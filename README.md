@@ -10,6 +10,7 @@ You'll need both food *and* housing xp; neglecting either xp type will really hu
 
 Your skill rates are scaled by the "maximum" xp scores, minus the food base gain, to work out how much benefit you get.
 
+...Skip over the examples if you're not interested in how the exact figure is calculated...
 ##### Example 1:
 If you have 5% of the food xp and 80% of the housing xp, you'll get sqrt(0.05 * 0.8) = 20% of the benefits -> +1200 extra calorie space, +6kg weight limit and +10% hands stack limit.
 Eating better food will pay dividends compared with improving your housing score when it's already way ahead of your food.
@@ -48,3 +49,8 @@ Then:
 
 ## Uninstallation
 Remove the "XP Benefits" folder from Mods/UserCode and delete Mods/UserCode/Tools/ShovelItem.override.cs
+
+Do get in touch if you have any problems or queries.
+Enjoy!
+
+https://mod.io/g/eco/m/xp-benefits
