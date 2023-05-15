@@ -52,3 +52,5 @@ Remove the "XP Benefits" folder from Mods/UserCode and delete Mods/UserCode/Tool
 
 Do get in touch if you have any problems or queries.
 Enjoy!
+
+https://mod.io/g/eco/m/xp-benefits
