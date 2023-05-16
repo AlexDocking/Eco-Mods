@@ -52,5 +52,7 @@ Then:
 ## Uninstallation
 Remove the "XP Benefits" folder from Mods/UserCode and delete Mods/UserCode/Tools/ShovelItem.override.cs
 
+**Special thanks** go to ArmoredStone and TheDu for their ideas
+
 Do get in touch if you have any problems or queries.
 Enjoy!
