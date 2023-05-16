@@ -31,7 +31,7 @@ See the example in the Settings.cs file.
 All code is provided so if you have other ideas to adapt the mod to your needs you can totally do that.
 
 ## Installation:
-Drop in the Mods folder in the server directory.
+Unzip and drop in the Mods folder in the server directory.
 
 ### Settings you need to change:
 If:
