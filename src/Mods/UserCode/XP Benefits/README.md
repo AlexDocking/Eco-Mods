@@ -1,6 +1,8 @@
 # XP Benefits
 Reward players for maintaining a high xp rate with extra carry capacity and a bigger stomach!
 
+*The rewards are an optional QoL bonus for participating in the economy. There's no penalty for eating cheap food if you still want to.*
+
 Unless your server has changed the default settings, it works as follows:
 
 ### Players:
