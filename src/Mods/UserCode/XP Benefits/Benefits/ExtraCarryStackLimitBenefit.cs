@@ -26,7 +26,7 @@ namespace XPBenefits
         /// </summary>
         public static bool IncreaseShovelSize { get; set; } = true;
         /// <summary>
-        /// Whether all shovels should by default take max stack size + benefit
+        /// Whether all shovels should by default take max stack size + (optional) benefit
         /// </summary>
         public static bool AllBigShovels { get; set; } = false;
         /// <summary>
@@ -37,7 +37,7 @@ namespace XPBenefits
         {
             XPConfig = XPConfig.Obj;
             //e.g. 0.5 represents 50 % increase in stack limit for the items held in the hands e.g.carry 30 bricks instead of 20
-            MaxBenefitValue = 0.5f;
+            MaxBenefitValue = 1f;
             ModsPreInitialize();
             BenefitFunction = new GeometricMeanFoodHousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
             ShovelBenefit ??= BenefitFunction;
