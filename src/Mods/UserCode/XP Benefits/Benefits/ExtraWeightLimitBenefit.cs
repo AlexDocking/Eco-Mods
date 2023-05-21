@@ -46,7 +46,6 @@ namespace XPBenefits
 
         public override void RemoveBenefitFromUser(User user)
         {
-            ModifiersRegister.RemoveStatModifiersFromUser(user, UserStatType.MaxCalories);
         }
     }
 }

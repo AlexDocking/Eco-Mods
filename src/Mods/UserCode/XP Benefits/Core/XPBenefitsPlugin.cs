@@ -42,10 +42,9 @@ namespace XPBenefits
         public void Initialize(TimedTask timer)
         {
             Benefits.AddRange(DiscoverILoggedInBenefits());
-            foreach(ILoggedInBenefit benefit in Benefits)
-            {
-                Log.WriteLine(Localizer.DoStr(benefit.GetType().Name));
-            }
+            
+            Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));
+            
             ModsChangeBenefits();
             UserManager.OnUserLoggedIn.Add(OnUserLoggedIn);
             UserManager.OnUserLoggedOut.Add(OnUserLoggedOut);

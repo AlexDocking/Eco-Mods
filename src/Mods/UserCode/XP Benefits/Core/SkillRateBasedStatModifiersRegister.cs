@@ -40,29 +40,21 @@ namespace XPBenefits
         /// <param name="callbackToUpdateStat">If not null, watch the skill rate property and call the callback to update the stat when the skill rate changes</param>
         public virtual void AddModifierToUser(User user, UserStatType statType, IDynamicValue benefit, Action callbackToUpdateStat)
         {
-            UserStat stat = user.ModifiedStats.GetStat(statType);
-            stat.ModifierSkill = new MultiDynamicValue(MultiDynamicOps.Sum, stat.ModifierSkill, benefit);
+            //Rather than add and remove the modifier every log in/out, set it once when they first log in and it will last until the server shuts down
+            if (!SkillRateListeners.ContainsKey((user, statType)))
+            {
+                UserStat stat = user.ModifiedStats.GetStat(statType);
+                stat.ModifierSkill = new MultiDynamicValue(MultiDynamicOps.Sum, stat.ModifierSkill, benefit);
 
-            //Eco will wait for the skill rate to change, then the callback will force the game to recalculate the stat
-            user.UserXP.Subscribe("SkillRate", callbackToUpdateStat);
-            SkillRateListeners.Add((user, statType), callbackToUpdateStat);
-            callbackToUpdateStat();
+                //Eco will wait for the skill rate to change, then the callback will force the game to recalculate the stat
+                user.UserXP.Subscribe("SkillRate", callbackToUpdateStat);
+                SkillRateListeners.Add((user, statType), callbackToUpdateStat);
+                callbackToUpdateStat();
+            }
         }
 
         public virtual void RemoveStatModifiersFromUser(User user, UserStatType statType)
         {
-            UserStat stat = user.ModifiedStats.GetStat(statType);
-            MultiDynamicValue modification = stat.ModifierSkill as MultiDynamicValue;
-            if (modification == null)
-            {
-                Log.WriteErrorLineLocStr($"Could not remove {statType} modifier from player: {user.Name}");
-                return;
-            }
-            stat.ModifierSkill = modification.Values[0];
-            if (SkillRateListeners.Remove((user, statType), out Action callbackToUpdateStat))
-            {
-                user.UserXP.Unsubscribe("SkillRate", callbackToUpdateStat);
-            }
         }
     }
 }
