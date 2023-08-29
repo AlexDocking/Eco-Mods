@@ -50,7 +50,7 @@ Then:
 	There is a setting you need to change at Settings.cs->ExtraCarryStackLimitBenefit->ModsPreInitialize
 
 ## Uninstallation
-Remove the "XP Benefits" folder from Mods/UserCode and delete Mods/UserCode/Tools/ShovelItem.override.cs
+Go to Mods/UserCode and delete the folder "XP Benefits", and the files Tools/ShovelItem.override.cs, Objects/TreeObject.override.cs and Benefits/SweepingHands.override.cs
 
 ### Credits:
 **Special thanks** go to ArmoredStone and TheDu for their ideas.
@@ -59,3 +59,13 @@ Remove the "XP Benefits" folder from Mods/UserCode and delete Mods/UserCode/Tool
 Do get in touch if you have any problems or queries.
 
 Enjoy!
+
+
+## Changelog
+### v1.1.0
+- Make sweeping hands pick up the extra rocks you should be allowed to hold
+- Update uninstallation instructions
+### v1.0.1
+- Fix issue with stat modifiers potentially not being removed on log out (which would have appeared in the console log)
+### v1.0.1
+- Initial release
