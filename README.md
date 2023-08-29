@@ -67,5 +67,5 @@ Enjoy!
 - Update uninstallation instructions
 ### v1.0.1
 - Fix issue with stat modifiers potentially not being removed on log out (which would have appeared in the console log)
-### v1.0.1
+### v1.0.0
 - Initial release
