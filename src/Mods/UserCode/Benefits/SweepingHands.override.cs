@@ -15,8 +15,6 @@ namespace Eco.Mods.TechTree
     using System;
     using Eco.Shared.Math;
     using Eco.Shared.Voxel;
-    using Eco.Shared.Properties;
-    using System.Threading;
 
     public partial class MiningSweepingHandsTalent
     {
@@ -62,7 +60,7 @@ namespace Eco.Mods.TechTree
                 // adjust to currently carrying item count
                 numToTake -= carrying.Quantity;
             }
-            
+
             // Get not breakable rubble around the target one and group them by their plot position.
             var originPlotPos = target.Position.XZi().ToPlotPos();
             var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, this.PickUpRange)

@@ -14,6 +14,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core.Tests;
+using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using Eco.Shared.Utils;
 using System;
@@ -62,7 +63,7 @@ namespace XPBenefits.Tests
         public static void ShouldNotLimitFractionFoodXP()
         {
             XPConfig config = new XPConfig();
-
+            DifficultySettings.SkillGainMultiplier = 1;
             config.DefaultBaseFoodXP = 5;
             config.DefaultMaximumFoodXP = 10;
             Assert.AreEqual(1.2f, SkillRateUtil.FractionFoodXP(11, config, false));
@@ -71,6 +72,7 @@ namespace XPBenefits.Tests
         {
             XPConfig config = new XPConfig();
 
+            DifficultySettings.SkillGainMultiplier = 1;
             config.DefaultBaseFoodXP = 5;
             config.DefaultMaximumFoodXP = 10;
             Assert.AreEqual(1f, SkillRateUtil.FractionFoodXP(11, config, true));
@@ -133,7 +135,6 @@ namespace XPBenefits.Tests
         }
         public static void ShouldCalculateFoodBenefitFunction()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.First();
             
             SetFood(testUser);
@@ -150,7 +151,6 @@ namespace XPBenefits.Tests
 
         public static void ShouldCalculateHousingBenefitFunction()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.MaxBy(user => SkillRateUtil.HousingXP(user));
             
             float housingXP = SkillRateUtil.HousingXP(testUser);
@@ -168,7 +168,6 @@ namespace XPBenefits.Tests
         }
         public static void ShouldCalculateGeometricFoodHousingBenefitFunction()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.MaxBy(user => SkillRateUtil.HousingXP(user));
 
             float housingXP = SkillRateUtil.HousingXP(testUser);
@@ -191,7 +190,6 @@ namespace XPBenefits.Tests
         }
         public static void ShouldCalculateSkillRateBenefitFunction()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.MaxBy(user => SkillRateUtil.HousingXP(user));
 
             float housingXP = SkillRateUtil.HousingXP(testUser);
@@ -284,6 +282,8 @@ namespace EcoTests
         /// <param name="test"></param>
         public static void Run(Action test)
         {
+            float skillGainMultiplier = DifficultySettings.SkillGainMultiplier;
+            DifficultySettings.SkillGainMultiplier = 1;
             try
             {
                 test();
@@ -291,6 +291,10 @@ namespace EcoTests
             catch (Exception ex)
             {
                 Log.WriteException(ex);
+            }
+            finally
+            {
+                DifficultySettings.SkillGainMultiplier = skillGainMultiplier;
             }
         }
     }

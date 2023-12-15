@@ -98,20 +98,13 @@ namespace XPBenefits
     public partial class ExtraCarryStackLimitBenefit
     {
         /// <summary>
-        /// Uncomment to change how much extra carry stack size (hands slot) the player can earn, or if you need to change how shovels work
+        /// Uncomment to change how much extra carry stack size (hands slot) the player can earn
         /// </summary>
         /*partial void ModsPreInitialize()
         {
             //e.g. 0.5 represents 50% increase in stack limit for the items held in the hands e.g. carry 30 bricks instead of 20
             MaxBenefitValue = ;
             XPLimitEnabled = ;
-
-            //If you don't want this benefit to increase the shovel sizes uncomment this line
-            //IncreaseShovelSize = false;
-
-            //If you use All Big Shovels (the one with a single file) you need to uncomment this line to enable the big shovel behaviour
-            //as this mod will overwrite the same ShovelItem.override.cs file
-            //AllBigShovels = true;
         }*/
         /// <summary>
         /// Uncomment to change how the amount of benefit is calculated from a user

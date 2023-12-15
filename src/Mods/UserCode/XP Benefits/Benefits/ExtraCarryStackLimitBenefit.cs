@@ -22,14 +22,6 @@ namespace XPBenefits
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
         /// <summary>
-        /// Whether the shovel size should be affected by the extra carry limit
-        /// </summary>
-        public static bool IncreaseShovelSize { get; set; } = true;
-        /// <summary>
-        /// Whether all shovels should by default take max stack size + (optional) benefit
-        /// </summary>
-        public static bool AllBigShovels { get; set; } = false;
-        /// <summary>
         /// Used by shovels to work out how much their size should increase
         /// </summary>
         public static IBenefitFunction ShovelBenefit { get; set; }

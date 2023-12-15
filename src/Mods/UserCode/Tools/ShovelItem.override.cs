@@ -3,30 +3,33 @@
 
 namespace Eco.Mods.TechTree
 {
-    using System;
     using System.ComponentModel;
-    using Eco.Core.Utils;
-    using Eco.Core.Utils.AtomicAction;
     using Eco.Gameplay.DynamicValues;
-    using Eco.Gameplay.Interactions;
     using Eco.Gameplay.Items;
-    using Eco.Gameplay.Plants;
-    using Eco.Gameplay.Objects;
     using Eco.Gameplay.Systems.TextLinks;
     using Eco.Shared.Items;
     using Eco.Shared.Localization;
-    using Eco.Shared.Math;
-    using Eco.Simulation;
-    using Eco.World;
-    using Eco.World.Blocks;
     using Eco.Gameplay.GameActions;
     using Eco.Shared.Serialization;
     using Eco.Core.Items;
-    using XPBenefits;
+    using Eco.Gameplay.Interactions.Interactors;
+    using Eco.Gameplay.Players;
+    using Eco.Shared.SharedTypes;
+    using Eco.Shared.Utils;
+    using Eco.Shared.Math;
+    using World = Eco.World.World;
+    using Eco.World;
+    using Eco.Gameplay.Placement;
+    using Eco.World.Blocks;
+    using Eco.Gameplay.Systems;
+    using Eco.Gameplay.Utils;
 
+    	[Serialized]
+    [LocDisplayName("Shovel")]
+    [Weight(0)]
     [Category("Hidden"), Tag("Excavation"), Tag("Harvester")]
     [CanAirInteraction]
-    public partial class ShovelItem : ToolItem
+    public abstract partial class ShovelItem : ToolItem, IInteractor
     {
         private static SkillModifiedValue caloriesBurn      = CreateCalorieValue(20, typeof(SelfImprovementSkill), typeof(ShovelItem));
         private static IDynamicValue      skilledRepairCost = new ConstantValue(1);
@@ -34,53 +37,59 @@ namespace Eco.Mods.TechTree
 
         public override GameActionDescription      DescribeBlockAction               => GameActionDescription.DoStr("dig up", "digging up");
         public override IDynamicValue              CaloriesBurn                      => caloriesBurn; 
-        public override ClientPredictedBlockAction LeftAction                        => ClientPredictedBlockAction.PickupBlock;
-        public override LocString                  LeftActionDescription             => Localizer.DoStr("Dig");
         public override IDynamicValue              Tier                              => tier;
         public override IDynamicValue              SkilledRepairCost                 => skilledRepairCost;
         public override int                        FullRepairAmount                  => 1;
-        public override int                        MaxTake                           => ExtraCarryStackLimitBenefit.AllBigShovels ? 0 : 1;
-        public override bool                       ShouldHighlight(Type block)       => Block.Is<Diggable>(block);
-        public override                            ToolCategory ToolCategory => ToolCategory.Shovel;
+        public override int                        MaxTake                           => 10;
+        public override bool                       IsValidForInteraction(Item item)  => base.IsValidForInteraction(item) && (item?.GetType().HasTag(TagManager.GetTagOrFail("Diggable")) ?? false);
+        public override                            ItemCategory ItemCategory         => ItemCategory.Shovel;
 
-        public override InteractResult OnActLeft(InteractionContext context)
+
+        [Interaction(InteractionTrigger.RightClick, canHoldToTrigger: TriBool.True, animationDriven: true, Priority = -1,
+            RequiredEnvVars = new[] { ClientSideEnvVars.Carried }, Flags = InteractionFlags.MustNotHaveTarget)]
+        public bool Drop(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
+            => BlockPlacementUtils.DropCarriedBlock(player);
+
+        [Interaction(InteractionTrigger.LeftClick, tags: BlockTags.Diggable, canHoldToTrigger: TriBool.True, animationDriven: true)]
+        public bool Dig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
         {
             // Fallback if not enough room in carrying stack
-            var carry = context.Player.User.Carrying;
+            ItemStack carry = player.User.Carrying;
             int maxTake = this.MaxTake;
-
-            if (maxTake == 0 && !ExtraCarryStackLimitBenefit.IncreaseShovelSize)
+            //(All) Big Shovel sets MaxTake to zero, meaning you can keep digging until the block's max stack size, excluding the server multiplier. Leaving MaxTake as 0 will not work with this mod, so this calculates what that limit would normally be
+            if (maxTake <= 0 && target.IsBlock)
             {
-                maxTake = carry.Item.MaxStackSize;
-            }
-            else if (ExtraCarryStackLimitBenefit.IncreaseShovelSize && ExtraCarryStackLimitBenefit.ShovelBenefit != null)
-            {
-                maxTake = (int)(maxTake * (1 + ExtraCarryStackLimitBenefit.ShovelBenefit.CalculateBenefit(context.Player.User)));
-            }
-            if (maxTake > 0 && carry.Quantity >= maxTake)
-            {
-                context.Player.ErrorLoc($"Can't dig while carrying {carry.UILink()}.");
-                return base.OnActLeft(context);
-            }
-            
-            // Try interact with a block.
-            if (context.HasBlock && context.Block.Is<Diggable>())
-            {
-                // Is it a diggable plant? Treat it like a plant then.
-                if (context.Block is PlantBlock) return (InteractResult)AtomicActions.DestroyPlantNow(this.CreateMultiblockContext(context), harvestTo: context.Player?.User.Inventory);
-
-                // Delete diggable block and add it to inventory.
-                return (InteractResult)AtomicActions.DeleteBlockNow(
-                    context:            this.CreateMultiblockContext(context),                                     // Get context with area of effect, calories, XP, etc.
-                    harvestPlantsAbove: World.GetBlock(context.BlockPosition.Value + Vector3i.Up).Is<Diggable>(),  // Also try harvest plants above if they are diggable.
-                    addTo:              context.Player?.User.Inventory);                                           // Deleted block (and maybe plants above) will be added to this inventory.
+                Item blockItem = target.Block().GetItem();
+                maxTake = ItemAttribute.Get<MaxStackSizeAttribute>(blockItem.Type)?.MaxStackSize ?? 10;
             }
 
-            // Try interact with a world object.
-            if (context.Target is WorldObject) return this.BasicToolOnWorldObjectCheck(context);
+            if (XPBenefits.ExtraCarryStackLimitBenefit.ShovelBenefit != null)
+            {
+                maxTake = (int)(maxTake * (1 + XPBenefits.ExtraCarryStackLimitBenefit.ShovelBenefit.CalculateBenefit(player.User)));
+            }
+            if (carry.Quantity >= maxTake)
+            {
+                player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");
+                return false;
+            }
 
-            // Fallback.
-            return base.OnActLeft(context);
+            //Find all plants we can harvest and all blocks we can dig within area of effect of this tool
+            var anyPlants = this.TryCreateMultiblockContext(out var plantContext, target, player, tagsTargetable: BlockTags.Diggable, mustNotHaveTags: BlockTags.NonPlant.SingleItemAsEnumerable(), applyXPSkill: true);
+            var anyOtherBlocks = this.TryCreateMultiblockContext(out var otherContext, target, player, tagsTargetable: BlockTags.Diggable, mustHaveTags: BlockTags.NonPlant.SingleItemAsEnumerable(), applyXPSkill: false);
+
+            if (anyPlants || anyOtherBlocks)
+            {
+                using var pack = new GameActionPack();
+
+                //Harvest all targeted plants
+                if (anyPlants) pack.DestroyPlant(plantContext, harvestTo: player?.User.Inventory);
+                //Destroy all targeted blocks that are not plants and harvest plants above them if those plants can be harvested by this tool
+                if (anyOtherBlocks) pack.DeleteBlock(otherContext, player?.User.Inventory);
+
+                return pack.TryPerform(player.User).Success;
+            }
+
+            return false;
         }
     }
 }

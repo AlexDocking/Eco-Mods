@@ -30,24 +30,14 @@ You can also change what values are used as the maximum food and housing, and wh
 See the example in the Settings.cs file.
 All code is provided so if you have other ideas to adapt the mod to your needs you can totally do that.
 
-## Installation:
-Unzip and drop it in the server directory.
-
 ### Settings you need to change:
 If:
-	Your server started pre-9.6 (food xp works differently even after migrating to later versions)
+	You use the (All) Big Shovel mod (this mod replaces the file ShovelItem.override from All Big Shovel)
 Then:
-	There is a setting you need to change at Settings.cs->XPConfig->ModsOverrideConfig
+	You need to go to ShovelItem.override and set MaxTake to 0
 
-If:
-	You use the All Big Shovel mod (this mod replaces the file from All Big Shovel. If you use the other version with files for each shovel type you can skip this step)
-Then:
-	There is a setting you need to change at Settings.cs->ExtraCarryStackLimitBenefit->ModsPreInitialize
-
-If:
-	You don't want the carry stack size benefit to increase the shovel amount
-Then:
-	There is a setting you need to change at Settings.cs->ExtraCarryStackLimitBenefit->ModsPreInitialize
+## Installation:
+Unzip and drop it in the server directory.
 
 ## Uninstallation
 Go to Mods/UserCode and delete the folder "XP Benefits", and the files Tools/ShovelItem.override.cs, Objects/TreeObject.override.cs and Benefits/SweepingHands.override.cs
@@ -62,6 +52,8 @@ Enjoy!
 
 
 ## Changelog
+### v1.2.0
+- Update for Eco v0.10.0
 ### v1.1.0
 - Make sweeping hands pick up the extra rocks you should be allowed to hold
 - Update uninstallation instructions
