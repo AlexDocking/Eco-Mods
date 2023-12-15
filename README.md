@@ -53,7 +53,7 @@ Enjoy!
 
 ## Changelog
 ### v1.2.0
-- Update for Eco v0.10.0
+- Update for Eco v0.10.0. Remove option to exclude the bonus from shovels (IncreaseShovelSize) - now it is always applied
 ### v1.1.0
 - Make sweeping hands pick up the extra rocks you should be allowed to hold
 - Update uninstallation instructions
