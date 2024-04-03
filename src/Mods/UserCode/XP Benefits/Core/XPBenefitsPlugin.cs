@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Eco.Gameplay.Players;
@@ -32,10 +33,25 @@ namespace XPBenefits
     /// The food xp is adjusted to account for the base rate xp that you get with an empty stomach, so no benefit is given on an empty stomach.
     /// Multipliers from other sources should still apply (if there are any)
     /// </summary>
-    public partial class XPBenefitsPlugin : IModKitPlugin, IInitializablePlugin
+    public partial class XPBenefitsPlugin : Singleton<XPBenefitsPlugin>, IConfigurablePlugin, IModKitPlugin, IInitializablePlugin
     {
-        public string GetCategory() => "Mod";
+        public XPConfig Config => Obj.GetEditObject() as XPConfig;
+        public IPluginConfig PluginConfig => this.config;
+        private PluginConfig<XPConfig> config;
+        public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
 
+        public XPBenefitsPlugin()
+        {
+            this.config = new PluginConfig<XPConfig>("XPBenefits");
+        }
+
+        public string GetCategory() => Localizer.DoStr("Mods");
+        public override string ToString() => Localizer.DoStr("XP Benefits");
+        public object GetEditObject() => this.config.Config;
+        public void OnEditObjectChanged(object o, string param)
+        {
+            this.SaveConfig();
+        }
         public string GetStatus() => (Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded");
 
         public List<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
@@ -46,6 +62,7 @@ namespace XPBenefits
             Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));
             
             ModsChangeBenefits();
+            Benefits.RemoveAll(benefit => !benefit.Enabled);
             UserManager.OnUserLoggedIn.Add(OnUserLoggedIn);
             UserManager.OnUserLoggedOut.Add(OnUserLoggedOut);
         }

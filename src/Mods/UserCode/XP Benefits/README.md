@@ -48,6 +48,8 @@ Enjoy!
 https://mod.io/g/eco/m/xp-benefits
 
 ## Changelog
+### v1.3.0
+- Enable the mod to be configured from the server GUI. If migrating from a previous version of the mod and you made changes to Settings.cs, these can now be recreated in the server GUI or in Configs/XPBenefits.eco, and the Settings.cs file deleted. Custom code such as new benefit functions will still work within ModsPreInitialize/ModsPostInitialize.
 ### v1.2.0
 - Update for Eco v0.10.0. Remove option to exclude the bonus from shovels (IncreaseShovelSize) - now it is always applied
 ### v1.1.0

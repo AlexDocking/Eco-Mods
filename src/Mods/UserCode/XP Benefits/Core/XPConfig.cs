@@ -13,51 +13,32 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Controller;
 using Eco.Gameplay.Players;
+using Eco.Shared.Localization;
+using System.ComponentModel;
 
 namespace XPBenefits
 {
-    public partial class XPConfig
+    public partial class XPConfig : IController
     {
-        private static XPConfig singleton;
-        public static XPConfig Obj
-        {
-            get
-            {
-                singleton ??= new XPConfig();
-                return singleton;
-            }
-        }
-
-        /// <summary>
-        /// What to subtract from the player's food xp before doing the calculation
-        /// </summary>
-        /// <remarks>
-        /// Since v9.6 of Eco players get a little food XP regardless of stomach contents.
-        /// If your server started pre-9.6 you'll see 'Base Multiplier' in the stomach tooltip
-        /// instead of 'Base Gain', in which case you should set this to zero
-        /// </remarks>
-        public float DefaultBaseFoodXP { get; set; }
+        [Category("Shared Settings"), LocDescription("Only if the server began before Eco v0.9.6 do you need this setting.\nWhat to subtract from the player's food xp before doing the calculation.\nSince v0.9.6 players get a little food XP regardless of stomach contents.\nIf your server started pre-9.6 you'll see 'Base Multiplier' in the stomach tooltip instead of 'Base Gain', in which case you should set this to zero.")]
+        public float DefaultBaseFoodXP { get; set; } = 12;
+        [Browsable(false)]
         public virtual float BaseFoodXP => DefaultBaseFoodXP * DifficultySettings.SkillGainMultiplier;
-        /// <summary>
-        /// The value before the server's skill gain setting is applied
-        /// </summary>
-        public float DefaultMaximumFoodXP { get; set; }
+        [Category("Shared Settings"), LocDescription("Players' food XP is scaled by this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
+        public float DefaultMaximumFoodXP { get; set; } = 120;
+        [Browsable(false)]
         public virtual float AdjustedMaximumFoodXP => DefaultMaximumFoodXP * DifficultySettings.SkillGainMultiplier - BaseFoodXP;
-        /// <summary>
-        /// The value before the server's skill gain setting is applied
-        /// </summary>
-        public float DefaultMaximumHousingXP { get; set; }
+        [Category("Shared Settings"), LocDescription("Players' housing XP is scaled by this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
+        public float DefaultMaximumHousingXP { get; set; } = 200;
+        [Browsable(false)]
         public virtual float AdjustedMaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
 
-        public virtual IBenefitFunction BenefitFunction { get; protected set; }
-        public XPConfig()
-        {
-            DefaultBaseFoodXP = 12;
-            DefaultMaximumFoodXP = 120;
-            DefaultMaximumHousingXP = 200;
-            ModsOverrideConfig();
-        }
-        partial void ModsOverrideConfig();
+        #region IController
+        int controllerID;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public ref int ControllerID => ref this.controllerID;
+        #endregion
     }
 }

@@ -13,24 +13,29 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Gameplay.Civics;
 using Eco.Gameplay.DynamicValues;
 using Eco.Gameplay.Players;
+using Eco.Gameplay.Systems;
+using Eco.Shared.Localization;
 using System;
+using System.ComponentModel;
 
 namespace XPBenefits
 {
+    [Benefit]
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
+        public override bool Enabled => XPConfig.ExtraCaloriesBenefitEnabled;
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
 
         public ExtraCaloriesBenefit()
         {
-            XPConfig = XPConfig.Obj;
-            //The player can earn 6000 calories at max food and housing
-            MaxBenefitValue = 6000;
-            XPLimitEnabled = false;
+            XPConfig = XPBenefitsPlugin.Obj.Config;
+            MaxBenefitValue = XPConfig.ExtraCaloriesBenefitMaxBenefitValue;
+            XPLimitEnabled = XPConfig.ExtraCaloriesBenefitXPLimitEnabled;
             ModsPreInitialize();
-            BenefitFunction = new GeometricMeanFoodHousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType, MaxBenefitValue, XPLimitEnabled);
             ModsPostInitialize();
         }
         /// <summary>
@@ -53,5 +58,20 @@ namespace XPBenefits
         public override void RemoveBenefitFromUser(User user)
         {
         }
+    }
+    public partial class XPConfig
+    {
+        [Category("Benefit - Extra Calories"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra calorie capacity. Requires restart.")]
+        public bool ExtraCaloriesBenefitEnabled { get; set; } = true;
+
+        [Category("Benefit - Extra Calories"), LocDisplayName("Max Extra Calories"), LocDescription("How much extra calorie space can be earned. " +
+            "If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled. Requires restart.")]
+        public float ExtraCaloriesBenefitMaxBenefitValue { get; set; } = 6000;
+
+        [Category("Benefit - Extra Calories"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
+        public bool ExtraCaloriesBenefitXPLimitEnabled { get; set; } = false;
+        
+        [Category("Benefit - Extra Calories"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
+        public BenefitFunctionType ExtraCaloriesBenefitFunctionType { get; set; }
     }
 }

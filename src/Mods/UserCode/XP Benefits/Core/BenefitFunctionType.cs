@@ -13,15 +13,13 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Gameplay.Players;
-
 namespace XPBenefits
 {
-    public interface ILoggedInBenefit
+    public enum BenefitFunctionType
     {
-        bool Enabled { get; }
-
-        public void ApplyBenefitToUser(User user);
-        public void RemoveBenefitFromUser(User user);
+        GeometricMeanFoodHousing,
+        FoodOnly,
+        HousingOnly,
+        SkillRate
     }
 }

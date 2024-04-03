@@ -15,23 +15,27 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
+using Eco.Shared.Localization;
+using System.ComponentModel;
 using System.Linq;
 
 namespace XPBenefits
 {
+    [Benefit]
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
+        public override bool Enabled => XPConfig.ExtraCarryStackLimitBenefitEnabled;
         /// <summary>
         /// Used by shovels to work out how much their size should increase
         /// </summary>
         public static IBenefitFunction ShovelBenefit { get; set; }
         public ExtraCarryStackLimitBenefit()
         {
-            XPConfig = XPConfig.Obj;
-            //e.g. 0.5 represents 50 % increase in stack limit for the items held in the hands e.g.carry 30 bricks instead of 20
-            MaxBenefitValue = 1f;
+            XPConfig = XPBenefitsPlugin.Obj.Config;
+            MaxBenefitValue = XPConfig.ExtraCarryStackLimitBenefitMaxBenefitValue;
+            XPLimitEnabled = XPConfig.ExtraCarryStackLimitBenefitXPLimitEnabled;
             ModsPreInitialize();
-            BenefitFunction = new GeometricMeanFoodHousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunctionType, MaxBenefitValue, XPLimitEnabled);
             ShovelBenefit ??= BenefitFunction;
             ModsPostInitialize();
         }
@@ -52,5 +56,21 @@ namespace XPBenefits
             Inventory carryInventory = user.Inventory.Carried;
             carryInventory.RemoveAllRestrictions(restriction => restriction is StackLimitBenefitInventoryRestriction);
         }
+    }
+    public partial class XPConfig
+    {
+        [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra carry capacity. Requires restart.")]
+        public bool ExtraCarryStackLimitBenefitEnabled { get; set; } = true;
+
+        [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Max Extra Carry Capacity"), LocDescription("How much extra carry stack size (hands slot) can be earned. " +
+            "A value of 1 represents a 100% increase in stack limit for the items held in the hands e.g. carry 40 bricks instead of 20. " +
+            "If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled. Requires restart.")]
+        public float ExtraCarryStackLimitBenefitMaxBenefitValue { get; set; } = 1;
+
+        [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
+        public bool ExtraCarryStackLimitBenefitXPLimitEnabled { get; set; } = false;
+
+        [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
+        public BenefitFunctionType ExtraCarryStackLimitBenefitFunctionType { get; set; }
     }
 }

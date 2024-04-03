@@ -19,6 +19,7 @@ namespace XPBenefits
 {
     public abstract class BenefitBase : ILoggedInBenefit
     {
+        public virtual bool Enabled { get; } = true;
         /// <summary>
         /// Whether players can continue gaining benefits above those defined
         /// or whether their xp should be capped for the purposes of the calculation
@@ -31,5 +32,21 @@ namespace XPBenefits
 
         public abstract void ApplyBenefitToUser(User user);
         public abstract void RemoveBenefitFromUser(User user);
+        protected IBenefitFunction CreateBenefitFunction(BenefitFunctionType benefitFunctionType, BenefitValue maximumBenefit, bool xpLimitEnabled)
+        {
+            switch (benefitFunctionType)
+            {
+                case BenefitFunctionType.GeometricMeanFoodHousing:
+                    return new GeometricMeanFoodHousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+                case BenefitFunctionType.FoodOnly:
+                    return new FoodBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+                case BenefitFunctionType.HousingOnly:
+                    return new HousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+                case BenefitFunctionType.SkillRate:
+                    return new SkillRateBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
+                default:
+                    return null;
+            }
+        }
     }
 }
