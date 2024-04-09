@@ -1,0 +1,16 @@
+﻿
+<!-- Here we define the Eco item that will be used for our page's icon in the Ecopedia navigation bar -->
+<ecopedia icon="XP"  priority="-10">
+	<summary>XP Benefits</summary>
+
+	<!-- In most cases your page content should be enclosed in the base section tag. This allows the page parser to properly lay out the content
+    you give it -->
+	<section>
+		This server uses a mod called XP Benefits. Various quality-of-life perks are able to be earnt, which act in addition to those given by [SelfImprovementSkill]. Unlike [SelfImprovementSkill] these benefits do not give permanent buffs. Instead, they are tied directly to your food and housing XP multipliers, so require continual upkeep to maintain.
+	</section>
+	<section>
+	</section>
+	<!-- The button section type creates a clickable button that will open an external URL when clicked. Note: if the URL is not a domain
+    that Strange Loop Games has verified as trusted a warning dialog will be presented to the user instead of the normal "open website" dialog box -->
+	<section type="button" url="https://mod.io/g/eco/m/xp-benefits">Click here to learn more</section>
+</ecopedia>

@@ -56,6 +56,10 @@ namespace Eco.Mods.TechTree
             // Fallback if not enough room in carrying stack
             ItemStack carry = player.User.Carrying;
             int maxTake = this.MaxTake;
+            if (XPBenefits.XPBenefitsPlugin.Obj.Config.AllBigShovel)
+            {
+                maxTake = 0;
+            }
             //(All) Big Shovel sets MaxTake to zero, meaning you can keep digging until the block's max stack size, excluding the server multiplier. Leaving MaxTake as 0 will not work with this mod, so this calculates what that limit would normally be
             if (maxTake <= 0 && target.IsBlock)
             {

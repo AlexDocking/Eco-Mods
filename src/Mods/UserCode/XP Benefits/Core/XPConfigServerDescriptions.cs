@@ -24,6 +24,6 @@ namespace XPBenefits
                                                             "SkillRate: Treats both food and housing xp equally after they have been scaled by their own maximums, taking their average. " +
                                                             "[100% food + 0% housing] and [0% food + 100% housing] are both equivalent to [50% food + 50% housing].\n" +
                                                             "Requires restart.";
-        public const string XPLimitDescription = "Enable if you want to cap the player's XP to prevent exceeding the maximum reward. Requires restart.";
+        public const string XPLimitDescription = "Enable if you want to the mod to cap the player's XP in the calculation to prevent exceeding the maximum reward. Requires restart.";
     }
 }

@@ -26,15 +26,18 @@ namespace XPBenefits
         public float DefaultBaseFoodXP { get; set; } = 12;
         [Browsable(false)]
         public virtual float BaseFoodXP => DefaultBaseFoodXP * DifficultySettings.SkillGainMultiplier;
-        [Category("Shared Settings"), LocDescription("Players' food XP is scaled by this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
+        [Category("Shared Settings"), LocDescription("Players' food XP is scaled using this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
         public float DefaultMaximumFoodXP { get; set; } = 120;
         [Browsable(false)]
         public virtual float AdjustedMaximumFoodXP => DefaultMaximumFoodXP * DifficultySettings.SkillGainMultiplier - BaseFoodXP;
-        [Category("Shared Settings"), LocDescription("Players' housing XP is scaled by this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
+        [Browsable(false)]
+        public virtual float MaximumFoodXP => DefaultMaximumFoodXP * DifficultySettings.SkillGainMultiplier;
+        [Category("Shared Settings"), LocDescription("Players' housing XP is scaled using this when calculating how much reward to give. If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.")]
         public float DefaultMaximumHousingXP { get; set; } = 200;
         [Browsable(false)]
         public virtual float AdjustedMaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
-
+        [Browsable(false)]
+        public virtual float MaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
         #region IController
         int controllerID;
         public event PropertyChangedEventHandler PropertyChanged;

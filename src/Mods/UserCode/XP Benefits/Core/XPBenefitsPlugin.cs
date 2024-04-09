@@ -13,9 +13,11 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Controller;
 using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
+using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
@@ -23,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace XPBenefits
 {
@@ -52,20 +55,73 @@ namespace XPBenefits
         {
             this.SaveConfig();
         }
-        public string GetStatus() => (Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded");
+        public string GetStatus() => Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded";
 
         public List<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
         public void Initialize(TimedTask timer)
         {
             Benefits.AddRange(DiscoverILoggedInBenefits());
-            
-            Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));
-            
+
+            List<ILoggedInBenefit> benefits = Benefits.ToList();
             ModsChangeBenefits();
+            AmendEcopedia(Benefits.Union(benefits));
+            
             Benefits.RemoveAll(benefit => !benefit.Enabled);
+
+            Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));
             UserManager.OnUserLoggedIn.Add(OnUserLoggedIn);
             UserManager.OnUserLoggedOut.Add(OnUserLoggedOut);
         }
+        private EcopediaCategory EcopediaXPBenefitsCategory => Ecopedia.Obj.Chapters["Mods"].Categories.FirstOrDefault(category => category.Name == "XP Benefits");
+        private EcopediaPage EcopediaXPBenefitsOverviewPage => EcopediaXPBenefitsCategory.Pages["XP Benefits Overview"];
+
+        private void AmendEcopedia(IEnumerable<ILoggedInBenefit> benefits)
+        {
+            StringBuilder ecopediaBenefitsListBuilder = new StringBuilder();
+            ecopediaBenefitsListBuilder.AppendLine(Text.Style(Text.Styles.Header, "List of Benefits:"));
+            SortedList<float, LocString> benefitLinks = new SortedList<float, LocString>();
+            foreach (var benefit in benefits)
+            {
+                if (!benefit.Enabled)
+                {
+                    TryRemoveEcopediaPage(benefit);
+                }
+                else
+                {
+                    benefitLinks.Add(benefit.EcopediaPagePriority, Localizer.NotLocalized($"[{benefit.EcopediaPageName}]"));
+                }
+            }
+            foreach(LocString benefitLink in benefitLinks.Values)
+            {
+                ecopediaBenefitsListBuilder.AppendLine(benefitLink);
+            }
+
+            if (!benefits.Any(benefit => benefit.Enabled))
+            {
+                Ecopedia.Obj.Chapters["Mods"].Categories.Remove(EcopediaXPBenefitsCategory);
+                return;
+            }
+            var section = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
+            section.Text = ecopediaBenefitsListBuilder.ToStringLoc();
+            EcopediaXPBenefitsOverviewPage.Sections.Insert(1, section);
+            //EcopediaXPBenefitsOverviewPage.Changed(nameof(EcopediaPage.Sections));
+            EcopediaXPBenefitsOverviewPage.ParseTagsInText();
+            Ecopedia.Obj.OnEcopediaRebuild();
+        }
+
+        private void TryRemoveEcopediaPage(ILoggedInBenefit benefit)
+        {
+            string ecopediaPageName = benefit.EcopediaPageName;
+            if (string.IsNullOrEmpty(ecopediaPageName))
+            {
+                return;
+            }
+            var xpBenefitsCategory = Ecopedia.Obj.Chapters["Mods"].Categories.FirstOrDefault(category => category.Name == "XP Benefits");
+            Log.WriteLine(Localizer.Do($"{benefit?.GetType().Name}: Found XP Benefits ecopedia: {xpBenefitsCategory?.Pages.Count}"));
+            bool? removed = xpBenefitsCategory?.Pages.Remove(ecopediaPageName);
+            Log.WriteLine(Localizer.Do($"removed: {removed}"));
+        }
+
         partial void ModsChangeBenefits();
 
         private IEnumerable<ILoggedInBenefit> DiscoverILoggedInBenefits()

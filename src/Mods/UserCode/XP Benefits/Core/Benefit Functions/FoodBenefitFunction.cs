@@ -13,8 +13,12 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
+using Eco.Gameplay.Systems.TextLinks;
+using Eco.Shared.Localization;
 using System;
+using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -47,6 +51,30 @@ namespace XPBenefits
             {
             }
             return 0;
+        }
+        private static string NutritionEcopediaPageLink => Ecopedia.Obj.GetPage("Nutrition").UILink();
+        public virtual LocString ResolveToken(User user, string token)
+        {
+            switch (token)
+            {
+                case INPUT_NAME:
+                    return Localizer.Do($"{NutritionEcopediaPageLink} multiplier");
+                case MEANS_OF_IMPROVING_STAT:
+                    return Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage");
+                case MAXIMUM_INPUT:
+                    return Localizer.Do($"{TextLoc.StyledNumLoc(XPConfig.AdjustedMaximumFoodXP, XPConfig.AdjustedMaximumFoodXP.ToString("0.#"))} food XP");
+                case MAXIMUM_BENEFIT:
+                    return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
+                case CURRENT_INPUT:
+                    return Localizer.Do($"{DisplayUtils.GradientNumLoc(SkillRateUtil.FoodXP(user), SkillRateUtil.FoodXP(user).ToString("0.#"), new Eco.Shared.Math.Range(XPConfig.BaseFoodXP, XPConfig.MaximumFoodXP))} food XP");
+                case CURRENT_BENEFIT:
+                    return TextLoc.StyledNum(CalculateBenefit(user));
+                case CURRENT_BENEFIT_ECOPEDIA:
+                    float currentBenefit = CalculateBenefit(user);
+                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
+                default:
+                    return LocString.Empty;
+            }
         }
     }
 }
