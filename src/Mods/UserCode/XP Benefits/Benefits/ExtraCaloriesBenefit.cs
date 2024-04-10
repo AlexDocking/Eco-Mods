@@ -32,7 +32,6 @@ using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
-    [Benefit]
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
         public static ExtraCaloriesBenefit Obj { get; private set; }

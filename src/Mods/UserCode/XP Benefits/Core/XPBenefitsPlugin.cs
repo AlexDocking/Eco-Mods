@@ -58,13 +58,19 @@ namespace XPBenefits
         public string GetStatus() => Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded";
 
         public List<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
+        private static bool initialized = false;
         public void Initialize(TimedTask timer)
         {
+            if (initialized) return;
+            initialized = true;
             Benefits.AddRange(DiscoverILoggedInBenefits());
 
             List<ILoggedInBenefit> benefits = Benefits.ToList();
+            Log.WriteLine(Localizer.Do($"benefits:{benefits.Count}"));
             ModsChangeBenefits();
-            AmendEcopedia(Benefits.Union(benefits));
+            IEnumerable<ILoggedInBenefit> benefits1 = Benefits.Union(benefits);
+            Log.WriteLine(Localizer.Do($"benefits1:{benefits1.Count()}"));
+            AmendEcopedia(benefits1);
             
             Benefits.RemoveAll(benefit => !benefit.Enabled);
 
@@ -79,8 +85,7 @@ namespace XPBenefits
         {
             StringBuilder ecopediaBenefitsListBuilder = new StringBuilder();
             ecopediaBenefitsListBuilder.AppendLine(Text.Style(Text.Styles.Header, "List of Benefits:"));
-            SortedList<float, LocString> benefitLinks = new SortedList<float, LocString>();
-            foreach (var benefit in benefits)
+            foreach (var benefit in benefits.OrderBy(b => b.EcopediaPagePriority))
             {
                 if (!benefit.Enabled)
                 {
@@ -88,14 +93,9 @@ namespace XPBenefits
                 }
                 else
                 {
-                    benefitLinks.Add(benefit.EcopediaPagePriority, Localizer.NotLocalized($"[{benefit.EcopediaPageName}]"));
+                    ecopediaBenefitsListBuilder.AppendLine(Localizer.NotLocalized($"[{benefit.EcopediaPageName}]"));
                 }
             }
-            foreach(LocString benefitLink in benefitLinks.Values)
-            {
-                ecopediaBenefitsListBuilder.AppendLine(benefitLink);
-            }
-
             if (!benefits.Any(benefit => benefit.Enabled))
             {
                 Ecopedia.Obj.Chapters["Mods"].Categories.Remove(EcopediaXPBenefitsCategory);
@@ -126,7 +126,7 @@ namespace XPBenefits
 
         private IEnumerable<ILoggedInBenefit> DiscoverILoggedInBenefits()
         {
-            var types = Assembly.GetExecutingAssembly().DefinedTypes.Where(type => type.IsAssignableTo(typeof(ILoggedInBenefit)) && Attribute.GetCustomAttributes(type).Any(attribute => attribute is BenefitAttribute));
+            var types = Assembly.GetExecutingAssembly().DefinedTypes.Where(type => type.IsAssignableTo(typeof(ILoggedInBenefit)) && !type.IsAbstract);
             var constructors = types.Select(type => type.DeclaredConstructors.FirstOrDefault(constructor => constructor.GetParameters().Length == 0)).NonNull();
             var classes = constructors.Select(c => c.Invoke(null)).NonNull();
             return classes.OfType<ILoggedInBenefit>();

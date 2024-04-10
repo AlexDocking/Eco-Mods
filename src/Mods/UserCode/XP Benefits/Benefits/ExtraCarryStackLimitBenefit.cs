@@ -30,7 +30,6 @@ using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
-    [Benefit]
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
         public static ExtraCarryStackLimitBenefit Obj { get; private set; }

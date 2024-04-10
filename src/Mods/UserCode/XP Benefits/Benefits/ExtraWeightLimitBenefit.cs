@@ -33,7 +33,6 @@ using Eco.Core.Controller;
 
 namespace XPBenefits
 {
-    [Benefit]
     public partial class ExtraWeightLimitBenefit : BenefitBase
     {
         public static ExtraWeightLimitBenefit Obj { get; private set; }
