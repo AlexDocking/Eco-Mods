@@ -34,10 +34,8 @@ namespace XPBenefits
     {
         public static ExtraCarryStackLimitBenefit Obj { get; private set; }
         public override bool Enabled => XPConfig.ExtraCarryStackLimitBenefitEnabled;
-        public override string EcopediaPageName => ECOPEDIA_PAGE_NAME;
-        public const string ECOPEDIA_PAGE_NAME = "Bigger Hands";
-        public override float EcopediaPagePriority => ECOPEDIA_PAGE_PRIORITY;
-        public const float ECOPEDIA_PAGE_PRIORITY = -6;
+        public override string EcopediaPageName { get; } = "Bigger Hands";
+        public override float EcopediaPagePriority { get; } = -6;
         protected override LocString BenefitDescription => Localizer.DoStr("extra carry capacity");
         /// <summary>
         /// Used by shovels to work out how much their size should increase
@@ -91,54 +89,24 @@ namespace XPBenefits
             }
         }
     }
-    public class ExtraCarryStackLimitEcopediaGenerator : IEcopediaGeneratedData
+    public class ExtraCarryStackLimitEcopediaGenerator : BenefitEcopediaGenerator
     {
-        const string pageName = ExtraCarryStackLimitBenefit.ECOPEDIA_PAGE_NAME;
-        const float pagePriority = ExtraCarryStackLimitBenefit.ECOPEDIA_PAGE_PRIORITY;
-        #region Ecopedia
-        private EcopediaPage CreateEcopediaPage()
+        public override LocString DisplayName { get; } = Localizer.DoStr("Bigger Hands");
+        public override string Summary { get; } = "Earn extra carry capacity, so you can hold more blocks in your hands.";
+        public override string IconName { get; } = "HandsItem";
+        protected override Type BenefitType { get; } = typeof(ExtraCarryStackLimitBenefit);
+        public override IEnumerable<LocString> Sections
         {
-            Dictionary<string, EcopediaPage> xpBenefitPages = Ecopedia.Obj.Categories["XP Benefits"].Pages;
-            if (xpBenefitPages.TryGetValue(pageName, out var existingPage))
+            get
             {
-                Log.WriteLine(Localizer.Do($"{pageName} exists in category"));
-                return existingPage;
-            }
-            var page = UnserializedNamedEntry<EcopediaPage>.GetByName(pageName);
-            if (page == null)
-            {
-                page = new EcopediaPage();
-                page.Name = pageName;
-                page.Priority = pagePriority;
-                page.DisplayName = Localizer.DoStr("Bigger Hands");
-                page.Summary = "Earn extra carry capacity, so you can hold more blocks in your hands.";
-                page.FullName = "XP Benefits;" + pageName;
-                page.IconName = "HandsItem";
-
+                List<LocString> sections = new List<LocString>();
                 LocStringBuilder locStringBuilder = new LocStringBuilder();
                 locStringBuilder.AppendLine(TextLoc.HeaderLoc($"Benefit Description"));
                 locStringBuilder.AppendLineLoc($"You can earn extra carry capacity, so you can hold more blocks in your hands.");
-                var section = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
-                section.Text = locStringBuilder.ToLocString();
-                page.Sections.Add(section);
-                page.Changed(nameof(EcopediaPage.Sections));
-                page.ParseTagsInText();
+                sections.Add(locStringBuilder.ToLocString());
+                return sections;
             }
-            xpBenefitPages.Add(pageName, page);
-            return page;
         }
-        public virtual LocString GetEcopediaData(Player player, EcopediaPage page)
-        {
-            LocStringBuilder locStringBuilder = new LocStringBuilder();
-            locStringBuilder.AppendLine(ExtraCarryStackLimitBenefit.Obj.GenerateEcopediaDescription(player.User));
-            return locStringBuilder.ToLocString();
-        }
-        public virtual IEnumerable<EcopediaPageReference> PagesWeSupplyDataFor()
-        {
-            EcopediaPage page = CreateEcopediaPage();
-            return new EcopediaPageReference(null, "XP Benefits", page.Name, page.DisplayName).SingleItemAsEnumerable();
-        }
-        #endregion
     }
     public partial class XPConfig
     {

@@ -34,10 +34,9 @@ namespace XPBenefits
 {
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
-        public static ExtraCaloriesBenefit Obj { get; private set; }
+        public static ExtraCaloriesBenefit Obj => XPBenefitsPlugin.Obj.GetBenefit<ExtraCaloriesBenefit>();
         public override bool Enabled => XPConfig.ExtraCaloriesEnabled;
-        public override string EcopediaPageName => ECOPEDIA_PAGE_NAME;
-        public const string ECOPEDIA_PAGE_NAME = "Expandable Stomach";
+        public override string EcopediaPageName { get; } = "Expandable Stomach";
         public override float EcopediaPagePriority => ECOPEDIA_PAGE_PRIORITY;
         public const float ECOPEDIA_PAGE_PRIORITY = -5;
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
@@ -46,15 +45,12 @@ namespace XPBenefits
 
         internal ExtraCaloriesBenefit()
         {
-            Obj = this;
-
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraCaloriesMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCaloriesXPLimitEnabled;
             ModsPreInitialize();
             BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType, MaxBenefitValue, XPLimitEnabled);
             ModsPostInitialize();
-            Log.WriteLine(Localizer.DoStr("Extra Calories post initialize"));
         }
         /// <summary>
         /// Override to change how much extra calorie space the player can earn
@@ -93,54 +89,24 @@ namespace XPBenefits
         }
         public LocString ColouredCaloriesNumberLoc(User user, float extraCalories) => Localizer.DoStr(DisplayUtils.GradientNum(extraCalories, extraCalories, new Eco.Shared.Math.Range(0, MaxBenefitValue.GetValue(user))));
     }
-    public class ExtraCaloriesEcopediaGenerator : IEcopediaGeneratedData
+    public class ExtraCaloriesEcopediaGenerator : BenefitEcopediaGenerator
     {
-        const string pageName = ExtraCaloriesBenefit.ECOPEDIA_PAGE_NAME;
-        const float pagePriority = ExtraCaloriesBenefit.ECOPEDIA_PAGE_PRIORITY;
-        #region Ecopedia
-        private EcopediaPage CreateEcopediaPage()
+        public override LocString DisplayName { get; } = Localizer.DoStr("Expandable Stomach");
+        public override string Summary { get; } = "Earn extra calorie space, so you can eat more food before you get full.";
+        public override string IconName { get; } = "Ecopedia_FoodandShelter";
+        protected override Type BenefitType { get; } = typeof(ExtraCaloriesBenefit);
+        public override IEnumerable<LocString> Sections
         {
-            Dictionary<string, EcopediaPage> xpBenefitPages = Ecopedia.Obj.Categories["XP Benefits"].Pages;
-            if (xpBenefitPages.TryGetValue(pageName, out var existingPage))
+            get
             {
-                Log.WriteLine(Localizer.Do($"{pageName} exists in category"));
-                return existingPage;
-            }
-            var page = UnserializedNamedEntry<EcopediaPage>.GetByName(pageName);
-            if (page == null)
-            {
-                page = new EcopediaPage();
-                page.Name = pageName;
-                page.Priority = pagePriority;
-                page.DisplayName = Localizer.DoStr("Expandable Stomach");
-                page.Summary = Localizer.DoStr("Earn extra calorie space, so you can eat more food before you get full.");
-                page.FullName = "XP Benefits;" + pageName;
-                page.IconName = "Ecopedia_FoodandShelter";
-
+                List<LocString> sections = new List<LocString>();
                 LocStringBuilder locStringBuilder = new LocStringBuilder();
                 locStringBuilder.AppendLine(TextLoc.HeaderLoc($"Benefit Description"));
                 locStringBuilder.AppendLineLoc($"You can earn extra calorie space, so you can eat more food before you get full.");
-                var section = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
-                section.Text = locStringBuilder.ToLocString();
-                page.Sections.Add(section);
-                page.Changed(nameof(EcopediaPage.Sections));
-                page.ParseTagsInText();
+                sections.Add(locStringBuilder.ToLocString());
+                return sections;
             }
-            xpBenefitPages.Add(pageName, page);
-            return page;
         }
-        public virtual LocString GetEcopediaData(Player player, EcopediaPage page)
-        {
-            LocStringBuilder locStringBuilder = new LocStringBuilder();
-            locStringBuilder.AppendLine(ExtraCaloriesBenefit.Obj.GenerateEcopediaDescription(player.User));
-            return locStringBuilder.ToLocString();
-        }
-        public virtual IEnumerable<EcopediaPageReference> PagesWeSupplyDataFor()
-        {
-            EcopediaPage page = CreateEcopediaPage();
-            return new EcopediaPageReference(null, "XP Benefits", page.Name, page.DisplayName).SingleItemAsEnumerable();
-        }
-        #endregion
     }
     public partial class XPConfig
     {
@@ -163,13 +129,15 @@ namespace XPBenefits
         [NewTooltip(Eco.Shared.Items.CacheAs.Disabled, 103, overrideType: typeof(Stomach))]
         public static LocString ExtraCaloriesStomachTooltip(this Stomach stomach)
         {
-            if (!ExtraCaloriesBenefit.Obj.Enabled)
+            ExtraCaloriesBenefit benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCaloriesBenefit>();
+            if (benefit == null || !benefit.Enabled)
             {
                 return LocString.Empty;
             }
             User user = stomach.Owner;
             LocString extraWeightLimit = ExtraCaloriesBenefit.Obj.ResolveToken(user, CURRENT_BENEFIT);
-            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {Ecopedia.Obj.GetPage(ExtraCaloriesBenefit.ECOPEDIA_PAGE_NAME).UILink()}."));
+            EcopediaPage ecopediaPage = benefit.GetEcopediaPage();
+            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {ecopediaPage?.UILink() ?? Localizer.DoStr(benefit.EcopediaPageName)}."));
         }
     }
 }

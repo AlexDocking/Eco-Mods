@@ -14,6 +14,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core.Utils;
+using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
@@ -79,5 +80,6 @@ namespace XPBenefits
 
             return locStringBuilder.ToLocString();
         }
+        public EcopediaPage GetEcopediaPage() => !string.IsNullOrEmpty(EcopediaPageName) ? Ecopedia.Obj.GetPage(EcopediaPageName) : null;
     }
 }

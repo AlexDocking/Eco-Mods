@@ -148,7 +148,7 @@ namespace XPBenefits.Tests
             BenefitWithoutEcopediaPage benefitWithoutEcopedia = plugin.Benefits.OfType<BenefitWithoutEcopediaPage>().SingleOrDefault();
             Assert.IsNull(GetEcopediaPage(benefitWithoutEcopedia));
 
-            DisabledBenefit disabledBenefit = plugin.Benefits.OfType<DisabledBenefit>().SingleOrDefault();
+            DisabledBenefit disabledBenefit = new DisabledBenefit();
             Assert.IsNull(GetEcopediaPage(disabledBenefit));
 
             BenefitWithEcopediaPage benefitWithEcopedia = plugin.Benefits.OfType<BenefitWithEcopediaPage>().SingleOrDefault();
@@ -251,66 +251,34 @@ namespace XPBenefits.Tests
     /// </summary>
     public class ValidBenefit : ILoggedInBenefit
     {
-        public int ApplyBenefitToUserCalls { get; set; }
-        public int RemoveBenefitFromUserCalls { get; set; }
         public virtual bool Enabled => true;
         public virtual string EcopediaPageName => "Valid Benefit";
         public virtual float EcopediaPagePriority => 3;
 
         public void ApplyBenefitToUser(User user)
         {
-            throw new NotImplementedException();
         }
         public void RemoveBenefitFromUser(User user)
         {
-            throw new NotImplementedException();
         }
     }
-    public class BenefitWithEcopediaPage : ValidBenefit
+    public class BenefitWithEcopediaPage : BenefitBase
     {
-        public override string EcopediaPageName => ECOPEDIA_PAGE_NAME;
-        public const string ECOPEDIA_PAGE_NAME = "Ecopedia Benefit";
-
-        public override float EcopediaPagePriority => ECOPEDIA_PAGE_PRIORITY;
-        public const float ECOPEDIA_PAGE_PRIORITY = 4;
+        public override string EcopediaPageName { get; } = "Ecopedia Benefit";
+        public override float EcopediaPagePriority { get; } = 4;
+        protected override LocString BenefitDescription { get; } = LocString.Empty;
+        public override void ApplyBenefitToUser(User user)
+        {
+        }
+        public override void RemoveBenefitFromUser(User user)
+        {
+        }
     }
-    public class BenefitWithEcopediaPageEcopediaGenerator : IEcopediaGeneratedData
+    public class BenefitWithEcopediaPageEcopediaGenerator : BenefitEcopediaGenerator
     {
-        const string pageName = BenefitWithEcopediaPage.ECOPEDIA_PAGE_NAME;
-        const float pagePriority = BenefitWithEcopediaPage.ECOPEDIA_PAGE_PRIORITY;
-        private EcopediaPage CreateEcopediaPage()
-        {
-            Dictionary<string, EcopediaPage> xpBenefitPages = Ecopedia.Obj.Categories["XP Benefits"].Pages;
-            if (xpBenefitPages.TryGetValue(pageName, out var existingPage))
-            {
-                Log.WriteLine(Localizer.Do($"{pageName} exists in category"));
-                return existingPage;
-            }
-            var page = UnserializedNamedEntry<EcopediaPage>.GetByName(pageName);
-            if (page == null)
-            {
-                page = new EcopediaPage();
-                page.Name = pageName;
-                page.Priority = pagePriority;
-                page.DisplayName = Localizer.DoStr("Test");
-                page.Summary = "Test Summary.";
-                page.FullName = "XP Benefits;" + pageName;
-                page.IconName = "";
-            }
-            xpBenefitPages.Add(pageName, page);
-            return page;
-        }
-        public virtual LocString GetEcopediaData(Player player, EcopediaPage page)
-        {
-            LocStringBuilder locStringBuilder = new LocStringBuilder();
-            locStringBuilder.AppendLine(ExtraCarryStackLimitBenefit.Obj.GenerateEcopediaDescription(player.User));
-            return locStringBuilder.ToLocString();
-        }
-        public virtual IEnumerable<EcopediaPageReference> PagesWeSupplyDataFor()
-        {
-            EcopediaPage page = CreateEcopediaPage();
-            return new EcopediaPageReference(null, "XP Benefits", page.Name, page.DisplayName).SingleItemAsEnumerable();
-        }
+        protected override Type BenefitType => base.BenefitType;
+        public override string Summary => "Test Summary";
+        public override LocString DisplayName => Localizer.DoStr("Test Benefit");
     }
     public class BenefitWithoutEcopediaPage : ValidBenefit
     {
@@ -328,6 +296,11 @@ namespace XPBenefits.Tests
     {
         public AbstractBenefit() { }
     }
+    /// <summary>
+    /// Should be ignored when finding benefits to instantiate
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class GenericBenefit<T> : ValidBenefit { }
 }
 namespace EcoTests
 {
