@@ -14,6 +14,8 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Gameplay.Players;
+using Eco.Shared.Localization;
+using Eco.Shared.Utils;
 using System;
 
 namespace XPBenefits

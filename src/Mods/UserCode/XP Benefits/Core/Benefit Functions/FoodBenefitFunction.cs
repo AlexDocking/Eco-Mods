@@ -62,7 +62,7 @@ namespace XPBenefits
                 case MEANS_OF_IMPROVING_STAT:
                     return Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage");
                 case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNumLoc(XPConfig.AdjustedMaximumFoodXP, XPConfig.AdjustedMaximumFoodXP.ToString("0.#"))} food XP");
+                    return Localizer.Do($"{TextLoc.StyledNumLoc(XPConfig.MaximumFoodXP, XPConfig.MaximumFoodXP.ToString("0.#"))} food XP");
                 case MAXIMUM_BENEFIT:
                     return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
                 case CURRENT_INPUT:

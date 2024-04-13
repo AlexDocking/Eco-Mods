@@ -23,8 +23,14 @@ namespace Eco.Mods.TechTree
     using Eco.World.Blocks;
     using Eco.Gameplay.Systems;
     using Eco.Gameplay.Utils;
+    using System.Collections.Generic;
+    using System.Collections;
+    using System.Collections.Specialized;
+    using CompatibleTools;
+    using System;
+    using Eco.Gameplay.Systems.NewTooltip;
 
-    	[Serialized]
+    [Serialized]
     [LocDisplayName("Shovel")]
     [Weight(0)]
     [Category("Hidden"), Tag("Excavation"), Tag("Harvester")]
@@ -44,7 +50,78 @@ namespace Eco.Mods.TechTree
         public override bool                       IsValidForInteraction(Item item)  => base.IsValidForInteraction(item) && (item?.GetType().HasTag(TagManager.GetTagOrFail("Diggable")) ?? false);
         public override                            ItemCategory ItemCategory         => ItemCategory.Shovel;
 
+        /// <summary>
+        /// List of modifiers that change MaxTake. Takes DigParams and current MaxTake, returns new MaxTake which is passed to the next function
+        /// </summary>
+        public static ICollection<IMaxTakeModifier> MaxTakeModifiers { get; } = new SortedCollection<IMaxTakeModifier>(new NumericComparer<IMaxTakeModifier>(modifier => modifier.Priority));
+        private class SortedCollection<T> : ICollection<T>
+        {
+            public int Count => ((ICollection<T>)Values).Count;
 
+            public bool IsReadOnly => ((ICollection<T>)Values).IsReadOnly;
+
+            private List<T> Values { get; } = new List<T>();
+            private IComparer<T> Comparer { get; }
+
+            public SortedCollection(IComparer<T> comparer)
+            {
+                Comparer = comparer;
+            }
+
+            public void Add(T item)
+            {
+                ((ICollection<T>)Values).Add(item);
+                Values.Sort(Comparer);
+            }
+
+            public void Clear()
+            {
+                ((ICollection<T>)Values).Clear();
+            }
+
+            public bool Contains(T item)
+            {
+                return ((ICollection<T>)Values).Contains(item);
+            }
+
+            public void CopyTo(T[] array, int arrayIndex)
+            {
+                ((ICollection<T>)Values).CopyTo(array, arrayIndex);
+            }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return ((IEnumerable<T>)Values).GetEnumerator();
+            }
+
+            public bool Remove(T item)
+            {
+                return ((ICollection<T>)Values).Remove(item);
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((IEnumerable)Values).GetEnumerator();
+            }
+        }
+        /// <summary>
+        /// Calculate how much the shovel can dig. If no limit is imposed it will return null and it will be left to the player's inventory to decide whether to accept the block
+        /// </summary>
+        /// <param name="modification"></param>
+        /// <param name="modifiers"></param>
+        /// <returns></returns>
+        public int? CalculateMaxTake(ShovelMaxTakeModification modification, IEnumerable<IMaxTakeModifier> modifiers)
+        {
+            foreach (var modifier in modifiers)
+            {
+                modifier.ModifyMaxTake(modification);
+            }
+            int maxTake = (int)Math.Floor(modification.MaxTake);
+            if (maxTake > 0) return maxTake;
+            if (modification.TargetItem == null) return null;
+            int maxAccepted = modification.User.Inventory.Carried.GetMaxAcceptedVal(modification.TargetItem, modification.User.Inventory.Carried.TotalNumberOfItems(modification.TargetItem), modification.User);
+            return maxAccepted;
+        }
         [Interaction(InteractionTrigger.RightClick, canHoldToTrigger: TriBool.True, animationDriven: true, Priority = -1,
             RequiredEnvVars = new[] { ClientSideEnvVars.Carried }, Flags = InteractionFlags.MustNotHaveTarget)]
         public bool Drop(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
@@ -54,24 +131,19 @@ namespace Eco.Mods.TechTree
         public bool Dig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
         {
             // Fallback if not enough room in carrying stack
-            ItemStack carry = player.User.Carrying;
-            int maxTake = this.MaxTake;
-            if (XPBenefits.XPBenefitsPlugin.Obj.Config.AllBigShovel)
+            var carry = player.User.Carrying;
+            ShovelMaxTakeModification modification = new ShovelMaxTakeModification()
             {
-                maxTake = 0;
-            }
-            //(All) Big Shovel sets MaxTake to zero, meaning you can keep digging until the block's max stack size, excluding the server multiplier. Leaving MaxTake as 0 will not work with this mod, so this calculates what that limit would normally be
-            if (maxTake <= 0 && target.IsBlock)
-            {
-                Item blockItem = target.Block().GetItem();
-                maxTake = ItemAttribute.Get<MaxStackSizeAttribute>(blockItem.Type)?.MaxStackSize ?? 10;
-            }
-
-            if (XPBenefits.ExtraCarryStackLimitBenefit.ShovelBenefit != null)
-            {
-                maxTake = (int)(maxTake * (1 + XPBenefits.ExtraCarryStackLimitBenefit.ShovelBenefit.CalculateBenefit(player.User)));
-            }
-            if (carry.Quantity >= maxTake)
+                User = player.User,
+                InteractionTriggerInfo = triggerInfo,
+                InteractionTarget = target,
+                TargetItem = target.Block()?.GetItem(),
+                MaxTake = this.MaxTake,
+                InitialMaxTake = this.MaxTake,
+                Shovel = this
+            };
+            int maxTake = CalculateMaxTake(modification, MaxTakeModifiers) ?? -1;
+            if (maxTake > 0 && carry.Quantity >= maxTake)
             {
                 player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");
                 return false;

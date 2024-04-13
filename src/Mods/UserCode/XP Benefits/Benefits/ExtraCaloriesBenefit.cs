@@ -13,18 +13,11 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core.Controller;
-using Eco.Core.Systems;
-using Eco.Gameplay.Civics;
 using Eco.Gameplay.DynamicValues;
-using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
-using Eco.Gameplay.Systems;
 using Eco.Gameplay.Systems.NewTooltip;
 using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
-using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -34,22 +27,18 @@ namespace XPBenefits
 {
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
-        public static ExtraCaloriesBenefit Obj => XPBenefitsPlugin.Obj.GetBenefit<ExtraCaloriesBenefit>();
         public override bool Enabled => XPConfig.ExtraCaloriesEnabled;
-        public override string EcopediaPageName { get; } = "Expandable Stomach";
-        public override float EcopediaPagePriority => ECOPEDIA_PAGE_PRIORITY;
-        public const float ECOPEDIA_PAGE_PRIORITY = -5;
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
+        public override BenefitEcopediaGenerator EcopediaGenerator { get; }
 
-        protected override LocString BenefitDescription => Localizer.DoStr("extra calorie space");
-
-        internal ExtraCaloriesBenefit()
+        public ExtraCaloriesBenefit()
         {
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraCaloriesMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCaloriesXPLimitEnabled;
+            EcopediaGenerator = new ExtraCaloriesEcopediaGenerator(this);
             ModsPreInitialize();
-            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType, MaxBenefitValue, XPLimitEnabled);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType);
             ModsPostInitialize();
         }
         /// <summary>
@@ -69,32 +58,18 @@ namespace XPBenefits
             ModifiersRegister.AddModifierToUser(user, UserStatType.MaxCalories, benefit, updateStomachCapacity);
         }
         public override void RemoveBenefitFromUser(User user) { }
-        public override LocString ResolveToken(User user, string token)
-        {
-            float currentBenefit;
-            switch (token)
-            {
-                case MAXIMUM_BENEFIT:
-                    float maxBenefit = MaxBenefitValue.GetValue(user);
-                    return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0;-0"));
-                case CURRENT_BENEFIT:
-                    currentBenefit = BenefitFunction.CalculateBenefit(user);
-                    return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    currentBenefit = BenefitFunction.CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"), new Eco.Shared.Math.Range(0, MaxBenefitValue.GetValue(user)));
-                default:
-                    return base.ResolveToken(user, token);
-            }
-        }
-        public LocString ColouredCaloriesNumberLoc(User user, float extraCalories) => Localizer.DoStr(DisplayUtils.GradientNum(extraCalories, extraCalories, new Eco.Shared.Math.Range(0, MaxBenefitValue.GetValue(user))));
     }
     public class ExtraCaloriesEcopediaGenerator : BenefitEcopediaGenerator
     {
+        public ExtraCaloriesEcopediaGenerator(BenefitBase benefit) : base(benefit)
+        {
+        }
+
+        public override string PageName { get; } = "Expandable Stomach";
+        public override float PagePriority { get; } = -5;
         public override LocString DisplayName { get; } = Localizer.DoStr("Expandable Stomach");
         public override string Summary { get; } = "Earn extra calorie space, so you can eat more food before you get full.";
         public override string IconName { get; } = "Ecopedia_FoodandShelter";
-        protected override Type BenefitType { get; } = typeof(ExtraCaloriesBenefit);
         public override IEnumerable<LocString> Sections
         {
             get
@@ -105,6 +80,25 @@ namespace XPBenefits
                 locStringBuilder.AppendLineLoc($"You can earn extra calorie space, so you can eat more food before you get full.");
                 sections.Add(locStringBuilder.ToLocString());
                 return sections;
+            }
+        }
+        public override LocString BenefitDescription => Localizer.DoStr("extra calorie space");
+        public override LocString ResolveToken(User user, string token)
+        {
+            float currentBenefit;
+            switch (token)
+            {
+                case MAXIMUM_BENEFIT:
+                    float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
+                    return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0;-0"));
+                case CURRENT_BENEFIT:
+                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+                    return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"));
+                case CURRENT_BENEFIT_ECOPEDIA:
+                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
+                default:
+                    return base.ResolveToken(user, token);
             }
         }
     }
@@ -135,9 +129,8 @@ namespace XPBenefits
                 return LocString.Empty;
             }
             User user = stomach.Owner;
-            LocString extraWeightLimit = ExtraCaloriesBenefit.Obj.ResolveToken(user, CURRENT_BENEFIT);
-            EcopediaPage ecopediaPage = benefit.GetEcopediaPage();
-            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {ecopediaPage?.UILink() ?? Localizer.DoStr(benefit.EcopediaPageName)}."));
+            LocString extraWeightLimit = benefit.EcopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {benefit.BenefitEcopedia.GetPageLink()}."));
         }
     }
 }

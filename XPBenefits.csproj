@@ -5,7 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.0-beta-release-532" />
+    <None Remove="tests\Mods\UserCode\Ecopedia\XP Benefits;Disabled Benefit.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="tests\Mods\UserCode\Ecopedia\Mods\XP Benefits%3bDisabled Benefit.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.1.5-beta-release-619" />
   </ItemGroup>
 
   <ItemGroup>

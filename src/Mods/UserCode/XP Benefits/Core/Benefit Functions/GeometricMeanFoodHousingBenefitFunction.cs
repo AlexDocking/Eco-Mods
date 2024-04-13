@@ -46,7 +46,6 @@ namespace XPBenefits
             {
                 float housingXP = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
                 float foodXP = SkillRateUtil.FractionFoodXP(user, XPConfig, XPLimitEnabled);
-
                 float fractionOfBenefitToApply = (float)Math.Sqrt(housingXP * foodXP);
                 return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
             }
@@ -66,7 +65,7 @@ namespace XPBenefits
                 case MEANS_OF_IMPROVING_STAT:
                     return Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers. If you want to see the greatest improvement you should improve the lower of the two percentages first. Note that 'Base Gain' is ignored when calculating your food XP percentage");
                 case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.AdjustedMaximumFoodXP)} food XP and {TextLoc.StyledNum(XPConfig.AdjustedMaximumHousingXP)} housing XP");
+                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} food XP and {TextLoc.StyledNum(XPConfig.MaximumHousingXP)} housing XP");
                 case MAXIMUM_BENEFIT:
                     return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
                 case CURRENT_INPUT:

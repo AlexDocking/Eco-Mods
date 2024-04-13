@@ -64,7 +64,7 @@ namespace XPBenefits
                 case MEANS_OF_IMPROVING_STAT:
                     return Localizer.Do($"You can increase this benefit by improving your {HousingEcopediaPageLink} multiplier");
                 case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.AdjustedMaximumFoodXP)} housing XP");
+                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} housing XP");
                 case MAXIMUM_BENEFIT:
                     return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
                 case CURRENT_INPUT:

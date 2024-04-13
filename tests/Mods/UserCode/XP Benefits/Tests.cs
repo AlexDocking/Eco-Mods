@@ -251,7 +251,6 @@ namespace XPBenefits.Tests
     /// </summary>
     public class ValidBenefit : ILoggedInBenefit
     {
-        public virtual bool Enabled => true;
         public virtual string EcopediaPageName => "Valid Benefit";
         public virtual float EcopediaPagePriority => 3;
 
@@ -285,7 +284,7 @@ namespace XPBenefits.Tests
     }
     public class DisabledBenefit : ValidBenefit
     {
-        public override bool Enabled => false;
+        public bool Enabled => false;
         public override string EcopediaPageName => "Disabled Benefit";
     }
     public class NoDefaultConstructorBenefit : ValidBenefit

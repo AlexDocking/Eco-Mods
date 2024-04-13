@@ -13,46 +13,36 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core.Systems;
 using Eco.Gameplay.DynamicValues;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
 using Eco.Gameplay.Systems.NewTooltip;
 using Eco.Shared.Localization;
-using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using static XPBenefits.BenefitDescriptionResolverStrings;
 using Eco.Gameplay.Items;
-using System.Linq;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Gameplay.Items.Actionbar;
-using Eco.Core.Controller;
 
 namespace XPBenefits
 {
     public partial class ExtraWeightLimitBenefit : BenefitBase
     {
-        public static ExtraWeightLimitBenefit Obj { get; private set; }
         public override bool Enabled => XPConfig.ExtraWeightLimitBenefitEnabled;
 
-        public override string EcopediaPageName { get; } = "Stronger Back";
-        public override float EcopediaPagePriority { get; } = -4;
-        protected override LocString BenefitDescription => Localizer.DoStr("extra carry weight capacity");
-
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
+        public override ExtraWeightLimitEcopediaGenerator EcopediaGenerator { get; }
 
         public ExtraWeightLimitBenefit()
         {
-            Obj = this;
-
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraWeightLimitBenefitMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraWeightLimitBenefitXPLimitEnabled;
+            EcopediaGenerator = new ExtraWeightLimitEcopediaGenerator(this);
             ModsPreInitialize();
-            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunctionType, MaxBenefitValue, XPLimitEnabled);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunctionType);
             ModsPostInitialize();
         }
         partial void ModsPreInitialize();
@@ -68,31 +58,19 @@ namespace XPBenefits
         public override void RemoveBenefitFromUser(User user)
         {
         }
-        public override LocString ResolveToken(User user, string token)
-        {
-            float currentBenefit;
-            switch (token)
-            {
-                case MAXIMUM_BENEFIT:
-                    float maxBenefit = MaxBenefitValue.GetValue(user);
-                    return TextLoc.StyledNumLoc(maxBenefit, (maxBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
-                case CURRENT_BENEFIT:
-                    currentBenefit = BenefitFunction.CalculateBenefit(user);
-                    return TextLoc.StyledNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    currentBenefit = BenefitFunction.CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#"), new Eco.Shared.Math.Range(0, MaxBenefitValue.GetValue(user))) + "kg";
-                default:
-                    return base.ResolveToken(user, token);
-            }
-        }
     }
     public class ExtraWeightLimitEcopediaGenerator : BenefitEcopediaGenerator
     {
+        public ExtraWeightLimitEcopediaGenerator(BenefitBase benefit) : base(benefit)
+        {
+        }
+
+        public override string PageName { get; } = "Stronger Back";
+        public override float PagePriority { get; } = -4;
+        public override LocString BenefitDescription => Localizer.DoStr("extra carry weight capacity");
         public override LocString DisplayName { get; } = Localizer.DoStr("Stronger Back");
         public override string Summary { get; } = "Earn extra carry weight capacity, so you can keep more heavy items in your toolbar and backpack.";
         public override string IconName { get; } = "BackpackItem";
-        protected override Type BenefitType { get; } = typeof(ExtraWeightLimitBenefit);
         public override IEnumerable<LocString> Sections
         {
             get
@@ -102,6 +80,24 @@ namespace XPBenefits
                 locStringBuilder.AppendLine(TextLoc.HeaderLoc($"Benefit Description"));
                 locStringBuilder.AppendLineLoc($"You can earn extra carry weight capacity, so you can keep more heavy items in your toolbar and backpack."); sections.Add(locStringBuilder.ToLocString());
                 return sections;
+            }
+        }
+        public override LocString ResolveToken(User user, string token)
+        {
+            float currentBenefit;
+            switch (token)
+            {
+                case MAXIMUM_BENEFIT:
+                    float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
+                    return TextLoc.StyledNumLoc(maxBenefit, (maxBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
+                case CURRENT_BENEFIT:
+                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+                    return TextLoc.StyledNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
+                case CURRENT_BENEFIT_ECOPEDIA:
+                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+                    return DisplayUtils.GradientNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user))) + "kg";
+                default:
+                    return base.ResolveToken(user, token);
             }
         }
     }
@@ -136,9 +132,9 @@ namespace XPBenefits
                 return Localizer.DoStr("Missing user in tooltip");
             }
 
-            LocString extraWeightLimit = benefit.ResolveToken(user, CURRENT_BENEFIT);
-            EcopediaPage ecopediaPage = benefit.GetEcopediaPage();
-            return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {ecopediaPage?.UILink() ?? Localizer.DoStr(benefit.EcopediaPageName)}."));
+            LocString extraWeightLimit = benefit.EcopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            EcopediaPage ecopediaPage = benefit.EcopediaGenerator.GetPage();
+            return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {benefit.BenefitEcopedia.GetPageLink()}."));
         }
 
         [NewTooltip(Eco.Shared.Items.CacheAs.Disabled, 90, overrideType: typeof(ToolbarBackpackInventory))]

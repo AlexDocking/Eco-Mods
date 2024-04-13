@@ -13,20 +13,17 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core.Utils;
 using Eco.Gameplay.Players;
-using System;
-using System.Collections.Concurrent;
 
 namespace XPBenefits
 {
     public interface ILoggedInBenefit
     {
         bool Enabled { get; }
-        string EcopediaPageName { get; }
-        float EcopediaPagePriority { get; }
-
+        IBenefitEcopedia BenefitEcopedia { get; }
         public void ApplyBenefitToUser(User user);
         public void RemoveBenefitFromUser(User user);
+        void OnPluginLoaded();
+        void OnServerStart();
     }
 }
