@@ -13,27 +13,19 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core;
 using Eco.Core.Controller;
 using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
-using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace CompatibleTools
 {
-    public partial class CompatibleToolsPlugin : IController
+    public partial class CompatibleToolsConfig : IController
     {
         [Category("Settings"), LocDescription("How many blocks a wooden shovel can dig before any modifiers are applied.")]
         public int WoodenShovelBaseSize { get; set; } = 1;
@@ -52,16 +44,17 @@ namespace CompatibleTools
         public ref int ControllerID => ref this.controllerID;
         #endregion
     }
-    public partial class CompatibleBigShovelPlugin : Singleton<CompatibleBigShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
+    
+    public partial class CompatibleToolsPlugin : Singleton<CompatibleToolsPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
     {
-        public CompatibleToolsPlugin Config => Obj.GetEditObject() as CompatibleToolsPlugin;
+        public CompatibleToolsConfig Config => Obj.GetEditObject() as CompatibleToolsConfig;
         public IPluginConfig PluginConfig => this.config;
-        private PluginConfig<CompatibleToolsPlugin> config;
+        private PluginConfig<CompatibleToolsConfig> config;
         public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
 
-        public CompatibleBigShovelPlugin()
+        public CompatibleToolsPlugin()
         {
-            this.config = new PluginConfig<CompatibleToolsPlugin>("BigShovel");
+            this.config = new PluginConfig<CompatibleToolsConfig>("BigShovel");
         }
 
         public string GetCategory() => Localizer.DoStr("Mods");
@@ -72,7 +65,6 @@ namespace CompatibleTools
             this.SaveConfig();
         }
         public string GetStatus() => "";
-
         public static void Initialize()
         {
             ShovelItem.MaxTakeModifiers.Add(new InitialShovelSizeModifier());
@@ -87,16 +79,16 @@ namespace CompatibleTools
             switch (modification.Shovel)
             {
                 case WoodenShovelItem:
-                    modification.MaxTake = CompatibleBigShovelPlugin.Obj.Config.WoodenShovelBaseSize;
+                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.WoodenShovelBaseSize;
                     break;
                 case IronShovelItem:
-                    modification.MaxTake = CompatibleBigShovelPlugin.Obj.Config.IronShovelBaseSize;
+                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.IronShovelBaseSize;
                     break;
                 case SteelShovelItem:
-                    modification.MaxTake = CompatibleBigShovelPlugin.Obj.Config.SteelShovelBaseSize;
+                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.SteelShovelBaseSize;
                     break;
                 case ModernShovelItem:
-                    modification.MaxTake = CompatibleBigShovelPlugin.Obj.Config.ModernShovelBaseSize;
+                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
         }
@@ -106,7 +98,7 @@ namespace CompatibleTools
         public float Priority { get; } = -100;
         public void ModifyMaxTake(ShovelMaxTakeModification modification)
         {
-            if (CompatibleBigShovelPlugin.Obj.Config.ApplyStackSizeModifier)
+            if (CompatibleToolsPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 modification.MaxTake *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
             }
