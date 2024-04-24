@@ -3,16 +3,13 @@
 
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Systems.TextLinks;
-using Eco.Shared.Items;
 using Eco.Gameplay.GameActions;
 using Eco.Gameplay.Interactions.Interactors;
 using Eco.Gameplay.Players;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
 using Eco.Gameplay.Utils;
-using System.Collections.Generic;
 using CompatibleTools;
-using System;
 using Eco.Gameplay.Systems.NewTooltip;
 using InteractionPatching;
 
@@ -21,45 +18,40 @@ namespace Eco.Mods.TechTree
     public abstract partial class ShovelItem
     {
         /// <summary>
-        /// List of modifiers that change MaxTake. Takes DigParams and current MaxTake, returns new MaxTake which is passed to the next function
+        /// List of modifiers that change MaxTake.
         /// </summary>
-        public static ICollection<IMaxTakeModifier> MaxTakeModifiers { get; } = new SortedCollection<IMaxTakeModifier>(new NumericComparer<IMaxTakeModifier>(modifier => modifier.Priority));
+        public static PriorityDynamicValueResolver MaxTakeResolver { get; } = new(new CarriedInventoryMaxTakeFallback());
 
-        /// <summary>
-        /// Calculate how much the shovel can dig. If no limit is imposed it will return null and it will be left to the player's inventory to decide whether to accept the block
-        /// </summary>
-        /// <param name="modification"></param>
-        /// <param name="modifiers"></param>
-        /// <returns></returns>
-        public int? CalculateMaxTake(ShovelMaxTakeModification modification, IEnumerable<IMaxTakeModifier> modifiers)
+        public class CarriedInventoryMaxTakeFallback : IPriorityModifyInPlaceDynamicValueHandler
         {
-            foreach (var modifier in modifiers)
+            public float Priority => float.MaxValue;
+            public void ModifyValue(IModifyInPlaceDynamicValueContext context)
             {
-                modifier.ModifyMaxTake(modification);
+                if (context is not ShovelMaxTakeModificationContext shovelContext) return;
+                if (context.FloatValue > 0) return;
+                if (shovelContext.TargetItem == null) return;
+                Log.WriteLine(Shared.Localization.Localizer.Do($"Carry inv fallback"));
+                int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, shovelContext.User.Inventory.Carried.TotalNumberOfItems(shovelContext.TargetItem), shovelContext.User);
+                context.FloatValue = maxAccepted;
+                context.IntValue = maxAccepted;
             }
-            int maxTake = (int)Math.Floor(modification.MaxTake);
-            if (maxTake > 0) return maxTake;
-            if (modification.TargetItem == null) return null;
-            int maxAccepted = modification.User.Inventory.Carried.GetMaxAcceptedVal(modification.TargetItem, modification.User.Inventory.Carried.TotalNumberOfItems(modification.TargetItem), modification.User);
-            return maxAccepted;
         }
-        
-        [ReplacementInteraction(nameof(Dig))]
-        public bool DigOverride(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
+
+        [ReplacementInteraction("Dig")]
+        public bool ModifiedDig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
         {
             // Fallback if not enough room in carrying stack
             var carry = player.User.Carrying;
-            ShovelMaxTakeModification modification = new ShovelMaxTakeModification()
+            ShovelMaxTakeModificationContext maxTakeContext = new ShovelMaxTakeModificationContext()
             {
                 User = player.User,
-                InteractionTriggerInfo = triggerInfo,
-                InteractionTarget = target,
                 TargetItem = target.Block()?.GetItem(),
-                MaxTake = this.MaxTake,
-                InitialMaxTake = this.MaxTake,
+                IntValue = this.MaxTake,
+                FloatValue = this.MaxTake,
                 Shovel = this
             };
-            int maxTake = CalculateMaxTake(modification, MaxTakeModifiers) ?? -1;
+            int maxTake = MaxTakeResolver.ResolveInt(maxTakeContext);
+            Log.WriteLine(Shared.Localization.Localizer.Do($"DigOverride:{maxTake}"));
             if (maxTake > 0 && carry.Quantity >= maxTake)
             {
                 player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");

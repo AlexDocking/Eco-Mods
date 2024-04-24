@@ -16,46 +16,5 @@
     <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.1.5-beta-release-619" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Eco.Core">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Gameplay">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Gameplay.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.ModKit">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.ModKit.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Mods">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Mods.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Networking.ENet">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Networking.ENet.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Plugins">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Plugins.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Shared">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Shared.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Simulation">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Simulation.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Stats">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.Stats.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.WebServer">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.WebServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.World">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.World.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.WorldGenerator">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\Eco.WorldGenerator.dll</HintPath>
-    </Reference>
-    <Reference Include="EcoServer">
-      <HintPath>..\..\..\..\Downloads\EcoModKit_v0.10.0.0-beta-staging-2823\ReferenceAssemblies\EcoServer.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 
 </Project>

@@ -57,7 +57,9 @@ namespace XPBenefits
             this.SaveConfig();
         }
         public string GetStatus() => Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded";
-
+        /// <summary>
+        /// List of loaded benefits. Benefits that are disabled when the plugin loads aren't included.
+        /// </summary>
         public IList<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
         public IEnumerable<ILoggedInBenefit> EnabledBenefits => Benefits.Where(benefit => benefit.Enabled);
         public void Initialize(TimedTask timer)

@@ -67,40 +67,47 @@ namespace CompatibleTools
         public string GetStatus() => "";
         public static void Initialize()
         {
-            ShovelItem.MaxTakeModifiers.Add(new InitialShovelSizeModifier());
-            ShovelItem.MaxTakeModifiers.Add(new ShovelStackSizeModifierSettingModifier());
+            ShovelItem.MaxTakeResolver.Add(new InitialShovelSizeModifier());
+            ShovelItem.MaxTakeResolver.Add(new ShovelStackSizeModifierSettingModifier());
         }
     }
-    public class InitialShovelSizeModifier : IMaxTakeModifier
+    public class InitialShovelSizeModifier : IPriorityModifyInPlaceDynamicValueHandler
     {
         public float Priority { get; } = float.MinValue;
-        public void ModifyMaxTake(ShovelMaxTakeModification modification)
+        public void ModifyValue(IModifyInPlaceDynamicValueContext context)
         {
-            switch (modification.Shovel)
+            if (context is not ShovelMaxTakeModificationContext shovelContext) return;
+            switch (shovelContext.Shovel)
             {
                 case WoodenShovelItem:
-                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.WoodenShovelBaseSize;
+                    shovelContext.FloatValue = CompatibleToolsPlugin.Obj.Config.WoodenShovelBaseSize;
+                    shovelContext.IntValue = CompatibleToolsPlugin.Obj.Config.WoodenShovelBaseSize;
                     break;
                 case IronShovelItem:
-                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.IronShovelBaseSize;
+                    shovelContext.FloatValue = CompatibleToolsPlugin.Obj.Config.IronShovelBaseSize;
+                    shovelContext.IntValue = CompatibleToolsPlugin.Obj.Config.IronShovelBaseSize;
                     break;
                 case SteelShovelItem:
-                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.SteelShovelBaseSize;
+                    shovelContext.FloatValue = CompatibleToolsPlugin.Obj.Config.SteelShovelBaseSize;
+                    shovelContext.IntValue = CompatibleToolsPlugin.Obj.Config.SteelShovelBaseSize;
                     break;
                 case ModernShovelItem:
-                    modification.MaxTake = CompatibleToolsPlugin.Obj.Config.ModernShovelBaseSize;
+                    shovelContext.FloatValue = CompatibleToolsPlugin.Obj.Config.ModernShovelBaseSize;
+                    shovelContext.IntValue = CompatibleToolsPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
         }
     }
-    public class ShovelStackSizeModifierSettingModifier : IMaxTakeModifier
+    public class ShovelStackSizeModifierSettingModifier : IPriorityModifyInPlaceDynamicValueHandler
     {
         public float Priority { get; } = -100;
-        public void ModifyMaxTake(ShovelMaxTakeModification modification)
+        public void ModifyValue(IModifyInPlaceDynamicValueContext context)
         {
+            if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             if (CompatibleToolsPlugin.Obj.Config.ApplyStackSizeModifier)
             {
-                modification.MaxTake *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
+                shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
+                shovelContext.IntValue = (int)shovelContext.FloatValue;
             }
         }
     }

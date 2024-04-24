@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using static XPBenefits.BenefitDescriptionResolverStrings;
+using Eco.Mods.Organisms;
 
 namespace XPBenefits
 {
@@ -69,7 +70,9 @@ namespace XPBenefits
         public override void OnPluginLoaded()
         {
             base.OnPluginLoaded();
-            ShovelItem.MaxTakeModifiers.Add(new ExtraCarryStackLimitShovelModifier());
+            ShovelItem.MaxTakeResolver.Add(new ExtraCarryStackLimitModifier());
+            TreeEntity.MaxPickupResolver.Add(new ExtraCarryStackLimitModifier());
+            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(new ExtraCarryStackLimitModifier());
         }
     }
     public class ExtraCarryStackLimitEcopediaGenerator : BenefitEcopediaGenerator
@@ -130,15 +133,19 @@ namespace XPBenefits
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
         public BenefitFunctionType ExtraCarryStackLimitBenefitFunctionType { get; set; }
     }
-    public class ExtraCarryStackLimitShovelModifier : IMaxTakeModifier
+    public class ExtraCarryStackLimitModifier : IPriorityModifyInPlaceDynamicValueHandler
     {
         public float Priority { get; } = 100;
-        public void ModifyMaxTake(ShovelMaxTakeModification modification)
+        public void ModifyValue(IModifyInPlaceDynamicValueContext context)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return;
-            modification.MaxTake *= (1 + benefit.ShovelBenefit.CalculateBenefit(modification.User));
+            float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
+            Log.WriteLine(Localizer.Do($"Benefit multiplier:{multiplier},initial:{context.FloatValue},result:{context.FloatValue * multiplier}"));
+            context.FloatValue *= multiplier;
+            context.IntValue = (int)context.FloatValue;
         }
+
     }
     [TooltipLibrary]
     public static class ExtraCarryStackLimitTooltipLibrary

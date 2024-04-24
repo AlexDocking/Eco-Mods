@@ -15,11 +15,33 @@ namespace Eco.Mods.TechTree
     using System;
     using Eco.Shared.Math;
     using Eco.Shared.Voxel;
+    using CompatibleTools;
 
     public partial class MiningSweepingHandsTalent
     {
         public readonly int PickUpRange = 4;
-
+        public static PriorityDynamicValueResolver PickUpRangeResolver { get; } = new PriorityDynamicValueResolver(new MaxStackSizePickupLimit());
+        public class DefaultPickupRange : IPriorityModifyInPlaceDynamicValueHandler
+        {
+            public float Priority => float.MinValue;
+            public void ModifyValue(IModifyInPlaceDynamicValueContext context)
+            {
+                if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
+                context.FloatValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
+                context.IntValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
+            }
+        }
+        public static PriorityDynamicValueResolver MaxStackSizeResolver { get; } = new PriorityDynamicValueResolver(new MaxStackSizePickupLimit());
+        public class MaxStackSizePickupLimit : IPriorityModifyInPlaceDynamicValueHandler
+        {
+            public float Priority => float.MinValue;
+            public void ModifyValue(IModifyInPlaceDynamicValueContext context)
+            {
+                if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
+                context.FloatValue = sweepingHandsContext.Resource.MaxStackSize;
+                context.IntValue = sweepingHandsContext.Resource.MaxStackSize;
+            }
+        }
         public override void RegisterTalent(User user)
         {
             base.RegisterTalent(user);
@@ -46,7 +68,13 @@ namespace Eco.Mods.TechTree
 
             var carried = user.Inventory.Carried;
             var resource = Item.Get(itemType);
-            int maxStackSize = carried.GetMaxAcceptedVal(resource, carried.Stacks.First().Quantity);
+            var maxStackSizeContext = new SweepingHandsMaxTakeModificationContext()
+            {
+                User = user,
+                Resource = resource,
+                SweepingHandsTalent = this,
+            };
+            int maxStackSize = MaxStackSizeResolver.ResolveInt(maxStackSizeContext);
             // max stack size minus currently picking item
             var numToTake = maxStackSize - 1;
             if (numToTake <= 0) return;
@@ -63,7 +91,14 @@ namespace Eco.Mods.TechTree
 
             // Get not breakable rubble around the target one and group them by their plot position.
             var originPlotPos = target.Position.XZi().ToPlotPos();
-            var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, this.PickUpRange)
+            var pickUpRangeContext = new SweepingHandsMaxTakeModificationContext()
+            {
+                User = user,
+                Resource = resource,
+                SweepingHandsTalent = this,
+            };
+            var pickUpRange = PickUpRangeResolver.ResolveInt(maxStackSizeContext);
+            var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, pickUpRange)
                                                      .OfType<RubbleObject>()
                                                      .Where(x => x != target && !x.IsBreakable && x is IRepresentsItem rubbleRepresentsItem && rubbleRepresentsItem.RepresentedItemType == itemType)
                                                      .GroupBy(x => x.Position.XZi().ToPlotPos()).ToList();

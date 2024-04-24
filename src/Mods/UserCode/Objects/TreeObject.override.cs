@@ -34,6 +34,8 @@ namespace Eco.Mods.Organisms
     using Vector3 = System.Numerics.Vector3;
     using System.ComponentModel;
     using Eco.Gameplay.Interactions.Interactors;
+    using CompatibleTools;
+    using Eco.Mods.TechTree;
 
     [Serialized]
     [Tag(BlockTags.Choppable)]
@@ -225,6 +227,27 @@ namespace Eco.Mods.Organisms
             if (this.Fallen && this.stumpHealth <= 0 && this.trunkPieces.All(piece => piece.IsCollectedOrNotValid))
                 this.Destroy();
         }
+        
+        //Compatible Tools - Start
+        /// <summary>
+        /// List of modifiers that change the max log pickup.
+        /// </summary>
+        public static PriorityDynamicValueResolver MaxPickupResolver { get; } = new PriorityDynamicValueResolver(new MaxStackSizePickupLimit());
+        /// <summary>
+        /// Use the log's MaxStackSize as the default value
+        /// </summary>
+        public class MaxStackSizePickupLimit : IPriorityModifyInPlaceDynamicValueHandler
+        {
+            public float Priority => float.MinValue;
+            public void ModifyValue(IModifyInPlaceDynamicValueContext context)
+            {
+                if (context is not TreeEntityMaxPickUpModificationContext treeContext) return;
+                var resourceType = treeContext.Tree.Species.ResourceItemType;
+                var resource = Item.Get(resourceType);
+                context.FloatValue = context.IntValue = resource.MaxStackSize;
+            }
+        }
+        //Compatible Tools - Finish
 
         void PickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
@@ -259,9 +282,17 @@ namespace Eco.Mods.Organisms
                             if      (carried.Stacks.First().Item.Type != resourceType)                    { player.Error(Localizer.Format("You are already carrying {0:items} and cannot pick up {1:items}.", carried.Stacks.First().Item.UILink(LinkConfig.ShowPlural), resource.UILink(LinkConfig.ShowPlural)));  return; }
                             else
                             {
-                                //Let the carry inventory decide how many logs it can hold, instead of using the default log stack size
-                                int maxStackSize = carried.GetMaxAcceptedVal(resource, carried.Stacks.First().Quantity);
+                                //Compatible Tools - Start
+                                var context = new TreeEntityMaxPickUpModificationContext()
+                                {
+                                    User = player.User,
+                                    InitialPickup = 0,
+                                    Axe = player.User.Inventory.Toolbar.SelectedItem as AxeItem,
+                                    Tree = this
+                                };
+                                int maxStackSize = MaxPickupResolver.ResolveInt(context);
                                 if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
+                                //Compatible Tools - Finish
                             }
                         }
 
