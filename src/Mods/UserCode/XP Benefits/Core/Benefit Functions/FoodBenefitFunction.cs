@@ -77,4 +77,19 @@ namespace XPBenefits
             }
         }
     }
+    public interface IBenefitFunctionFactory
+    {
+        string Name { get; }
+        string Description { get; }
+        IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false);
+    }
+    public class FoodBenefitFunctionFactory : IBenefitFunctionFactory
+    {
+        public string Name { get; } = "FoodOnly";
+        public string Description { get; } = "Uses only the amount of food xp the player has.";
+        public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
+        {
+            return new FoodBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);
+        }
+    }
 }

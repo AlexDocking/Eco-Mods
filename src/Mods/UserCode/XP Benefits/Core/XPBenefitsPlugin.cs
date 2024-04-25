@@ -42,8 +42,11 @@ namespace XPBenefits
         public XPConfig Config => Obj.GetEditObject() as XPConfig;
         public IPluginConfig PluginConfig => this.config;
         private PluginConfig<XPConfig> config;
-        public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
+        private Dictionary<string, string> validBenefitFunctionList;
+        private List<IBenefitFunctionFactory> choosableBenefitFunctions;
 
+        public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
+ 
         public XPBenefitsPlugin()
         {
             this.config = new PluginConfig<XPConfig>("XPBenefits");
@@ -62,8 +65,20 @@ namespace XPBenefits
         /// </summary>
         public IList<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
         public IEnumerable<ILoggedInBenefit> EnabledBenefits => Benefits.Where(benefit => benefit.Enabled);
+        public IEnumerable<IBenefitFunctionFactory> CreatableBenefitFunctions
+        {
+            get
+            {
+                if (choosableBenefitFunctions == null)
+                {
+                    choosableBenefitFunctions = new List<IBenefitFunctionFactory>(typeof(IBenefitFunctionFactory).CreatableTypes().Select(type => (IBenefitFunctionFactory)Activator.CreateInstance(type)));
+                }
+                return choosableBenefitFunctions;
+            }
+        }
         public void Initialize(TimedTask timer)
         {
+            Config.AvailableBenefitFunctionTypesDescription = CreatableBenefitFunctions.Select(factory => factory.Name + ": " + Localizer.LocalizeString(factory.Description)).Order().ToList();
             DiscoverILoggedInBenefits();
             ModsChangeBenefits();
             foreach (var benefit in Benefits)
@@ -149,6 +164,11 @@ namespace XPBenefits
             {
                 benefit.RemoveBenefitFromUser(user);
             }
+        }
+        public string ValidateBenefitFunctionType(string value)
+        {
+            var validOptions = CreatableBenefitFunctions.Select(factory => factory.Name);
+            return validOptions.FirstOrDefault(option => value == option) ?? Localizer.LocalizeString("Invalid");
         }
     }
 }

@@ -14,6 +14,8 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Gameplay.Players;
+using Eco.Shared.Utils;
+using System.Linq;
 
 namespace XPBenefits
 {
@@ -30,24 +32,19 @@ namespace XPBenefits
         public virtual IBenefitFunction BenefitFunction { get; protected set; }
         public virtual IBenefitEcopediaGenerator EcopediaGenerator { get; }
         public IBenefitEcopedia BenefitEcopedia => EcopediaGenerator;
-        public virtual bool Enabled { get; } = true;
+        public virtual bool Enabled { get; protected set; } = true;
         public abstract void ApplyBenefitToUser(User user);
         public abstract void RemoveBenefitFromUser(User user);
-        protected virtual IBenefitFunction CreateBenefitFunction(BenefitFunctionType benefitFunctionType)
+        protected virtual IBenefitFunction CreateBenefitFunction(string benefitFunctionType)
         {
-            switch (benefitFunctionType)
+            IBenefitFunctionFactory factory = XPBenefitsPlugin.Obj.CreatableBenefitFunctions.FirstOrDefault(factory => factory.Name == benefitFunctionType);
+            if (factory == null)
             {
-                case BenefitFunctionType.GeometricMeanFoodHousing:
-                    return new GeometricMeanFoodHousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
-                case BenefitFunctionType.FoodOnly:
-                    return new FoodBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
-                case BenefitFunctionType.HousingOnly:
-                    return new HousingBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
-                case BenefitFunctionType.SkillRate:
-                    return new SkillRateBenefitFunction(XPConfig, MaxBenefitValue, XPLimitEnabled);
-                default:
-                    return null;
+                Enabled = false;
+                Log.WriteWarningLineLoc($"Warning: {GetType().Name} has an invalid benefit function. Set a valid option and restart the server. Until then this benefit will be disabled.");
+                return null;
             }
+            return factory.Create(XPConfig, MaxBenefitValue, XPLimitEnabled);
         }
         public virtual void OnPluginLoaded()
         {

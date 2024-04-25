@@ -17,13 +17,7 @@ namespace XPBenefits
 {
     internal static class XPConfigServerDescriptions
     {
-        public const string BenefitFunctionTypeDescription = "How the player's XP is combined to scale the reward.\n" +
-                                                            "GeometricMeanFoodHousing: Uses a combination of the amount of food and housing xp the player has in such a way as to require both sources of xp to give any benefit.\n" +
-                                                            "FoodOnly: Uses only the amount of food xp the player has.\n" +
-                                                            "HousingOnly: Uses only the amount of housing xp the player has.\n" +
-                                                            "SkillRate: Treats both food and housing xp equally after they have been scaled by their own maximums, taking their average. " +
-                                                            "[100% food + 0% housing] and [0% food + 100% housing] are both equivalent to [50% food + 50% housing].\n" +
-                                                            "Requires restart.";
+        public const string BenefitFunctionTypeDescription = "How the player's XP is combined to scale the reward. See the list at the bottom of the page for the available options, along with their descriptions. Requires restart.";
         public const string XPLimitDescription = "Enable if you want to the mod to cap the player's XP in the calculation to prevent exceeding the maximum reward. Requires restart.";
     }
 }

@@ -79,4 +79,13 @@ namespace XPBenefits
             }
         }
     }
+    public class HousingBenefitFunctionFactory : IBenefitFunctionFactory
+    {
+        public string Name { get; } = "HousingOnly";
+        public string Description { get; } = "Uses only the amount of housing xp the player has.";
+        public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
+        {
+            return new HousingBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);
+        }
+    }
 }

@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Controller;
 using Eco.Gameplay.DynamicValues;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.NewTooltip;
@@ -21,6 +22,8 @@ using Eco.Shared.Localization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
 using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
@@ -52,6 +55,7 @@ namespace XPBenefits
 
         public override void ApplyBenefitToUser(User user)
         {
+            if (BenefitFunction == null) return;
             IDynamicValue benefit = new BenefitDynamicValue(BenefitFunction);
 
             Action updateStomachCapacity = user.Stomach.ChangedMaxCalories;
@@ -104,6 +108,8 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
+        private string extraCaloriesBenefitFunctionType;
+
         [Category("Benefit - Extra Calories"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra calorie capacity. Requires restart.")]
         public bool ExtraCaloriesEnabled { get; set; } = true;
 
@@ -113,9 +119,15 @@ namespace XPBenefits
 
         [Category("Benefit - Extra Calories"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
         public bool ExtraCaloriesXPLimitEnabled { get; set; } = false;
-        
+
         [Category("Benefit - Extra Calories"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public BenefitFunctionType ExtraCaloriesBenefitFunctionType { get; set; }
+        public string ExtraCaloriesBenefitFunctionType
+        {
+            get => extraCaloriesBenefitFunctionType; set
+            {
+                extraCaloriesBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
+            }
+        }
     }
     [TooltipLibrary]
     public static class ExtraCaloriesTooltipLibrary

@@ -82,4 +82,13 @@ namespace XPBenefits
             }
         }
     }
+    public class SkillRateBenefitFunctionFactory : IBenefitFunctionFactory
+    {
+        public string Name { get; } = "SkillRate";
+        public string Description { get; } = "Treats both food and housing xp equally after they have been scaled by their own maximums, taking their average. [100% food + 0% housing] and [0% food + 100% housing] are both equivalent to [50% food + 50% housing].";
+        public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
+        {
+            return new SkillRateBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);
+        }
+    }
 }

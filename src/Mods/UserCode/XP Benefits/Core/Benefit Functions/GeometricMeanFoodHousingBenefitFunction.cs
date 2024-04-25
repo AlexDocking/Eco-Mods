@@ -82,4 +82,13 @@ namespace XPBenefits
             }
         }
     }
+    public class GeometricMeanFoodHousingBenefitFactory : IBenefitFunctionFactory
+    {
+        public string Name => "GeometricMeanFoodHousing";
+        public string Description => "Uses a combination of the amount of food and housing xp the player has in such a way as to require both sources of xp to give any benefit.";
+        public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
+        {
+            return new GeometricMeanFoodHousingBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);
+        }
+    }
 }

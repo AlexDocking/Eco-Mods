@@ -103,6 +103,8 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
+        private string extraWeightLimitBenefitFunctionType;
+
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra backpack/toolbar inventory weight limit. Requires restart.")]
         public bool ExtraWeightLimitBenefitEnabled { get; set; } = true;
 
@@ -112,9 +114,15 @@ namespace XPBenefits
 
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
         public bool ExtraWeightLimitBenefitXPLimitEnabled { get; set; } = false;
-        
+
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public BenefitFunctionType ExtraWeightLimitBenefitFunctionType { get; set; }
+        public string ExtraWeightLimitBenefitFunctionType
+        {
+            get => extraWeightLimitBenefitFunctionType; set
+            {
+                extraWeightLimitBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
+            }
+        }
     }
     [TooltipLibrary]
     public static class ExtraWeightTooltipLibrary

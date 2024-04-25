@@ -119,6 +119,8 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
+        private string extraCarryStackLimitBenefitFunctionType;
+
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra carry capacity. Requires restart.")]
         public bool ExtraCarryStackLimitBenefitEnabled { get; set; } = true;
 
@@ -131,7 +133,13 @@ namespace XPBenefits
         public bool ExtraCarryStackLimitBenefitXPLimitEnabled { get; set; } = false;
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public BenefitFunctionType ExtraCarryStackLimitBenefitFunctionType { get; set; }
+        public string ExtraCarryStackLimitBenefitFunctionType
+        {
+            get => extraCarryStackLimitBenefitFunctionType; set
+            {
+                extraCarryStackLimitBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
+            }
+        }
     }
     public class ExtraCarryStackLimitModifier : IPriorityModifyInPlaceDynamicValueHandler
     {

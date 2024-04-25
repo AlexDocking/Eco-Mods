@@ -16,6 +16,8 @@
 using Eco.Core.Controller;
 using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
+using Eco.Shared.Serialization;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace XPBenefits
@@ -38,6 +40,10 @@ namespace XPBenefits
         public virtual float AdjustedMaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
         [Browsable(false)]
         public virtual float MaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
+        [Category("Shared Settings"), LocDescription("Available benefit function types.")]
+        [JsonIgnore]
+        [ReadOnly(true)]
+        public List<string> AvailableBenefitFunctionTypesDescription { get; set; }
         #region IController
         int controllerID;
         public event PropertyChangedEventHandler PropertyChanged;
