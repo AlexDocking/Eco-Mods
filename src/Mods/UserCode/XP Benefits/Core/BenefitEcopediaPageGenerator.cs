@@ -1,5 +1,4 @@
-﻿using Eco.Core;
-using Eco.Core.Systems;
+﻿using Eco.Core.Systems;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
@@ -49,7 +48,7 @@ namespace XPBenefits
     {
         string PageName { get; }
     }
-    public interface IBenefitEcopediaGenerator : IBenefitEcopedia, IBenefitDescriber
+    public interface IBenefitEcopediaGenerator : IBenefitEcopedia
     {
         BenefitBase Benefit { get; }
         EcopediaPage CreateEcopediaPage();
@@ -66,17 +65,18 @@ namespace XPBenefits
         public virtual IEnumerable<LocString> Sections { get; }
         public abstract LocString BenefitDescription { get; }
         public BenefitBase Benefit { get; }
-
-        public BenefitEcopediaGenerator(BenefitBase benefit)
+        public IBenefitDescriber BenefitDescriber { get; }
+        public BenefitEcopediaGenerator(BenefitBase benefit, IBenefitDescriber benefitDescriber)
         {
             Benefit = benefit;
+            BenefitDescriber = benefitDescriber;
         }
 
         private object pageCreationLock = new object();
         public virtual LocString GenerateEcopediaDescription(User user)
         {
             var locStringBuilder = new LocStringBuilder();
-            IBenefitDescriber describer = this;
+            IBenefitDescriber describer = BenefitDescriber;
 
             locStringBuilder.AppendLineLoc($"{describer.MeansOfImprovingStat(user)}.");
             locStringBuilder.AppendLine();
@@ -129,14 +129,6 @@ namespace XPBenefits
                 return page;
             }
         }
-
-        public abstract LocString CurrentBenefit(User user);
-        public abstract LocString CurrentInput(User user);
-        public abstract LocString CurrentBenefitEcopedia(User user);
-        public abstract LocString InputName(User user);
-        public abstract LocString MaximumBenefit(User user);
-        public abstract LocString MaximumInput(User user);
-        public abstract LocString MeansOfImprovingStat(User user);
     }
  
     //Cannot be abstract or generic due to how they are loaded by the game

@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Gameplay.DynamicValues;
-using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
 using Eco.Gameplay.Systems.NewTooltip;
@@ -26,8 +25,6 @@ using Eco.Gameplay.Items;
 using Eco.Gameplay.Items.Actionbar;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
-using Eco.Core;
-using Eco.Shared.Utils;
 
 namespace XPBenefits
 {
@@ -38,7 +35,9 @@ namespace XPBenefits
         public void Initialize(TimedTask timer)
         {
             var benefit = new ExtraWeightLimitBenefit();
-            var ecopediaGenerator = new ExtraWeightLimitEcopediaGenerator(benefit);
+            IBenefitDescriber benefitDescriber = new ExtraWeightLimitBenefitDescriber(benefit);
+            ExtraWeightTooltipLibrary.BenefitDescriber = benefitDescriber;
+            var ecopediaGenerator = new ExtraWeightLimitEcopediaGenerator(benefit, benefitDescriber);
             XPBenefitsPlugin.RegisterBenefit(benefit);
             XPBenefitsEcopediaManager.Obj.RegisterEcopediaPageGenerator(benefit, ecopediaGenerator);
             UserManager.OnUserLoggedIn.Add(user => { if (benefit.Enabled) benefit.ApplyBenefitToUser(user); });
@@ -77,7 +76,7 @@ namespace XPBenefits
     }
     public class ExtraWeightLimitEcopediaGenerator : BenefitEcopediaGenerator
     {
-        public ExtraWeightLimitEcopediaGenerator(BenefitBase benefit) : base(benefit)
+        public ExtraWeightLimitEcopediaGenerator(BenefitBase benefit, IBenefitDescriber benefitDescriber) : base(benefit, benefitDescriber)
         {
         }
 
@@ -98,27 +97,35 @@ namespace XPBenefits
                 return sections;
             }
         }
-        #region IBenefitDescriber
-        public override LocString MaximumBenefit(User user)
+        
+    }
+    public class ExtraWeightLimitBenefitDescriber : IBenefitDescriber
+    {
+        public ExtraWeightLimitBenefitDescriber(ExtraWeightLimitBenefit benefit)
+        {
+            Benefit = benefit;
+        }
+        ExtraWeightLimitBenefit Benefit { get; }
+        IBenefitFunction BenefitFunction => Benefit.BenefitFunction;
+        public LocString MaximumBenefit(User user)
         {
             float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
             return TextLoc.StyledNumLoc(maxBenefit, (maxBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
         }
-        public override LocString CurrentBenefit(User user)
+        public LocString CurrentBenefit(User user)
         {
-            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            float currentBenefit = BenefitFunction.CalculateBenefit(user);
             return TextLoc.StyledNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
         }
-        public override LocString CurrentBenefitEcopedia(User user)
+        public LocString CurrentBenefitEcopedia(User user)
         {
-            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            float currentBenefit = BenefitFunction.CalculateBenefit(user);
             return DisplayUtils.GradientNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user))) + "kg";
         }
-        public override LocString CurrentInput(User user) => Benefit.BenefitFunction.Describer.CurrentInput(user);
-        public override LocString InputName(User user) => Benefit.BenefitFunction.Describer.InputName(user);
-        public override LocString MaximumInput(User user) => Benefit.BenefitFunction.Describer.MaximumInput(user);
-        public override LocString MeansOfImprovingStat(User user) => Benefit.BenefitFunction.Describer.MeansOfImprovingStat(user);
-        #endregion
+        public LocString CurrentInput(User user) => BenefitFunction.Describer.CurrentInput(user);
+        public LocString InputName(User user) => BenefitFunction.Describer.InputName(user);
+        public LocString MaximumInput(User user) => BenefitFunction.Describer.MaximumInput(user);
+        public LocString MeansOfImprovingStat(User user) => BenefitFunction.Describer.MeansOfImprovingStat(user);
     }
     public partial class XPConfig
     {
@@ -146,6 +153,7 @@ namespace XPBenefits
     [TooltipLibrary]
     public static class ExtraWeightTooltipLibrary
     {
+        public static IBenefitDescriber BenefitDescriber { get; set; }
         [NewTooltip(Eco.Shared.Items.CacheAs.Disabled, 140, overrideType: typeof(BackpackItem))]
         public static LocString ExtraWeightLimitTooltip(User user)
         {
@@ -159,7 +167,7 @@ namespace XPBenefits
                 return Localizer.DoStr("Missing user in tooltip");
             }
             var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
-            LocString extraWeightLimit = ecopediaGenerator.CurrentBenefit(user);
+            LocString extraWeightLimit = BenefitDescriber.CurrentBenefit(user);
             return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {ecopediaGenerator.GetPageLink()}."));
         }
 

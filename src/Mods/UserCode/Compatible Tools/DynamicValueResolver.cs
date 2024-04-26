@@ -85,11 +85,8 @@ namespace CompatibleTools
         {
             foreach (var handler in RequestHandlers.ToList())
             {
-                Log.WriteLine(Eco.Shared.Localization.Localizer.Do($"Process {context.GetType()} with {handler.GetType()}:{context.FloatValue}f,{context.IntValue}"));
-
                 handler.ModifyValue(context);
             }
-            Log.WriteLine(Eco.Shared.Localization.Localizer.Do($"Evaluate {context.GetType()}:{context.FloatValue}f,{context.IntValue}"));
         }
     }
 }
