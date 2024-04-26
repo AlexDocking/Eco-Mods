@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
@@ -24,6 +25,13 @@ using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
+    public class RegisterGeometricMeanFoodHousingBenefitFunction : IModInit
+    {
+        public static void Initialize()
+        {
+            XPBenefitsPlugin.RegisterBenefitFunctionFactory(new GeometricMeanFoodHousingBenefitFunctionFactory());
+        }
+    }
     /// <summary>
     /// Scale the benefit by the amount of food and housing xp the player has
     /// in such a way as to require both sources of xp to give any benefit
@@ -82,7 +90,7 @@ namespace XPBenefits
             }
         }
     }
-    public class GeometricMeanFoodHousingBenefitFactory : IBenefitFunctionFactory
+    public class GeometricMeanFoodHousingBenefitFunctionFactory : IBenefitFunctionFactory
     {
         public string Name => "GeometricMeanFoodHousing";
         public string Description => "Uses a combination of the amount of food and housing xp the player has in such a way as to require both sources of xp to give any benefit.";

@@ -17,13 +17,11 @@ using Eco.Gameplay.Players;
 
 namespace XPBenefits
 {
-    public interface ILoggedInBenefit
+    public interface IUserBenefit
     {
         bool Enabled { get; }
-        IBenefitEcopedia BenefitEcopedia { get; }
         public void ApplyBenefitToUser(User user);
         public void RemoveBenefitFromUser(User user);
         void OnPluginLoaded();
-        void OnServerStart();
     }
 }

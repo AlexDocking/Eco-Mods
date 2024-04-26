@@ -243,13 +243,13 @@ namespace XPBenefits.Tests
             food.TimeEaten = TimeUtil.Days;
             user.Stomach.Contents.Add(food);
         }
-        private static EcopediaPage GetEcopediaPage(ILoggedInBenefit benefit) => benefit != null ? Ecopedia.Obj.GetPage(benefit.EcopediaPageName) : null;
+        private static EcopediaPage GetEcopediaPage(IUserBenefit benefit) => benefit != null ? Ecopedia.Obj.GetPage(benefit.EcopediaPageName) : null;
     }
 
     /// <summary>
     /// It is ILoggedInBenefit and doesn't specify any constructors so the empty constructor exists
     /// </summary>
-    public class ValidBenefit : ILoggedInBenefit
+    public class ValidBenefit : IUserBenefit
     {
         public virtual string EcopediaPageName => "Valid Benefit";
         public virtual float EcopediaPagePriority => 3;

@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
@@ -23,6 +24,13 @@ using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
+    public class RegisterSkillRateBenefitFunction : IModInit
+    {
+        public static void Initialize()
+        {
+            XPBenefitsPlugin.RegisterBenefitFunctionFactory(new SkillRateBenefitFunctionFactory());
+        }
+    }
     /// <summary>
     /// Scale the benefit by the amount of food and housing xp the player has,
     /// treating both sources of xp equally

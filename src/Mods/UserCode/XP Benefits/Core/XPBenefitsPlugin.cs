@@ -13,20 +13,15 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core;
 using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
-using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace XPBenefits
 {
@@ -37,13 +32,12 @@ namespace XPBenefits
     /// The food xp is adjusted to account for the base rate xp that you get with an empty stomach, so no benefit is given on an empty stomach.
     /// Multipliers from other sources should still apply (if there are any)
     /// </summary>
+    [Priority(PriorityAttribute.Normal + 2)]
     public partial class XPBenefitsPlugin : Singleton<XPBenefitsPlugin>, IConfigurablePlugin, IModKitPlugin, IInitializablePlugin
     {
         public XPConfig Config => Obj.GetEditObject() as XPConfig;
         public IPluginConfig PluginConfig => this.config;
         private PluginConfig<XPConfig> config;
-        private Dictionary<string, string> validBenefitFunctionList;
-        private List<IBenefitFunctionFactory> choosableBenefitFunctions;
 
         public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
  
@@ -59,111 +53,35 @@ namespace XPBenefits
         {
             this.SaveConfig();
         }
-        public string GetStatus() => Benefits.Any() ? "Loaded Benefits:" + string.Concat(Benefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded";
+        public string GetStatus() => Benefits.Any() ? "Loaded Benefits:" + string.Concat(EnabledBenefits.Select(benefit => " " + benefit.GetType().Name)) : "No benefits loaded";
+        private static IList<IUserBenefit> LoadedBenefits { get; } = new List<IUserBenefit>();
         /// <summary>
         /// List of loaded benefits. Benefits that are disabled when the plugin loads aren't included.
         /// </summary>
-        public IList<ILoggedInBenefit> Benefits { get; } = new List<ILoggedInBenefit>();
-        public IEnumerable<ILoggedInBenefit> EnabledBenefits => Benefits.Where(benefit => benefit.Enabled);
-        public IEnumerable<IBenefitFunctionFactory> CreatableBenefitFunctions
-        {
-            get
-            {
-                if (choosableBenefitFunctions == null)
-                {
-                    choosableBenefitFunctions = new List<IBenefitFunctionFactory>(typeof(IBenefitFunctionFactory).CreatableTypes().Select(type => (IBenefitFunctionFactory)Activator.CreateInstance(type)));
-                }
-                return choosableBenefitFunctions;
-            }
-        }
+        public IList<IUserBenefit> Benefits => LoadedBenefits;
+        public IEnumerable<IUserBenefit> EnabledBenefits => Benefits.Where(benefit => benefit.Enabled);
+        private static IList<IBenefitFunctionFactory> LoadedBenefitFunctionFactories { get; } = new List<IBenefitFunctionFactory>();
+        public IEnumerable<IBenefitFunctionFactory> CreatableBenefitFunctions => LoadedBenefitFunctionFactories;
         public void Initialize(TimedTask timer)
         {
             Config.AvailableBenefitFunctionTypesDescription = CreatableBenefitFunctions.Select(factory => factory.Name + ": " + Localizer.LocalizeString(factory.Description)).Order().ToList();
-            DiscoverILoggedInBenefits();
-            ModsChangeBenefits();
             foreach (var benefit in Benefits)
             {
                 benefit.OnPluginLoaded();
             }
-            UserManager.OnUserLoggedIn.Add(OnUserLoggedIn);
-            UserManager.OnUserLoggedOut.Add(OnUserLoggedOut);
+            ModsChangeBenefits();
             Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));
-
-            PluginManager.Controller.RunIfOrWhenInited(() => OnServerStart(Benefits));
-        }
-        private EcopediaCategory EcopediaXPBenefitsCategory => Ecopedia.Obj.Chapters["Mods"].Categories.FirstOrDefault(category => category.Name == "XP Benefits");
-        private EcopediaPage EcopediaXPBenefitsOverviewPage => EcopediaXPBenefitsCategory.Pages["XP Benefits Overview"];
-
-        private void OnServerStart(IEnumerable<ILoggedInBenefit> benefits)
-        {
-            foreach(var benefit in benefits)
-            {
-                benefit.OnServerStart();
-            }
-            AmendEcopedia(benefits);
-        }
-        private void AmendEcopedia(IEnumerable<ILoggedInBenefit> benefits)
-        {
-            StringBuilder ecopediaBenefitsListBuilder = new StringBuilder();
-            ecopediaBenefitsListBuilder.AppendLine(Text.Style(Text.Styles.Header, "List of Benefits:"));
-            var pages = Benefits.SelectNonNull(benefit => benefit.BenefitEcopedia.GetPage()).OrderBy(page => page.Priority);
-            foreach (var page in pages)
-            {
-                ecopediaBenefitsListBuilder.AppendLine(page.UILink());
-            }
-            LocString ecopediaPageList = ecopediaBenefitsListBuilder.ToStringLoc();
-            if (benefits.Any(benefit => benefit.Enabled))
-            {
-                var section = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
-                section.Text = ecopediaPageList;
-                EcopediaXPBenefitsOverviewPage.Sections.Insert(1, section);
-                EcopediaXPBenefitsOverviewPage.ParseTagsInText();
-            }
-            else
-            {
-                Ecopedia.Obj.Chapters["Mods"].Categories.Remove(EcopediaXPBenefitsCategory);
-            }
         }
         partial void ModsChangeBenefits();
-
-        private void DiscoverILoggedInBenefits()
-        {
-            var types = typeof(ILoggedInBenefit).CreatableTypes();
-            foreach (var type in types)
-            {
-                LoadBenefitType(type);
-            }
-        }
-        private ILoggedInBenefit LoadBenefitType(Type benefitType)
-        {
-            if (benefitType == null) { return null; }
-            TypeInfo typeInfo = benefitType.GetTypeInfo();
-            var constructor = typeInfo.DeclaredConstructors.FirstOrDefault(constructor => constructor.GetParameters().Length == 0);
-            var benefit = (ILoggedInBenefit)constructor?.Invoke(null);
-            Benefits.Add(benefit);
-            return benefit;
-        }
-        public T GetBenefit<T>() where T : ILoggedInBenefit
+        public static void RegisterBenefit(IUserBenefit benefit) => LoadedBenefits.Add(benefit);
+        public static void RegisterBenefitFunctionFactory(IBenefitFunctionFactory benefitFunctionFactory) => LoadedBenefitFunctionFactories.Add(benefitFunctionFactory);
+        public T GetBenefit<T>() where T : IUserBenefit
         {
             return (T)GetBenefit(typeof(T));
         }
-        public ILoggedInBenefit GetBenefit(Type benefitType)
+        public IUserBenefit GetBenefit(Type benefitType)
         {
             return Benefits.FirstOrDefault(benefit => benefit.GetType() == benefitType);
-        }
-        private void OnUserLoggedIn(User user)
-        {
-            foreach(ILoggedInBenefit benefit in EnabledBenefits)
-            {
-                benefit.ApplyBenefitToUser(user);
-            }
-        }
-        private void OnUserLoggedOut(User user)
-        {
-            foreach(ILoggedInBenefit benefit in EnabledBenefits)
-            {
-                benefit.RemoveBenefitFromUser(user);
-            }
         }
         public string ValidateBenefitFunctionType(string value)
         {

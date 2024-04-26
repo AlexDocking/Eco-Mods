@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace XPBenefits
 {
-    public abstract class BenefitBase : ILoggedInBenefit
+    public abstract class BenefitBase : IUserBenefit
     {
         /// <summary>
         /// Whether players can continue gaining benefits above those defined
@@ -30,8 +30,6 @@ namespace XPBenefits
         public virtual XPConfig XPConfig { get; protected set; }
         public virtual BenefitValue MaxBenefitValue { get; protected set; }
         public virtual IBenefitFunction BenefitFunction { get; protected set; }
-        public virtual IBenefitEcopediaGenerator EcopediaGenerator { get; }
-        public IBenefitEcopedia BenefitEcopedia => EcopediaGenerator;
         public virtual bool Enabled { get; protected set; } = true;
         public abstract void ApplyBenefitToUser(User user);
         public abstract void RemoveBenefitFromUser(User user);
@@ -48,18 +46,6 @@ namespace XPBenefits
         }
         public virtual void OnPluginLoaded()
         {
-        }
-
-        public virtual void OnServerStart()
-        {
-            if (!Enabled)
-            {
-                BenefitEcopedia.RemovePage();
-            }
-            else
-            {
-                EcopediaGenerator.GetOrCreatePage();
-            }
         }
     }
 }

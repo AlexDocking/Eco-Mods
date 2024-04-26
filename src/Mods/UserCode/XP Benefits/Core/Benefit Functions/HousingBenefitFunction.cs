@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
@@ -22,6 +23,13 @@ using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
+    public class RegisterHousingBenefitFunction : IModInit
+    {
+        public static void Initialize()
+        {
+            XPBenefitsPlugin.RegisterBenefitFunctionFactory(new HousingBenefitFunctionFactory());
+        }
+    }
     /// <summary>
     /// Scale the benefit by the amount of housing xp the player has
     /// </summary>

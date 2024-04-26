@@ -25,22 +25,39 @@ using System.ComponentModel;
 using static XPBenefits.BenefitDescriptionResolverStrings;
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Items.Actionbar;
+using Eco.Core.Plugins.Interfaces;
+using Eco.Core.Utils;
+using Eco.Core;
+using Eco.Shared.Utils;
 
 namespace XPBenefits
 {
+    public class RegisterExtraWeightLimitBenefit : IModKitPlugin, IInitializablePlugin
+    {
+        public string GetCategory() => "Mods";
+        public string GetStatus() => "";
+        public void Initialize(TimedTask timer)
+        {
+            var benefit = new ExtraWeightLimitBenefit();
+            var ecopediaGenerator = new ExtraWeightLimitEcopediaGenerator(benefit);
+            XPBenefitsPlugin.RegisterBenefit(benefit);
+            XPBenefitsEcopediaManager.Obj.RegisterEcopediaPageGenerator(benefit, ecopediaGenerator);
+            UserManager.OnUserLoggedIn.Add(user => { if (benefit.Enabled) benefit.ApplyBenefitToUser(user); });
+            UserManager.OnUserLoggedOut.Add(user => { if (benefit.Enabled) benefit.RemoveBenefitFromUser(user); });
+        }
+    }
     public partial class ExtraWeightLimitBenefit : BenefitBase
     {
         public override bool Enabled => XPConfig.ExtraWeightLimitBenefitEnabled;
 
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
-        public override ExtraWeightLimitEcopediaGenerator EcopediaGenerator { get; }
 
-        public ExtraWeightLimitBenefit()
+        public override void OnPluginLoaded()
         {
+            base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraWeightLimitBenefitMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraWeightLimitBenefitXPLimitEnabled;
-            EcopediaGenerator = new ExtraWeightLimitEcopediaGenerator(this);
             ModsPreInitialize();
             BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunctionType);
             ModsPostInitialize();
@@ -139,10 +156,9 @@ namespace XPBenefits
             {
                 return Localizer.DoStr("Missing user in tooltip");
             }
-
-            LocString extraWeightLimit = benefit.EcopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
-            EcopediaPage ecopediaPage = benefit.EcopediaGenerator.GetPage();
-            return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {benefit.BenefitEcopedia.GetPageLink()}."));
+            var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
+            LocString extraWeightLimit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {ecopediaGenerator.GetPageLink()}."));
         }
 
         [NewTooltip(Eco.Shared.Items.CacheAs.Disabled, 90, overrideType: typeof(ToolbarBackpackInventory))]

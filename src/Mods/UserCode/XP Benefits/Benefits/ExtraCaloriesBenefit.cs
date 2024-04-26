@@ -13,7 +13,8 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Core.Controller;
+using Eco.Core.Plugins.Interfaces;
+using Eco.Core.Utils;
 using Eco.Gameplay.DynamicValues;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.NewTooltip;
@@ -22,24 +23,34 @@ using Eco.Shared.Localization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
 using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
+    public class RegisterExtraCaloriesBenefit : IModKitPlugin, IInitializablePlugin
+    {
+        public string GetCategory() => "Mods";
+        public string GetStatus() => "";
+        public void Initialize(TimedTask timer)
+        {
+            var benefit = new ExtraCaloriesBenefit();
+            var ecopediaGenerator = new ExtraCaloriesEcopediaGenerator(benefit);
+            XPBenefitsPlugin.RegisterBenefit(benefit);
+            XPBenefitsEcopediaManager.Obj.RegisterEcopediaPageGenerator(benefit, ecopediaGenerator);
+            UserManager.OnUserLoggedIn.Add(user => { if (benefit.Enabled) benefit.ApplyBenefitToUser(user); });
+            UserManager.OnUserLoggedOut.Add(user => { if (benefit.Enabled) benefit.RemoveBenefitFromUser(user); });
+        }
+    }
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
         public override bool Enabled => XPConfig.ExtraCaloriesEnabled;
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
-        public override BenefitEcopediaGenerator EcopediaGenerator { get; }
-
-        public ExtraCaloriesBenefit()
+        public override void OnPluginLoaded()
         {
+            base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraCaloriesMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCaloriesXPLimitEnabled;
-            EcopediaGenerator = new ExtraCaloriesEcopediaGenerator(this);
             ModsPreInitialize();
             BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType);
             ModsPostInitialize();
@@ -141,8 +152,9 @@ namespace XPBenefits
                 return LocString.Empty;
             }
             User user = stomach.Owner;
-            LocString extraWeightLimit = benefit.EcopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
-            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {benefit.BenefitEcopedia.GetPageLink()}."));
+            var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
+            LocString extraWeightLimit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {ecopediaGenerator.GetPageLink()}."));
         }
     }
 }

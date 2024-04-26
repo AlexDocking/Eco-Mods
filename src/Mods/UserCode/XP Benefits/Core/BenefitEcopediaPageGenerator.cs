@@ -55,6 +55,7 @@ namespace XPBenefits
         BenefitBase Benefit { get; }
         EcopediaPage CreateEcopediaPage();
         LocString GenerateEcopediaDescription(User user);
+        LocString ResolveToken(User user, string token);
     }
     public abstract class BenefitEcopediaGenerator : IBenefitEcopediaGenerator
     {

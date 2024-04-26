@@ -26,9 +26,25 @@ using System.ComponentModel;
 using System.Linq;
 using static XPBenefits.BenefitDescriptionResolverStrings;
 using Eco.Mods.Organisms;
+using Eco.Core.Plugins.Interfaces;
+using Eco.Core.Utils;
 
 namespace XPBenefits
 {
+    public class RegisterExtraCarryStackLimitBenefit : IModKitPlugin, IInitializablePlugin
+    {
+        public string GetCategory() => "Mods";
+        public string GetStatus() => "";
+        public void Initialize(TimedTask timer)
+        {
+            var benefit = new ExtraCarryStackLimitBenefit();
+            var ecopediaGenerator = new ExtraCarryStackLimitEcopediaGenerator(benefit);
+            XPBenefitsPlugin.RegisterBenefit(benefit);
+            XPBenefitsEcopediaManager.Obj.RegisterEcopediaPageGenerator(benefit, ecopediaGenerator);
+            UserManager.OnUserLoggedIn.Add(user => { if (benefit.Enabled) benefit.ApplyBenefitToUser(user); });
+            UserManager.OnUserLoggedOut.Add(user => { if (benefit.Enabled) benefit.RemoveBenefitFromUser(user); });
+        }
+    }
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
         public override bool Enabled => XPConfig.ExtraCarryStackLimitBenefitEnabled;
@@ -37,18 +53,20 @@ namespace XPBenefits
         /// </summary>
         public IBenefitFunction ShovelBenefit { get; set; }
 
-        public override BenefitEcopediaGenerator EcopediaGenerator { get; }
-
-        public ExtraCarryStackLimitBenefit()
+        public override void OnPluginLoaded()
         {
+            base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
             MaxBenefitValue = XPConfig.ExtraCarryStackLimitBenefitMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCarryStackLimitBenefitXPLimitEnabled;
-            EcopediaGenerator = new ExtraCarryStackLimitEcopediaGenerator(this);
             ModsPreInitialize();
             BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunctionType);
-            ShovelBenefit ??= BenefitFunction;
             ModsPostInitialize();
+            if (!Enabled) return;
+            ShovelBenefit ??= BenefitFunction;
+            ShovelItem.MaxTakeResolver.Add(new ExtraCarryStackLimitModifier());
+            TreeEntity.MaxPickupResolver.Add(new ExtraCarryStackLimitModifier());
+            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(new ExtraCarryStackLimitModifier());
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();
@@ -66,13 +84,6 @@ namespace XPBenefits
         {
             Inventory carryInventory = user.Inventory.Carried;
             carryInventory.RemoveAllRestrictions(restriction => restriction is StackLimitBenefitInventoryRestriction);
-        }
-        public override void OnPluginLoaded()
-        {
-            base.OnPluginLoaded();
-            ShovelItem.MaxTakeResolver.Add(new ExtraCarryStackLimitModifier());
-            TreeEntity.MaxPickupResolver.Add(new ExtraCarryStackLimitModifier());
-            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(new ExtraCarryStackLimitModifier());
         }
     }
     public class ExtraCarryStackLimitEcopediaGenerator : BenefitEcopediaGenerator
@@ -153,7 +164,6 @@ namespace XPBenefits
             context.FloatValue *= multiplier;
             context.IntValue = (int)context.FloatValue;
         }
-
     }
     [TooltipLibrary]
     public static class ExtraCarryStackLimitTooltipLibrary
@@ -162,9 +172,10 @@ namespace XPBenefits
         public static LocString ExtraCarryStackLimitShovelTooltip(this ShovelItem shovel, User user)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
-            if (benefit == null) return LocString.Empty;
-            var currentBenefit = benefit.EcopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
-            var ecopediaLink = benefit.BenefitEcopedia.GetPageLink();
+            if (benefit == null || !benefit.Enabled) return LocString.Empty;
+            var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
+            var currentBenefit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            var ecopediaLink = ecopediaGenerator.GetPageLink();
             return new TooltipSection(Localizer.Do($"Shovel limit increased by {currentBenefit} due to {ecopediaLink}"));
         }
     }
