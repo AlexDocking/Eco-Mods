@@ -8,7 +8,6 @@ using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -50,12 +49,11 @@ namespace XPBenefits
     {
         string PageName { get; }
     }
-    public interface IBenefitEcopediaGenerator : IBenefitEcopedia
+    public interface IBenefitEcopediaGenerator : IBenefitEcopedia, IBenefitDescriber
     {
         BenefitBase Benefit { get; }
         EcopediaPage CreateEcopediaPage();
         LocString GenerateEcopediaDescription(User user);
-        LocString ResolveToken(User user, string token);
     }
     public abstract class BenefitEcopediaGenerator : IBenefitEcopediaGenerator
     {
@@ -75,25 +73,24 @@ namespace XPBenefits
         }
 
         private object pageCreationLock = new object();
-        public virtual LocString ResolveToken(User user, string token) => Benefit.BenefitFunction.ResolveToken(user, token);
         public virtual LocString GenerateEcopediaDescription(User user)
         {
             var locStringBuilder = new LocStringBuilder();
-            LocString Resolve(string token) => ResolveToken(user, token);
+            IBenefitDescriber describer = this;
 
-            locStringBuilder.AppendLineLoc($"{Resolve(MEANS_OF_IMPROVING_STAT)}.");
+            locStringBuilder.AppendLineLoc($"{describer.MeansOfImprovingStat(user)}.");
             locStringBuilder.AppendLine();
             if (Benefit.XPLimitEnabled)
             {
-                locStringBuilder.AppendLineLoc($"With {Resolve(MAXIMUM_INPUT)} you would receive {Resolve(MAXIMUM_BENEFIT)} {BenefitDescription}. Note that the benefit will be capped at this.");
+                locStringBuilder.AppendLineLoc($"With {describer.MaximumInput(user)} you would receive {describer.MaximumBenefit(user)} {BenefitDescription}. Note that the benefit will be capped at this.");
             }
             else
             {
-                locStringBuilder.AppendLineLoc($"With {Resolve(MAXIMUM_INPUT)} you would receive {Resolve(MAXIMUM_BENEFIT)} {BenefitDescription}. Note that the benefit will not be capped at this if you can do even better.");
+                locStringBuilder.AppendLineLoc($"With {describer.MaximumInput(user)} you would receive {describer.MaximumBenefit(user)} {BenefitDescription}. Note that the benefit will not be capped at this if you can do even better.");
             }
             locStringBuilder.AppendLine();
             locStringBuilder.AppendLine(TextLoc.HeaderLoc($"Current Status"));
-            locStringBuilder.AppendLineLoc($"You have {Resolve(CURRENT_INPUT)}, which is providing you with {Resolve(CURRENT_BENEFIT_ECOPEDIA)} {BenefitDescription}.");
+            locStringBuilder.AppendLineLoc($"You have {describer.CurrentInput(user)}, which is providing you with {describer.CurrentBenefitEcopedia(user)} {BenefitDescription}.");
 
             return locStringBuilder.ToLocString();
         }
@@ -132,6 +129,14 @@ namespace XPBenefits
                 return page;
             }
         }
+
+        public abstract LocString CurrentBenefit(User user);
+        public abstract LocString CurrentInput(User user);
+        public abstract LocString CurrentBenefitEcopedia(User user);
+        public abstract LocString InputName(User user);
+        public abstract LocString MaximumBenefit(User user);
+        public abstract LocString MaximumInput(User user);
+        public abstract LocString MeansOfImprovingStat(User user);
     }
  
     //Cannot be abstract or generic due to how they are loaded by the game

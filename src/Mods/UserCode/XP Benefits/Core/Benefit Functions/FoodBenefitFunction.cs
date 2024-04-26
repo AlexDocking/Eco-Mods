@@ -19,7 +19,6 @@ using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using System;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -33,7 +32,7 @@ namespace XPBenefits
     /// <summary>
     /// Scale the benefit by the amount of food xp the player has
     /// </summary>
-    public class FoodBenefitFunction : IBenefitFunction
+    public class FoodBenefitFunction : IBenefitFunction, IBenefitDescriber
     {
         public XPConfig XPConfig { get; set; }
         public bool XPLimitEnabled { get; set; }
@@ -61,29 +60,20 @@ namespace XPBenefits
             return 0;
         }
         private static string NutritionEcopediaPageLink => Ecopedia.Obj.GetPage("Nutrition").UILink();
-        public virtual LocString ResolveToken(User user, string token)
+        #region IBenefitDescriber
+        IBenefitDescriber IBenefitFunction.Describer => this;
+        LocString IBenefitDescriber.InputName(User user) => Localizer.Do($"{NutritionEcopediaPageLink} multiplier");
+        LocString IBenefitDescriber.MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage");
+        LocString IBenefitDescriber.MaximumInput(User user) => Localizer.Do($"{TextLoc.StyledNumLoc(XPConfig.MaximumFoodXP, XPConfig.MaximumFoodXP.ToString("0.#"))} food XP");
+        LocString IBenefitDescriber.MaximumBenefit(User user) => TextLoc.StyledNum(MaximumBenefit.GetValue(user));
+        LocString IBenefitDescriber.CurrentInput(User user) => Localizer.Do($"{DisplayUtils.GradientNumLoc(SkillRateUtil.FoodXP(user), SkillRateUtil.FoodXP(user).ToString("0.#"), new Eco.Shared.Math.Range(XPConfig.BaseFoodXP, XPConfig.MaximumFoodXP))} food XP");
+        LocString IBenefitDescriber.CurrentBenefit(User user) => TextLoc.StyledNum(CalculateBenefit(user));
+        LocString IBenefitDescriber.CurrentBenefitEcopedia(User user)
         {
-            switch (token)
-            {
-                case INPUT_NAME:
-                    return Localizer.Do($"{NutritionEcopediaPageLink} multiplier");
-                case MEANS_OF_IMPROVING_STAT:
-                    return Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage");
-                case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNumLoc(XPConfig.MaximumFoodXP, XPConfig.MaximumFoodXP.ToString("0.#"))} food XP");
-                case MAXIMUM_BENEFIT:
-                    return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
-                case CURRENT_INPUT:
-                    return Localizer.Do($"{DisplayUtils.GradientNumLoc(SkillRateUtil.FoodXP(user), SkillRateUtil.FoodXP(user).ToString("0.#"), new Eco.Shared.Math.Range(XPConfig.BaseFoodXP, XPConfig.MaximumFoodXP))} food XP");
-                case CURRENT_BENEFIT:
-                    return TextLoc.StyledNum(CalculateBenefit(user));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    float currentBenefit = CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
-                default:
-                    return LocString.Empty;
-            }
+            float currentBenefit = CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user))); 
         }
+        #endregion
     }
     public interface IBenefitFunctionFactory
     {

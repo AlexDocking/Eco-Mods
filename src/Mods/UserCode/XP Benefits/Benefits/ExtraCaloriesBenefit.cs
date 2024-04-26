@@ -23,7 +23,6 @@ using Eco.Shared.Localization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -74,7 +73,7 @@ namespace XPBenefits
         }
         public override void RemoveBenefitFromUser(User user) { }
     }
-    public class ExtraCaloriesEcopediaGenerator : BenefitEcopediaGenerator
+    public class ExtraCaloriesEcopediaGenerator : BenefitEcopediaGenerator, IBenefitDescriber
     {
         public ExtraCaloriesEcopediaGenerator(BenefitBase benefit) : base(benefit)
         {
@@ -98,24 +97,28 @@ namespace XPBenefits
             }
         }
         public override LocString BenefitDescription => Localizer.DoStr("extra calorie space");
-        public override LocString ResolveToken(User user, string token)
+
+        #region IBenefitDescriber
+        public override LocString MaximumBenefit(User user)
         {
-            float currentBenefit;
-            switch (token)
-            {
-                case MAXIMUM_BENEFIT:
-                    float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
-                    return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0;-0"));
-                case CURRENT_BENEFIT:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
-                default:
-                    return base.ResolveToken(user, token);
-            }
+            float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
+            return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0;-0"));
         }
+        public override LocString CurrentBenefit(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"));
+        }
+        public override LocString CurrentBenefitEcopedia(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0;-0"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
+        }
+        public override LocString CurrentInput(User user) => Benefit.BenefitFunction.Describer.CurrentInput(user);
+        public override LocString InputName(User user) => Benefit.BenefitFunction.Describer.InputName(user);
+        public override LocString MaximumInput(User user) => Benefit.BenefitFunction.Describer.MaximumInput(user);
+        public override LocString MeansOfImprovingStat(User user) => Benefit.BenefitFunction.Describer.MeansOfImprovingStat(user);
+        #endregion
     }
     public partial class XPConfig
     {
@@ -153,7 +156,7 @@ namespace XPBenefits
             }
             User user = stomach.Owner;
             var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
-            LocString extraWeightLimit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            LocString extraWeightLimit = ecopediaGenerator.CurrentBenefit(user);
             return new TooltipSection(Localizer.Do($"Calorie limit boosted by {extraWeightLimit} due to {ecopediaGenerator.GetPageLink()}."));
         }
     }

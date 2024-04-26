@@ -13,17 +13,19 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Gameplay.Players;
+using Eco.Shared.Localization;
+
 namespace XPBenefits
 {
-    public static class BenefitDescriptionResolverStrings
+    public interface IBenefitDescriber
     {
-        public const string MEANS_OF_IMPROVING_STAT = "MEANS_OF_IMPROVING_STAT";
-        public const string MAXIMUM_INPUT = "MAXIMUM_INPUT";
-        public const string MAXIMUM_BENEFIT = "MAXIMUM_BENEFIT";
-        public const string MAXIMUM_BENEFIT_ECOPEDIA = "MAXIMUM_BENEFIT_ECOPEDIA";
-        public const string INPUT_NAME = "INPUT_NAME";
-        public const string CURRENT_INPUT = "CURRENT_INPUT";
-        public const string CURRENT_BENEFIT = "CURRENT_BENEFIT";
-        public const string CURRENT_BENEFIT_ECOPEDIA = "CURRENT_BENEFIT_ECOPEDIA";
+        LocString CurrentBenefit(User user);
+        LocString CurrentInput(User user);
+        LocString CurrentBenefitEcopedia(User user);
+        LocString InputName(User user);
+        LocString MaximumBenefit(User user);
+        LocString MaximumInput(User user);
+        LocString MeansOfImprovingStat(User user);
     }
 }

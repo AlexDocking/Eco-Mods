@@ -18,10 +18,8 @@ using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
-using Eco.Shared.Math;
 using Eco.Shared.Utils;
 using System;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -36,7 +34,7 @@ namespace XPBenefits
     /// Scale the benefit by the amount of food and housing xp the player has
     /// in such a way as to require both sources of xp to give any benefit
     /// </summary>
-    public class GeometricMeanFoodHousingBenefitFunction : IBenefitFunction
+    public class GeometricMeanFoodHousingBenefitFunction : IBenefitFunction, IBenefitDescriber
     {
         public XPConfig XPConfig { get; set; }
         public bool XPLimitEnabled { get; set; }
@@ -64,31 +62,26 @@ namespace XPBenefits
         }
         private static string NutritionEcopediaPageLink => Ecopedia.Obj.GetPage("Nutrition").UILink();
         private static string HousingEcopediaPageLink => Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"));
-        public LocString ResolveToken(User user, string token)
+
+        #region IBenefitDescriber
+        IBenefitDescriber IBenefitFunction.Describer => this;
+        LocString IBenefitDescriber.InputName(User user) => Localizer.Do($"{NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers");
+        LocString IBenefitDescriber.MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers. If you want to see the greatest improvement you should improve the lower of the two percentages first. Note that 'Base Gain' is ignored when calculating your food XP percentage");
+        LocString IBenefitDescriber.MaximumInput(User user) => Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} food XP and {TextLoc.StyledNum(XPConfig.MaximumHousingXP)} housing XP");
+        LocString IBenefitDescriber.MaximumBenefit(User user) => TextLoc.StyledNum(MaximumBenefit.GetValue(user));
+        LocString IBenefitDescriber.CurrentInput(User user)
         {
-            switch (token)
-            {
-                case INPUT_NAME:
-                    return Localizer.Do($"{NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers");
-                case MEANS_OF_IMPROVING_STAT:
-                    return Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers. If you want to see the greatest improvement you should improve the lower of the two percentages first. Note that 'Base Gain' is ignored when calculating your food XP percentage");
-                case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} food XP and {TextLoc.StyledNum(XPConfig.MaximumHousingXP)} housing XP");
-                case MAXIMUM_BENEFIT:
-                    return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
-                case CURRENT_INPUT:
-                    float housingXP = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
-                    float foodXP = SkillRateUtil.FractionFoodXP(user, XPConfig, XPLimitEnabled);
-                    return Localizer.Do($"{Text.GradientColoredPercent(foodXP)} food XP and {Text.GradientColoredPercent(housingXP)} housing XP");
-                case CURRENT_BENEFIT:
-                    return TextLoc.StyledNum(CalculateBenefit(user));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    float currentBenefit = CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
-                default:
-                    return LocString.Empty;
-            }
+            float housingXP = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
+            float foodXP = SkillRateUtil.FractionFoodXP(user, XPConfig, XPLimitEnabled);
+            return Localizer.Do($"{Text.GradientColoredPercent(foodXP)} food XP and {Text.GradientColoredPercent(housingXP)} housing XP");
         }
+        LocString IBenefitDescriber.CurrentBenefit(User user) => TextLoc.StyledNum(CalculateBenefit(user));
+        LocString IBenefitDescriber.CurrentBenefitEcopedia(User user)
+        {
+            float currentBenefit = CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
+        }
+        #endregion
     }
     public class GeometricMeanFoodHousingBenefitFunctionFactory : IBenefitFunctionFactory
     {

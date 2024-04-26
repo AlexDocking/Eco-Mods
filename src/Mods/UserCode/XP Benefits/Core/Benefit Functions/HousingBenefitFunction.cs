@@ -19,7 +19,6 @@ using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using System;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 
 namespace XPBenefits
 {
@@ -33,7 +32,7 @@ namespace XPBenefits
     /// <summary>
     /// Scale the benefit by the amount of housing xp the player has
     /// </summary>
-    public class HousingBenefitFunction : IBenefitFunction
+    public class HousingBenefitFunction : IBenefitFunction, IBenefitDescriber
     {
         public XPConfig XPConfig { get; set; }
         public bool XPLimitEnabled { get; set; }
@@ -62,30 +61,20 @@ namespace XPBenefits
             return 0;
         }
         private static string HousingEcopediaPageLink => Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"));
-
-        public virtual LocString ResolveToken(User user, string token)
+        #region IBenefitDescriber
+        IBenefitDescriber IBenefitFunction.Describer => this;
+        LocString IBenefitDescriber.InputName(User user) => Localizer.Do($"{HousingEcopediaPageLink} multiplier");
+        LocString IBenefitDescriber.MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {HousingEcopediaPageLink} multiplier");
+        LocString IBenefitDescriber.MaximumInput(User user) => Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} housing XP");
+        LocString IBenefitDescriber.MaximumBenefit(User user) => TextLoc.StyledNum(MaximumBenefit.GetValue(user));
+        LocString IBenefitDescriber.CurrentInput(User user) => Localizer.Do($"{TextLoc.StyledNum(SkillRateUtil.HousingXP(user))} housing XP");
+        LocString IBenefitDescriber.CurrentBenefit(User user) => TextLoc.StyledNum(CalculateBenefit(user));
+        LocString IBenefitDescriber.CurrentBenefitEcopedia(User user)
         {
-            switch (token)
-            {
-                case INPUT_NAME:
-                    return Localizer.Do($"{HousingEcopediaPageLink} multiplier");
-                case MEANS_OF_IMPROVING_STAT:
-                    return Localizer.Do($"You can increase this benefit by improving your {HousingEcopediaPageLink} multiplier");
-                case MAXIMUM_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} housing XP");
-                case MAXIMUM_BENEFIT:
-                    return TextLoc.StyledNum(MaximumBenefit.GetValue(user));
-                case CURRENT_INPUT:
-                    return Localizer.Do($"{TextLoc.StyledNum(SkillRateUtil.HousingXP(user))} housing XP");
-                case CURRENT_BENEFIT:
-                    return TextLoc.StyledNum(CalculateBenefit(user));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    float currentBenefit = CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit, new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
-                default:
-                    return LocString.Empty;
-            }
+            float currentBenefit = CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit, new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
         }
+        #endregion
     }
     public class HousingBenefitFunctionFactory : IBenefitFunctionFactory
     {

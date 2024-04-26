@@ -22,7 +22,6 @@ using Eco.Shared.Localization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Items.Actionbar;
 using Eco.Core.Plugins.Interfaces;
@@ -99,24 +98,27 @@ namespace XPBenefits
                 return sections;
             }
         }
-        public override LocString ResolveToken(User user, string token)
+        #region IBenefitDescriber
+        public override LocString MaximumBenefit(User user)
         {
-            float currentBenefit;
-            switch (token)
-            {
-                case MAXIMUM_BENEFIT:
-                    float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
-                    return TextLoc.StyledNumLoc(maxBenefit, (maxBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
-                case CURRENT_BENEFIT:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return TextLoc.StyledNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user))) + "kg";
-                default:
-                    return base.ResolveToken(user, token);
-            }
+            float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
+            return TextLoc.StyledNumLoc(maxBenefit, (maxBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
         }
+        public override LocString CurrentBenefit(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return TextLoc.StyledNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#")) + "kg";
+        }
+        public override LocString CurrentBenefitEcopedia(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, (currentBenefit / 1000).ToString("+0.#;-0.#"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user))) + "kg";
+        }
+        public override LocString CurrentInput(User user) => Benefit.BenefitFunction.Describer.CurrentInput(user);
+        public override LocString InputName(User user) => Benefit.BenefitFunction.Describer.InputName(user);
+        public override LocString MaximumInput(User user) => Benefit.BenefitFunction.Describer.MaximumInput(user);
+        public override LocString MeansOfImprovingStat(User user) => Benefit.BenefitFunction.Describer.MeansOfImprovingStat(user);
+        #endregion
     }
     public partial class XPConfig
     {
@@ -157,7 +159,7 @@ namespace XPBenefits
                 return Localizer.DoStr("Missing user in tooltip");
             }
             var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
-            LocString extraWeightLimit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            LocString extraWeightLimit = ecopediaGenerator.CurrentBenefit(user);
             return new TooltipSection(Localizer.Do($"Weight limit boosted by {extraWeightLimit} due to {ecopediaGenerator.GetPageLink()}."));
         }
 

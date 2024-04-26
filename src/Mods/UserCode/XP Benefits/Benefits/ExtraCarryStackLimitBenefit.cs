@@ -24,7 +24,6 @@ using Eco.Shared.Utils;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using static XPBenefits.BenefitDescriptionResolverStrings;
 using Eco.Mods.Organisms;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
@@ -109,24 +108,28 @@ namespace XPBenefits
         public override LocString BenefitDescription { get; } = Localizer.DoStr("extra carry capacity");
         public override string PageName { get; } = "Bigger Hands";
         public override float PagePriority { get; } = -6;
-        public override LocString ResolveToken(User user, string token)
+
+        #region IBenefitDescriber
+        public override LocString MaximumBenefit(User user)
         {
-            float currentBenefit;
-            switch (token)
-            {
-                case MAXIMUM_BENEFIT:
-                    float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
-                    return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0%;-0%"));
-                case CURRENT_BENEFIT:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"));
-                case CURRENT_BENEFIT_ECOPEDIA:
-                    currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
-                    return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
-                default:
-                    return base.ResolveToken(user, token);
-            }
+            float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
+            return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0%;-0%"));
         }
+        public override LocString CurrentBenefit(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"));
+        }
+        public override LocString CurrentBenefitEcopedia(User user)
+        {
+            float currentBenefit = Benefit.BenefitFunction.CalculateBenefit(user);
+            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
+        }
+        public override LocString CurrentInput(User user) => Benefit.BenefitFunction.Describer.CurrentInput(user);
+        public override LocString InputName(User user) => Benefit.BenefitFunction.Describer.InputName(user);
+        public override LocString MaximumInput(User user) => Benefit.BenefitFunction.Describer.MaximumInput(user);
+        public override LocString MeansOfImprovingStat(User user) => Benefit.BenefitFunction.Describer.MeansOfImprovingStat(user);
+        #endregion
     }
     public partial class XPConfig
     {
@@ -174,7 +177,7 @@ namespace XPBenefits
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return LocString.Empty;
             var ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit);
-            var currentBenefit = ecopediaGenerator.ResolveToken(user, CURRENT_BENEFIT);
+            var currentBenefit = ecopediaGenerator.CurrentBenefit(user);
             var ecopediaLink = ecopediaGenerator.GetPageLink();
             return new TooltipSection(Localizer.Do($"Shovel limit increased by {currentBenefit} due to {ecopediaLink}"));
         }

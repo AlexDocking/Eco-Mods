@@ -21,6 +21,6 @@ namespace XPBenefits
     public interface IBenefitFunction
     {
         public float CalculateBenefit(User user);
-        LocString ResolveToken(User user, string token);
+        IBenefitDescriber Describer { get; }
     }
 }
