@@ -130,7 +130,7 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
-        private string extraCaloriesBenefitFunctionType;
+        private string extraCaloriesBenefitFunction = "GeometricMeanFoodHousing";
 
         [Category("Benefit - Extra Calories"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra calorie capacity. Requires restart.")]
         public bool ExtraCaloriesEnabled { get; set; } = true;
@@ -143,13 +143,7 @@ namespace XPBenefits
         public bool ExtraCaloriesXPLimitEnabled { get; set; } = false;
 
         [Category("Benefit - Extra Calories"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public string ExtraCaloriesBenefitFunctionType
-        {
-            get => extraCaloriesBenefitFunctionType; set
-            {
-                extraCaloriesBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
-            }
-        }
+        public string ExtraCaloriesBenefitFunctionType { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCaloriesBenefitFunction); set { extraCaloriesBenefitFunction = value; } }
     }
     [TooltipLibrary]
     public static class ExtraCaloriesTooltipLibrary

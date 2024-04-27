@@ -40,8 +40,7 @@ namespace XPBenefits
         public virtual float AdjustedMaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
         [Browsable(false)]
         public virtual float MaximumHousingXP => DefaultMaximumHousingXP * DifficultySettings.SkillGainMultiplier;
-        [Category("Shared Settings"), LocDescription("Available benefit function types.")]
-        [JsonIgnore]
+        [Category("Shared Settings"), LocDisplayName("List of Available Benefit Function Types"), LocDescription("The different ways a benefit can be calculated, and each benefit can have a different means of calculation.")]
         [ReadOnly(true)]
         public List<string> AvailableBenefitFunctionTypesDescription { get; set; }
         #region IController

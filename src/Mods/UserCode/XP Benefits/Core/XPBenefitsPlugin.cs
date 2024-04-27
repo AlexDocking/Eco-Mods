@@ -44,6 +44,7 @@ namespace XPBenefits
         public XPBenefitsPlugin()
         {
             this.config = new PluginConfig<XPConfig>("XPBenefits");
+            Log.WriteLine(Localizer.Do($"Config:{Config.BaseFoodXP}"));
         }
 
         public string GetCategory() => Localizer.DoStr("Mods");

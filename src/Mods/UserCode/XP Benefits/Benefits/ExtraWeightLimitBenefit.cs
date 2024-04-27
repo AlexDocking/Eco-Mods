@@ -46,7 +46,7 @@ namespace XPBenefits
     }
     public partial class ExtraWeightLimitBenefit : BenefitBase
     {
-        public override bool Enabled => XPConfig.ExtraWeightLimitBenefitEnabled;
+        public override bool Enabled => XPConfig.ExtraWeightLimitEnabled;
 
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
 
@@ -54,10 +54,10 @@ namespace XPBenefits
         {
             base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
-            MaxBenefitValue = XPConfig.ExtraWeightLimitBenefitMaxBenefitValue;
-            XPLimitEnabled = XPConfig.ExtraWeightLimitBenefitXPLimitEnabled;
+            MaxBenefitValue = XPConfig.ExtraWeightLimitMaxBenefitValue;
+            XPLimitEnabled = XPConfig.ExtraWeightLimitXPLimitEnabled;
             ModsPreInitialize();
-            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunctionType);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunction);
             ModsPostInitialize();
         }
         partial void ModsPreInitialize();
@@ -129,25 +129,22 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
-        private string extraWeightLimitBenefitFunctionType;
+        private string extraWeightLimitBenefitFunction = "GeometricMeanFoodHousing";
 
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra backpack/toolbar inventory weight limit. Requires restart.")]
-        public bool ExtraWeightLimitBenefitEnabled { get; set; } = true;
+        public bool ExtraWeightLimitEnabled { get; set; } = true;
 
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Max Extra Weight Limit"), LocDescription("How much extra backpack/toolbar inventory weight limit can be earned, in grams (e.g. 30000 = +30kg). " +
             "If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled. Requires restart.")]
-        public int ExtraWeightLimitBenefitMaxBenefitValue { get; set; } = 30000;
+        public int ExtraWeightLimitMaxBenefitValue { get; set; } = 30000;
 
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
-        public bool ExtraWeightLimitBenefitXPLimitEnabled { get; set; } = false;
+        public bool ExtraWeightLimitXPLimitEnabled { get; set; } = false;
 
         [Category("Benefit - Extra Weight Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public string ExtraWeightLimitBenefitFunctionType
+        public string ExtraWeightLimitBenefitFunction
         {
-            get => extraWeightLimitBenefitFunctionType; set
-            {
-                extraWeightLimitBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
-            }
+            get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraWeightLimitBenefitFunction); set { extraWeightLimitBenefitFunction = value; }
         }
     }
     [TooltipLibrary]

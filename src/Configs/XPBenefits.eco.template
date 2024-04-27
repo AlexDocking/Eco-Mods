@@ -1,0 +1,76 @@
+﻿{
+  //Extra Calorie Benefit a.k.a. Expandable Stomach
+  
+	  //Disable if you don't want XP to grant extra calorie capacity.
+	  "ExtraCaloriesEnabled": true,
+
+	  //How much extra calorie space can be earned.
+	  //If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled.
+	  "ExtraCaloriesMaxBenefitValue": 6000.0,
+
+	  //Enable if you want the mod to cap the player's XP in the calculation to prevent exceeding the maximum reward.
+	  "ExtraCaloriesXPLimitEnabled": false,
+
+	  //How the player's XP is combined to scale the reward. See the list at the bottom of the page for the available options, along with their descriptions. If the name doesn't match any in the list the benefit will not be enabled.
+	  "ExtraCaloriesBenefitFunctionType": "GeometricMeanFoodHousing",
+
+
+  //Extra Carry Stack Limit a.k.a. Bigger Hands
+
+	  //Disable if you don't want XP to grant extra carry capacity.
+	  "ExtraCarryStackLimitEnabled": true,
+
+	  //How much extra carry stack size (hands slot) can be earned.
+	  //A value of 1 represents a 100% increase in stack limit for the items held in the hands e.g. carry 40 bricks instead of 20.
+	  //If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled.
+	  "ExtraCarryStackLimitMaxBenefitValue": 1.0,
+
+	  //Enable if you want the mod to cap the player's XP in the calculation to prevent exceeding the maximum reward.
+	  "ExtraCarryStackLimitXPLimitEnabled": false,
+
+	  //How the player's XP is combined to scale the reward. See the list at the bottom of the page for the available options, along with their descriptions. If the name doesn't match any in the list the benefit will not be enabled.
+	  "ExtraCarryStackLimitBenefitFunction": "GeometricMeanFoodHousing",
+
+
+  //Extra Weight Limit a.k.a Stronger Back
+
+	  //Disable if you don't want XP to grant extra backpack/toolbar inventory weight limit.
+	  "ExtraWeightLimitEnabled": true,
+
+	  //How much extra backpack/toolbar inventory weight limit can be earned, in grams (e.g. 30000 = +30kg).
+	  //If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled.
+	  "ExtraWeightLimitMaxBenefitValue": 30000,
+
+	  //Enable if you want the mod to cap the player's XP in the calculation to prevent exceeding the maximum reward.
+	  "ExtraWeightLimitXPLimitEnabled": false,
+
+	  //How the player's XP is combined to scale the reward. See the list at the bottom of the page for the available options, along with their descriptions. If the name doesn't match any in the list the benefit will not be enabled.
+	  "ExtraWeightLimitBenefitFunction": "GeometricMeanFoodHousing",
+
+
+  //Shared Settings
+
+	  //Only if the server began before Eco v0.9.6 do you need this setting.
+	  //What to subtract from the player's food xp before doing the calculation.
+	  //Since v0.9.6 players get a little food XP regardless of stomach contents.
+	  //If your server started pre-9.6 you'll see 'Base Multiplier' in the stomach tooltip instead of 'Base Gain', in which case you should set this to zero.
+	  "DefaultBaseFoodXP": 12.0,
+
+	  //Players' food XP is scaled using this when calculating how much reward to give.
+	  //If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.
+	  "DefaultMaximumFoodXP": 120.0,
+
+	  //Players' housing XP is scaled using this when calculating how much reward to give.
+	  //If players reach this value they will get the full reward. This is the value before the server's skill gain setting is applied.
+	  "DefaultMaximumHousingXP": 200.0,
+
+	  //For reference only. (This list is generated at runtime based on the functions registered with the mod)
+	  //The different ways a benefit can be calculated, and each benefit can have a different means of calculation.
+	  "AvailableBenefitFunctionTypesDescription": [
+		"FoodOnly: Uses only the amount of food xp the player has.",
+		"GeometricMeanFoodHousing: Uses a combination of the amount of food and housing xp the player has in such a way as to require both sources of xp to give any benefit.",
+		"HousingOnly: Uses only the amount of housing xp the player has.",
+		"SkillRate: Treats both food and housing xp equally after they have been scaled by their own maximums, taking their average. [100% food + 0% housing] and [0% food + 100% housing] are both equivalent to [50% food + 50% housing]."
+	  ]
+
+}

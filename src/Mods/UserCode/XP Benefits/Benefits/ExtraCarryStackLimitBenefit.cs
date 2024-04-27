@@ -48,7 +48,7 @@ namespace XPBenefits
     }
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
-        public override bool Enabled => XPConfig.ExtraCarryStackLimitBenefitEnabled;
+        public override bool Enabled => XPConfig.ExtraCarryStackLimitEnabled;
         /// <summary>
         /// Used by shovels to work out how much their size should increase
         /// </summary>
@@ -58,10 +58,10 @@ namespace XPBenefits
         {
             base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
-            MaxBenefitValue = XPConfig.ExtraCarryStackLimitBenefitMaxBenefitValue;
-            XPLimitEnabled = XPConfig.ExtraCarryStackLimitBenefitXPLimitEnabled;
+            MaxBenefitValue = XPConfig.ExtraCarryStackLimitMaxBenefitValue;
+            XPLimitEnabled = XPConfig.ExtraCarryStackLimitXPLimitEnabled;
             ModsPreInitialize();
-            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunctionType);
+            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunction);
             ModsPostInitialize();
             if (!Enabled) return;
             ShovelBenefit ??= BenefitFunction;
@@ -142,27 +142,21 @@ namespace XPBenefits
     }
     public partial class XPConfig
     {
-        private string extraCarryStackLimitBenefitFunctionType;
+        private string extraCarryStackLimitBenefitFunction = "GeometricMeanFoodHousing";
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Enabled"), LocDescription("Disable if you don't want XP to grant extra carry capacity. Requires restart.")]
-        public bool ExtraCarryStackLimitBenefitEnabled { get; set; } = true;
+        public bool ExtraCarryStackLimitEnabled { get; set; } = true;
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Max Extra Carry Capacity"), LocDescription("How much extra carry stack size (hands slot) can be earned. " +
             "A value of 1 represents a 100% increase in stack limit for the items held in the hands e.g. carry 40 bricks instead of 20. " +
             "If a player exceeds the 'maximum' XP it will be higher unless the XP limit is enabled. Requires restart.")]
-        public float ExtraCarryStackLimitBenefitMaxBenefitValue { get; set; } = 1;
+        public float ExtraCarryStackLimitMaxBenefitValue { get; set; } = 1;
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Limit XP"), LocDescription(XPConfigServerDescriptions.XPLimitDescription)]
-        public bool ExtraCarryStackLimitBenefitXPLimitEnabled { get; set; } = false;
+        public bool ExtraCarryStackLimitXPLimitEnabled { get; set; } = false;
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public string ExtraCarryStackLimitBenefitFunctionType
-        {
-            get => extraCarryStackLimitBenefitFunctionType; set
-            {
-                extraCarryStackLimitBenefitFunctionType = XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(value);
-            }
-        }
+        public string ExtraCarryStackLimitBenefitFunction { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCarryStackLimitBenefitFunction); set { extraCarryStackLimitBenefitFunction = value; } }
     }
     public class ExtraCarryStackLimitModifier : IPriorityModifyInPlaceDynamicValueHandler
     {
