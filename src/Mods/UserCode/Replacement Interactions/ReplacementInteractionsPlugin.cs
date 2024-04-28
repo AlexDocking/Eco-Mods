@@ -7,10 +7,12 @@ using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ReplacementInteractions
 {
+    [Priority(4)] //Execute as early as possible in case later plugins want to access the interactions
     public class ReplacementInteractionsPlugin : IInitializablePlugin, IModKitPlugin
     {
         public string GetCategory() => "Mods";
@@ -19,7 +21,7 @@ namespace ReplacementInteractions
 
         public void Initialize(TimedTask timer)
         {
-            PluginManager.Controller.RunIfOrWhenInited(ReplaceInteractions);
+            ReplaceInteractions();
         }
         public static void EditInteraction(Type type, string methodName, string replacementMethodName)
         {
@@ -45,12 +47,12 @@ namespace ReplacementInteractions
             sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
             GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
         }
-        public static void ReplaceInteraction(Type type, InteractionAttribute oldInteraction, InteractionAttribute replacementInteraction)
+        public static void ReplaceInteraction(List<InteractionAttribute> list, InteractionAttribute oldInteraction, InteractionAttribute replacementInteraction)
         {
             var sim = GlobalData.Obj.ServerInteractionManager;
             var interactionDict = sim.InteractorToInteractions;
 
-            var interactionAttributes = interactionDict[type];
+            var interactionAttributes = list;
             interactionAttributes.Remove(replacementInteraction);
             if (oldInteraction != null)
             {
@@ -69,27 +71,30 @@ namespace ReplacementInteractions
         {
             var sim = GlobalData.Obj.ServerInteractionManager;
             var interactionDict = sim.InteractorToInteractions;
+            ReplaceInteractions(interactionDict.Values);
+            sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
+            GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
+        }
 
-            foreach (var classType in interactionDict.Keys)
+        public static void ReplaceInteractions(IEnumerable<List<InteractionAttribute>> interactionLists)
+        {
+            foreach (var list in interactionLists)
             {
-                var interactionAttributes = interactionDict[classType];
-                foreach (var replacementInteraction in interactionAttributes.OfType<ReplacementInteractionAttribute>().ToList())
+                foreach (var replacementInteraction in list.OfType<ReplacementInteractionAttribute>().ToList())
                 {
-                    Log.WriteLine(Localizer.Do($"found override attribute RPC {replacementInteraction.RPCName}, replaces {replacementInteraction.MethodName} from {classType}"));
-                    var oldAttribute = interactionAttributes.FirstOrDefault(attribute => attribute.RPCName == replacementInteraction.MethodName);
+                    Log.WriteLine(Localizer.Do($"found override attribute RPC {replacementInteraction.RPCName}, replaces {replacementInteraction.MethodName}"));
+                    var oldAttribute = list.FirstOrDefault(attribute => attribute.RPCName == replacementInteraction.MethodName);
                     if (replacementInteraction.CopyParameters)
                     {
                         EditInteraction(oldAttribute, replacementInteraction.RPCName, null);
-                        interactionAttributes.Remove(replacementInteraction);
+                        list.Remove(replacementInteraction);
                     }
                     else
                     {
-                        ReplaceInteraction(classType, oldAttribute, replacementInteraction);
+                        ReplaceInteraction(list, oldAttribute, replacementInteraction);
                     }
                 }
             }
-            sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
-            GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
         }
     }
 }
