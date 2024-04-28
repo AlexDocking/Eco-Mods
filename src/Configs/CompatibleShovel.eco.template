@@ -1,0 +1,16 @@
+﻿{
+  //How many blocks a wooden shovel can dig before any modifiers are applied.
+  "WoodenShovelBaseSize": 1,
+
+  //How many blocks an iron shovel can dig before any modifiers are applied.
+  "IronShovelBaseSize": 3,
+
+  //How many blocks a steel shovel can dig before any modifiers are applied.
+  "SteelShovelBaseSize": 5,
+
+  //How many blocks a modern shovel can dig before any modifiers are applied.
+  "ModernShovelBaseSize": 10,
+
+  //Should the "ItemStackSizeMultiplier" in the Difficulty config affect how much shovels can dig?
+  "ApplyStackSizeModifier": false
+}
