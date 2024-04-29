@@ -7,8 +7,6 @@ using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReplacementInteractions.Tests
 {
@@ -25,6 +23,7 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldReplaceChainedInteractions, nameof(ShouldReplaceChainedInteractions));
             Test.Run(ShouldIgnoreMissingInteractions, nameof(ShouldIgnoreMissingInteractions));
             Test.Run(ShouldThrowExceptionIfThereIsACycle, nameof(ShouldThrowExceptionIfThereIsACycle));
+            Test.Run(ShouldTrackMultipleInteractionsOnSameMethod, nameof(ShouldTrackMultipleInteractionsOnSameMethod));
         }
         private static void ShouldReplaceSingleInteraction()
         {
@@ -113,6 +112,32 @@ namespace ReplacementInteractions.Tests
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
                 Assert.Throws<InvalidOperationException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(interactionList.SingleItemAsEnumerable()));
+            }
+        }
+        private static void ShouldTrackMultipleInteractionsOnSameMethod()
+        {
+            List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
+                new InteractionAttribute(InteractionTrigger.RightClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+            };
+
+            foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
+            {
+                Check(interactionList);
+            }
+            void Check(List<InteractionAttribute> list)
+            {
+                ReplacementInteractionsPlugin.ReplaceInteractions(list.SingleItemAsEnumerable());
+                Log.WriteLine(Localizer.Do($"Multiple. {list.Select(x => x.RPCName).CommaList()}"));
+                Assert.AreEqual(2, list.Count);
+                var leftClickInteraction = list.FirstOrDefault(interaction => interaction.TriggerInfo.Trigger == InteractionTrigger.LeftClick);
+                Assert.IsNotNull(leftClickInteraction);
+                Assert.AreEqual(nameof(ExampleClass.ReplacementMethod1), leftClickInteraction.RPCName);
+                var rightClickInteraction = list.FirstOrDefault(interaction => interaction.TriggerInfo.Trigger == InteractionTrigger.RightClick);
+                Assert.IsNotNull(rightClickInteraction);
+                Assert.AreEqual(nameof(ExampleClass.ReplacementMethod1), rightClickInteraction.RPCName);
             }
         }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
