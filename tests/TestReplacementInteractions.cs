@@ -23,47 +23,108 @@ namespace ReplacementInteractions.Tests
         {
             Test.Run(ShouldReplaceSingleInteraction, nameof(ShouldReplaceSingleInteraction));
             Test.Run(ShouldReplaceChainedInteractions, nameof(ShouldReplaceChainedInteractions));
+            Test.Run(ShouldIgnoreMissingInteractions, nameof(ShouldIgnoreMissingInteractions));
+            Test.Run(ShouldThrowExceptionIfThereIsACycle, nameof(ShouldThrowExceptionIfThereIsACycle));
         }
         private static void ShouldReplaceSingleInteraction()
         {
-            var interactionList = new List<InteractionAttribute>()
+            List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
                 new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
                 new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
-            }; 
-            Check(interactionList, nameof(ExampleClass.ReplacementMethod1));
+            };
+            foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
+            {
+                Check(interactionList, nameof(ExampleClass.ReplacementMethod1));
+            }
         }
         private static void ShouldReplaceChainedInteractions()
         {
-            var interactionList = new List<InteractionAttribute>()
+            List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
                 new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
                 new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.ReplacementMethod2) },
                 new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
             };
 
-            var reversedInteractionList = new List<InteractionAttribute>()
+            foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
+            {
+                Check(interactionList, nameof(ExampleClass.ReplacementMethod2));
+            }
+        }
+        static IEnumerable<List<InteractionAttribute>> AllPermutationsOfAttributeList(Func<List<InteractionAttribute>> listGenerator)
+        {
+            List<InteractionAttribute> firstList = listGenerator();
+            List<int> indices = new List<int>();
+            for (int i = 0; i < firstList.Count; i++)
+            {
+                indices.Add(i);
+            }
+
+            IEnumerable<IEnumerable<int>> indicesPermutations = AllPermutations<int>(indices);
+            foreach(var indicesPermutation in indicesPermutations)
+            {
+                var copy = listGenerator();
+                List<InteractionAttribute> permutation = indicesPermutation.Select(i => copy[i]).ToList();
+                yield return permutation;
+            }
+        }
+        static IEnumerable<List<T>> AllPermutations<T>(List<T> list)
+        {
+            if (!list.Any()) return Array.Empty<List<T>>();
+            List<List<T>> permutations = new List<List<T>>();
+            if (list.Count == 1) permutations.Add(list);
+            for (int i = 0; i < list.Count; i++)
+            {
+                var allExceptChosen = list.Take(i).ToList();
+                allExceptChosen.AddRange(list.Skip(i + 1));
+                foreach (var remainder in AllPermutations(allExceptChosen))
+                {
+                    var permutation = list[i].SingleItemAsEnumerable().ToList();
+                    permutation.AddRange(remainder);
+                    permutations.Add(permutation);
+                }
+            }
+            return permutations;
+        }
+        private static void ShouldIgnoreMissingInteractions()
+        {
+            List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
                 new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.ReplacementMethod2) },
                 new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new ReplacementInteractionAttribute("MissingInteraction") { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.ReplacementMethod2) },
             };
 
-            reversedInteractionList.Reverse();
-
-            Log.WriteLine(Localizer.Do($"Check forward"));
-            Check(interactionList, nameof(ExampleClass.ReplacementMethod2));
-            Log.WriteLine(Localizer.Do($"Check backward"));
-            Check(reversedInteractionList, nameof(ExampleClass.ReplacementMethod2));
-            
+            foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
+            {
+                Check(interactionList, nameof(ExampleClass.ReplacementMethod2));
+            }
+        }
+        private static void ShouldThrowExceptionIfThereIsACycle()
+        {
+            List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.OriginalMethod) },
+            };
+            foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
+            {
+                Assert.Throws<InvalidOperationException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(interactionList.SingleItemAsEnumerable()));
+            }
         }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
+            Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
+
             ReplacementInteractionsPlugin.ReplaceInteractions(list.SingleItemAsEnumerable());
             Assert.AreEqual(1, list.Count);
             var interaction = list[0];
             Assert.AreEqual(InteractionTrigger.LeftClick, interaction.TriggerInfo.Trigger);
             Assert.AreEqual(expectedMethodName, interaction.RPCName);
+            Log.WriteLine(Localizer.Do($"Result:{interaction.RPCName} named {interaction.Description}"));
         }
         private class ExampleClass
         {
@@ -124,6 +185,20 @@ namespace ReplacementInteractions.Tests
                 {
                     throw new Exception($"IsFalse failed.");
                 }
+            }
+            public static void Throws<T>(Action action) where T : Exception
+            {
+                bool threwException = false;
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    if (ex is not T) throw new Exception($"Action threw wrong exception. Expected {typeof(T).Name}, got {ex}");
+                    threwException = true;
+                }
+                if (!threwException) throw new Exception($"Action did not throw exception. Expected {typeof(T).Name}");
             }
         }
         public static class Test
