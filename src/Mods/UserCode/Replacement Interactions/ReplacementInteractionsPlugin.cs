@@ -73,7 +73,7 @@ namespace ReplacementInteractions
         {
             var sim = GlobalData.Obj.ServerInteractionManager;
             var interactionDict = sim.InteractorToInteractions;
-            ReplaceInteractions(interactionDict.Values);
+            ReplaceInteractions(interactionDict);
             sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
             GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
         }
@@ -83,11 +83,14 @@ namespace ReplacementInteractions
             public List<InteractionAttribute> Interactions { get; set; } = new();
             public List<Method> ReplacedBy { get; set; } = new();
         }
-        public static void ReplaceInteractions(IEnumerable<List<InteractionAttribute>> interactionLists)
+        public static void ReplaceInteractions(IEnumerable<KeyValuePair<Type, List<InteractionAttribute>>> interactionDict)
         {
-            foreach (var list in interactionLists)
+            foreach (var interactionsForType in interactionDict)
             {
+                Type type = interactionsForType.Key;
+                List<InteractionAttribute> list = interactionsForType.Value;
                 List<Method> methods = new List<Method>();
+                //Find all the interactions for each method
                 foreach(var interaction in list)
                 {
                     if (methods.FirstOrDefault(method => method.RPCName == interaction.RPCName) is not Method method)
@@ -100,9 +103,9 @@ namespace ReplacementInteractions
                     {
                         method.Interactions.Add(interaction);
                         Log.WriteLine(Localizer.Do($"Found existing method {method.RPCName}, interactions:{method.Interactions.Select(interaction => $"{interaction.RPCName}").CommaList()}"));
-
                     }
                 }
+                //Find out which methods replace which
                 foreach (var interaction in list)
                 {
                     if (interaction is ReplacementInteractionAttribute replacement)
@@ -114,11 +117,13 @@ namespace ReplacementInteractions
                         }
                     }
                 }
+                //Find paths from the methods where interactions are defined, to the actual methods which those interactions will be attached to
                 List<InteractionAttribute> leaves = new List<InteractionAttribute>();
                 foreach (var method in methods.Where(m => m.Interactions.Any(interaction => interaction.GetType() == typeof(InteractionAttribute))))
                 {
                     Log.WriteLine(Localizer.Do($"Method {method.RPCName} has {method.Interactions.Count} interactions and is replaced by {method.ReplacedBy.Select(m => m.RPCName).CommaList()}"));
                     IEnumerable<List<Method>> routeToLeaves = FindRoutesToLeaves(method, new List<Method>());
+                    //Traverse each path and get the parameters of the resulting interaction, either passed along the chain from the original method or by any custom replacements on the way
                     foreach(var route in routeToLeaves)
                     {
                         List<InteractionAttribute> results = new List<InteractionAttribute>();
@@ -134,18 +139,22 @@ namespace ReplacementInteractions
                             foreach(ReplacementInteractionAttribute replacement in replacementAttributes)
                             {
                                 Log.WriteLine(Localizer.Do($"Replacement {replacement.RPCName} replaces {replacement.MethodName}"));
+                                //All interactions on the previous method get transferred
                                 if (replacement.CopyParameters)
                                 {
                                     newResults.AddRange(results.Select(interaction => { var clone = interaction.Clone(); clone.RPCName = replacement.RPCName; return clone; }));
                                 }
+                                //Or, a replacement interaction is provided and all interactions on the previous method are forgotten
                                 else
                                 {
-                                    //todo: read new interaction params from replacement attribute
+                                    var providedReplacement = replacement.GetReplacementInteraction(type);
+                                    providedReplacement.RPCName = replacement.RPCName;
+                                    Log.WriteLine(Localizer.Do($"{replacement.RPCName} provided custom interaction from {type}.{replacement.InteractionParametersGetter} -> {providedReplacement?.GetType()}"));
+                                    newResults.Add(providedReplacement);
                                 }
                             }
                             results = newResults;
                             Log.WriteLine(Localizer.Do($"result[{i}] count:{results.Count}"));
-
                         }
                         leaves.AddRange(results);
                     }
