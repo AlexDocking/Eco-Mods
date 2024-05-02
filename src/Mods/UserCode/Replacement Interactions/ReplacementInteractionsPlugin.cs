@@ -1,16 +1,15 @@
-﻿using Eco.Core;
-using Eco.Core.Controller;
+﻿using Eco.Core.Controller;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Eco.Gameplay.Interactions.Interactors;
 using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
+using ReplacementInteractions.Tests;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection.Metadata;
+using System.Reflection;
 
 namespace ReplacementInteractions
 {
@@ -76,6 +75,43 @@ namespace ReplacementInteractions
             ReplaceInteractions(interactionDict);
             sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
             GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
+        }
+        public static void ModifyInteractions(IDictionary<Type, List<InteractionAttribute>> interactionDict, IEnumerable<InteractionParametersModification> modifications)
+        {
+            foreach(var modification in modifications)
+            {
+                foreach (var type in modification.InteractorType.DerivedTypes(includeSelf: true))
+                {
+                    if (interactionDict.TryGetValue(type, out var list))
+                    {
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            Log.WriteLine(Localizer.Do($"Modify interaction {type}.{list[i].RPCName}"));
+                            list[i] = modification.ModificationMethod(type, list[i].Clone());
+                        }
+                    }
+                }
+            }
+        }
+        public static void ModifyInteractions(IDictionary<Type, List<InteractionAttribute>> interactionDict)
+        {
+            ModifyInteractions(interactionDict, FindInteractionModifications());
+        }
+        private static IEnumerable<InteractionParametersModification> FindInteractionModifications()
+        {
+            var classesWithModifiers = ReflectionCache.GetAssemblies().SelectMany(assembly => assembly.DefinedTypes.Where(type => type.HasAttribute<DefinesInteractionsAttribute>()));
+            var m = typeof(TestReplacementInteractions.ExampleInteractionReplacer).GetMethod(nameof(TestReplacementInteractions.ExampleInteractionReplacer.ModifyInteractionOnOriginalMethod));
+
+            var modificationMethods = classesWithModifiers.SelectMany(type => type.MethodsWithAttribute<ModifyInteractionAttribute>()).Where(method => method.IsPublic && !method.IsGenericMethod && method.VerifySignature(typeof(Type), typeof(InteractionAttribute).GetTypeInfo().MakeByRefType()));
+            return modificationMethods.Select(method => {
+                var attribute = method.GetCustomAttribute<ModifyInteractionAttribute>();
+                return new InteractionParametersModification()
+                {
+                    InteractorType = attribute.InteractorType,
+                    InteractorMethodName = method.Name,
+                    ModificationMethod = (type, interaction) => { var parameters = new object[] { type, interaction.Clone() }; method.Invoke(null, parameters); return InteractionExtensions.AreEqual(interaction, parameters[1] as InteractionAttribute) ? interaction : parameters[1] as InteractionAttribute; }
+                };
+            });
         }
         private class Method
         {
@@ -202,6 +238,24 @@ namespace ReplacementInteractions
     }
     static class InteractionExtensions
     {
+        public static bool AreEqual(InteractionAttribute first,  InteractionAttribute second)
+        {
+            return first?.GetType() == second?.GetType() &&
+                first.TriggerInfo.Trigger == second.TriggerInfo.Trigger &&
+                first.Description == second.Description &&
+                first.TriggerInfo.Modifier == second.TriggerInfo.Modifier &&
+                first.RequiredEnvVars.SequenceEqualNullSafe(second.RequiredEnvVars) &&
+                first.InteractionDistance == second.InteractionDistance &&
+                first.Priority == second.Priority &&
+                first.PredictedBlockAction == second.PredictedBlockAction &&
+                first.MaxTake == second.MaxTake &&
+                first.AnimationDriven == second.AnimationDriven &&
+                first.CanHoldToTrigger == second.CanHoldToTrigger &&
+                first.HighlightColor.HexRGBA == second.HighlightColor.HexRGBA &&
+                first.AccessForHighlight == second.AccessForHighlight &&
+                first.Flags == second.Flags &&
+                first.TagsTargetable.SequenceEqualNullSafe(second.TagsTargetable);
+        }
         public static InteractionAttribute Clone(this InteractionAttribute interaction)
         {
             if (interaction == null)

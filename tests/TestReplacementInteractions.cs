@@ -27,31 +27,33 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldUseCustomInteractionIfProvided, nameof(ShouldUseCustomInteractionIfProvided));
             Test.Run(ShouldThrowExceptionIfCustomInteractionGetterDoesNotExist, nameof(ShouldThrowExceptionIfCustomInteractionGetterDoesNotExist));
             Test.Run(ShouldThrowExceptionIfCustomInteractionGetterIsIncorrect, nameof(ShouldThrowExceptionIfCustomInteractionGetterIsIncorrect));
+            Test.Run(ShouldModifyInteraction, nameof(ShouldModifyInteraction));
+            Test.Run(ShouldModifyInteractionUsingAttributesOnClass, nameof(ShouldModifyInteractionUsingAttributesOnClass));
         }
         private static void ShouldReplaceSingleInteraction()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
             };
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Check(interactionList, nameof(ExampleClass.ReplacementMethod1));
+                Check(interactionList, nameof(ExampleInteractor.ReplacementMethod1));
             }
         }
         private static void ShouldReplaceChainedInteractions()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.ReplacementMethod2) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.ReplacementMethod1)) { RPCName = nameof(ExampleInteractor.ReplacementMethod2) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
             };
 
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Check(interactionList, nameof(ExampleClass.ReplacementMethod2));
+                Check(interactionList, nameof(ExampleInteractor.ReplacementMethod2));
             }
         }
         static IEnumerable<List<InteractionAttribute>> AllPermutationsOfAttributeList(Func<List<InteractionAttribute>> listGenerator)
@@ -93,37 +95,37 @@ namespace ReplacementInteractions.Tests
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
-                new ReplacementInteractionAttribute("MissingInteraction") { RPCName = nameof(ExampleClass.ReplacementMethod1) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.ReplacementMethod2) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
+                new ReplacementInteractionAttribute("MissingInteraction") { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.ReplacementMethod1)) { RPCName = nameof(ExampleInteractor.ReplacementMethod2) },
             };
 
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Check(interactionList, nameof(ExampleClass.ReplacementMethod2));
+                Check(interactionList, nameof(ExampleInteractor.ReplacementMethod2));
             }
         }
         private static void ShouldThrowExceptionIfThereIsACycle()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.ReplacementMethod1)) { RPCName = nameof(ExampleClass.OriginalMethod) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.ReplacementMethod1)) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
             };
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Assert.Throws<InvalidOperationException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), interactionList } }));
+                Assert.Throws<InvalidOperationException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), interactionList } }));
             }
         }
         private static void ShouldTrackMultipleInteractionsOnSameMethod()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new InteractionAttribute(InteractionTrigger.RightClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new InteractionAttribute(InteractionTrigger.RightClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
             };
 
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
@@ -132,34 +134,34 @@ namespace ReplacementInteractions.Tests
             }
             void Check(List<InteractionAttribute> list)
             {
-                ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), list } });
+                ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), list } });
                 Log.WriteLine(Localizer.Do($"Multiple. {list.Select(x => x.RPCName).CommaList()}"));
                 Assert.AreEqual(2, list.Count);
                 var leftClickInteraction = list.FirstOrDefault(interaction => interaction.TriggerInfo.Trigger == InteractionTrigger.LeftClick);
                 Assert.IsNotNull(leftClickInteraction);
-                Assert.AreEqual(nameof(ExampleClass.ReplacementMethod1), leftClickInteraction.RPCName);
+                Assert.AreEqual(nameof(ExampleInteractor.ReplacementMethod1), leftClickInteraction.RPCName);
                 var rightClickInteraction = list.FirstOrDefault(interaction => interaction.TriggerInfo.Trigger == InteractionTrigger.RightClick);
                 Assert.IsNotNull(rightClickInteraction);
-                Assert.AreEqual(nameof(ExampleClass.ReplacementMethod1), rightClickInteraction.RPCName);
+                Assert.AreEqual(nameof(ExampleInteractor.ReplacementMethod1), rightClickInteraction.RPCName);
             }
         }
         private static void ShouldUseCustomInteractionIfProvided()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.RightClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod), nameof(ExampleClass.GetReplacementInteraction)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new InteractionAttribute(InteractionTrigger.RightClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod), nameof(ExampleInteractor.GetReplacementInteraction)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
             };
 
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Check(interactionList, nameof(ExampleClass.ReplacementMethod1));
+                Check(interactionList, nameof(ExampleInteractor.ReplacementMethod1));
             }
             void Check(List<InteractionAttribute> list, string expectedMethodName)
             {
                 Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
 
-                ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), list } });
+                ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), list } });
                 Assert.AreEqual(1, list.Count);
                 var interaction = list[0];
                 Assert.AreEqual(InteractionTrigger.RightClick, interaction.TriggerInfo.Trigger);
@@ -171,38 +173,71 @@ namespace ReplacementInteractions.Tests
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod), "MethodDoesNotExist") { RPCName = nameof(ExampleClass.ReplacementMethod1) },
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod), "MethodDoesNotExist") { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },
             };
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Assert.Throws<MissingMethodException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), interactionList } }));
+                Assert.Throws<MissingMethodException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), interactionList } }));
             }
         }
         private static void ShouldThrowExceptionIfCustomInteractionGetterIsIncorrect()
         {
             List<InteractionAttribute> CreateList() => new List<InteractionAttribute>()
             {
-                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleClass.OriginalMethod) },
-                new ReplacementInteractionAttribute(nameof(ExampleClass.OriginalMethod), nameof(ExampleClass.IncorrectReplacementInteraction)) { RPCName = nameof(ExampleClass.ReplacementMethod1) },            
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+                new ReplacementInteractionAttribute(nameof(ExampleInteractor.OriginalMethod), nameof(ExampleInteractor.IncorrectReplacementInteraction)) { RPCName = nameof(ExampleInteractor.ReplacementMethod1) },            
             };
             foreach (List<InteractionAttribute> interactionList in AllPermutationsOfAttributeList(CreateList))
             {
-                Assert.Throws<MissingMethodException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), interactionList } }));
+                Assert.Throws<MissingMethodException>(() => ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), interactionList } }));
             }
+        }
+        private static void ShouldModifyInteraction()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+            };
+            List<InteractionParametersModification> interactionModifications = new List<InteractionParametersModification>()
+            {
+                new InteractionParametersModification()
+                {
+                    InteractorType = typeof(ExampleInteractor),
+                    InteractorMethodName = nameof(ExampleInteractor.OriginalMethod),
+                    ModificationMethod = (type, interaction) => { ExampleInteractionReplacer.ModifyInteractionOnOriginalMethod(type, ref interaction); return interaction; }
+                }
+            };
+            ReplacementInteractionsPlugin.ModifyInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } }, interactionModifications);
+            Assert.AreEqual(1, originalInteractions.Count);
+            var interaction = originalInteractions[0];
+            Assert.AreEqual(InteractionTrigger.RightClick, interaction.TriggerInfo.Trigger);
+            Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod), interaction.RPCName);
+        }
+        private static void ShouldModifyInteractionUsingAttributesOnClass()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+            };
+            ReplacementInteractionsPlugin.ModifyInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } });
+            Assert.AreEqual(1, originalInteractions.Count);
+            var interaction = originalInteractions[0];
+            Assert.AreEqual(InteractionTrigger.RightClick, interaction.TriggerInfo.Trigger);
+            Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod), interaction.RPCName);
         }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
             Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
 
-            ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleClass), list } });
+            ReplacementInteractionsPlugin.ReplaceInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), list } });
             Assert.AreEqual(1, list.Count);
             var interaction = list[0];
             Assert.AreEqual(InteractionTrigger.LeftClick, interaction.TriggerInfo.Trigger);
             Assert.AreEqual(expectedMethodName, interaction.RPCName);
             Log.WriteLine(Localizer.Do($"Result:{interaction.RPCName} named {interaction.Description}"));
         }
-        private class ExampleClass
+        private class ExampleInteractor
         {
             public void OriginalMethod() { }
             public void ReplacementMethod1() { }
@@ -210,7 +245,20 @@ namespace ReplacementInteractions.Tests
             public static InteractionAttribute GetReplacementInteraction() => new InteractionAttribute(InteractionTrigger.RightClick);
             public static InteractionAttribute IncorrectReplacementInteraction(object obj) => new InteractionAttribute(InteractionTrigger.RightClick);
             public static void IncorrectReplacementInteraction() { }
-
+        }
+        [DefinesInteractions]
+        public static class ExampleInteractionReplacer
+        {
+            [AdditionalInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod))]
+            public static InteractionAttribute GetAdditionalInteraction(Type interactorType) => new InteractionAttribute(InteractionTrigger.InteractKey);
+            [ModifyInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod))]
+            public static void ModifyInteractionOnOriginalMethod(Type interactorType, ref InteractionAttribute interaction)
+            {
+                if (interaction.TriggerInfo.Trigger == InteractionTrigger.LeftClick)
+                {
+                    interaction.TriggerInfo = new InteractionTriggerInfo(InteractionTrigger.RightClick, interaction.TriggerInfo.Modifier);
+                }
+            }
         }
     }
     namespace EcoTests
