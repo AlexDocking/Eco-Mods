@@ -2,10 +2,11 @@
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Eco.Gameplay.Interactions.Interactors;
+using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
+using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
-using ReplacementInteractions.Tests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,6 +77,25 @@ namespace ReplacementInteractions
             sim.Changed(nameof(ServerInteractionManager.InteractorToInteractions));
             GlobalData.Obj.Changed(nameof(GlobalData.ServerInteractionManager));
         }
+
+        public static void AddInteractions(IDictionary<Type, List<InteractionAttribute>> interactionDict, IEnumerable<AddInteractionModification> additions)
+        {
+            foreach(var addition in additions)
+            {
+                foreach(var type in addition.InteractorType.ConcreteTypes(includeSelf: true))
+                {
+                    var m = type.GetMethod(addition.InteractorMethodName);
+                    if (!type.GetMethods().Any(method => method.Name == addition.InteractorMethodName && method.VerifySignature(typeof(Player), typeof(InteractionTriggerInfo), typeof(InteractionTarget)))) continue;
+                    InteractionAttribute newAttribute = addition?.InteractionCreationMethod(type);
+                    if (newAttribute == null) continue;
+                    interactionDict.AddToList(type, newAttribute);
+                }
+            }
+        }
+        public static void AddInteractions(IDictionary<Type, List<InteractionAttribute>> interactionDict)
+        {
+            AddInteractions(interactionDict, FindAddModifications());
+        }
         public static void ModifyInteractions(IDictionary<Type, List<InteractionAttribute>> interactionDict, IEnumerable<InteractionParametersModification> modifications)
         {
             foreach(var modification in modifications)
@@ -86,7 +106,6 @@ namespace ReplacementInteractions
                     {
                         for (int i = 0; i < list.Count; i++)
                         {
-                            Log.WriteLine(Localizer.Do($"Modify interaction {type}.{list[i].RPCName}"));
                             list[i] = modification.ModificationMethod(type, list[i].Clone());
                         }
                     }
@@ -100,10 +119,8 @@ namespace ReplacementInteractions
         private static IEnumerable<InteractionParametersModification> FindInteractionModifications()
         {
             var classesWithModifiers = ReflectionCache.GetAssemblies().SelectMany(assembly => assembly.DefinedTypes.Where(type => type.HasAttribute<DefinesInteractionsAttribute>()));
-            var m = typeof(TestReplacementInteractions.ExampleInteractionReplacer).GetMethod(nameof(TestReplacementInteractions.ExampleInteractionReplacer.ModifyInteractionOnOriginalMethod));
-
-            var modificationMethods = classesWithModifiers.SelectMany(type => type.MethodsWithAttribute<ModifyInteractionAttribute>()).Where(method => method.IsPublic && !method.IsGenericMethod && method.VerifySignature(typeof(Type), typeof(InteractionAttribute).GetTypeInfo().MakeByRefType()));
-            return modificationMethods.Select(method => {
+            var modificationMethods = classesWithModifiers.SelectMany(type => type.MethodsWithAttribute<ModifyInteractionAttribute>()).Where(method => method.IsPublic && method.IsStatic && !method.IsGenericMethod && method.VerifySignature(typeof(Type), typeof(InteractionAttribute).GetTypeInfo().MakeByRefType()));
+            var interactionParameterModifications = modificationMethods.Select(method => {
                 var attribute = method.GetCustomAttribute<ModifyInteractionAttribute>();
                 return new InteractionParametersModification()
                 {
@@ -112,6 +129,24 @@ namespace ReplacementInteractions
                     ModificationMethod = (type, interaction) => { var parameters = new object[] { type, interaction.Clone() }; method.Invoke(null, parameters); return InteractionExtensions.AreEqual(interaction, parameters[1] as InteractionAttribute) ? interaction : parameters[1] as InteractionAttribute; }
                 };
             });
+            return interactionParameterModifications;
+        }
+        private static IEnumerable<AddInteractionModification> FindAddModifications()
+        {
+            var classesWithModifiers = ReflectionCache.GetAssemblies().SelectMany(assembly => assembly.DefinedTypes.Where(type => type.HasAttribute<DefinesInteractionsAttribute>()));
+
+            var addMethods = classesWithModifiers.SelectMany(type => type.MethodsWithAttribute<AdditionalInteractionAttribute>()).Where(method => method.IsPublic && method.IsStatic && method.VerifySignature(typeof(Type)) && method.ReturnType == typeof(InteractionAttribute));
+            var addModifications = addMethods.Select(method => {
+                var attribute = method.GetCustomAttribute<AdditionalInteractionAttribute>();
+                var modification = new AddInteractionModification()
+                {
+                    InteractorType = attribute.InteractorType,
+                    InteractorMethodName = attribute.MethodName,
+                };
+                modification.SetCreationMethod(method);
+                return modification;
+            });
+            return addModifications;
         }
         private class Method
         {

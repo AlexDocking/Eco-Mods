@@ -8,10 +8,10 @@ namespace ReplacementInteractions
         public AdditionalInteractionAttribute(Type interactorType, string method)
         {
             InteractorType = interactorType;
-            Method = method;
+            MethodName = method;
         }
 
         public Type InteractorType { get; }
-        public string Method { get; }
+        public string MethodName { get; }
     }
 }

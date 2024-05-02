@@ -29,6 +29,7 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldThrowExceptionIfCustomInteractionGetterIsIncorrect, nameof(ShouldThrowExceptionIfCustomInteractionGetterIsIncorrect));
             Test.Run(ShouldModifyInteraction, nameof(ShouldModifyInteraction));
             Test.Run(ShouldModifyInteractionUsingAttributesOnClass, nameof(ShouldModifyInteractionUsingAttributesOnClass));
+            Test.Run(ShouldAddNewInteractionUsingAttributesOnClass, nameof(ShouldAddNewInteractionUsingAttributesOnClass));
         }
         private static void ShouldReplaceSingleInteraction()
         {
@@ -226,6 +227,18 @@ namespace ReplacementInteractions.Tests
             Assert.AreEqual(InteractionTrigger.RightClick, interaction.TriggerInfo.Trigger);
             Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod), interaction.RPCName);
         }
+        private static void ShouldAddNewInteractionUsingAttributesOnClass()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod) },
+            };
+            ReplacementInteractionsPlugin.AddInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } });
+            Assert.AreEqual(2, originalInteractions.Count);
+            var newInteraction = originalInteractions[1];
+            Assert.AreEqual(InteractionTrigger.InteractKey, newInteraction.TriggerInfo.Trigger);
+            Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod), newInteraction.RPCName);
+        }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
             Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
@@ -239,9 +252,9 @@ namespace ReplacementInteractions.Tests
         }
         private class ExampleInteractor
         {
-            public void OriginalMethod() { }
-            public void ReplacementMethod1() { }
-            public void ReplacementMethod2() { }
+            public void OriginalMethod(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
+            public void ReplacementMethod1(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
+            public void ReplacementMethod2(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public static InteractionAttribute GetReplacementInteraction() => new InteractionAttribute(InteractionTrigger.RightClick);
             public static InteractionAttribute IncorrectReplacementInteraction(object obj) => new InteractionAttribute(InteractionTrigger.RightClick);
             public static void IncorrectReplacementInteraction() { }
