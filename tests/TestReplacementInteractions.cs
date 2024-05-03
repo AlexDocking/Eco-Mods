@@ -31,6 +31,7 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldModifyInteractionUsingAttributesOnClass, nameof(ShouldModifyInteractionUsingAttributesOnClass));
             Test.Run(ShouldAddNewInteractionUsingAttributesOnClass, nameof(ShouldAddNewInteractionUsingAttributesOnClass));
             Test.Run(ShouldAddNewInteractionBasedOnType, nameof(ShouldAddNewInteractionBasedOnType));
+            Test.Run(ShouldNotAddInteractionForMissingMethod, nameof(ShouldNotAddInteractionForMissingMethod));
         }
         private static void ShouldReplaceSingleInteraction()
         {
@@ -256,6 +257,12 @@ namespace ReplacementInteractions.Tests
             Assert.AreEqual(InteractionTrigger.InteractKey, newInteraction.TriggerInfo.Trigger);
             Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod2), newInteraction.RPCName);
         }
+        private static void ShouldNotAddInteractionForMissingMethod()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>();
+            ReplacementInteractionsPlugin.AddInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } });
+            Assert.IsFalse(originalInteractions.Any(interaction => interaction.RPCName == "MissingMethod"));
+        }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
             Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
@@ -289,6 +296,10 @@ namespace ReplacementInteractions.Tests
 
             [AdditionalInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod2))]
             public static InteractionAttribute GetAdditionalInteractionOnDerivedClass(Type interactorType) => interactorType == typeof(ExampleInteractorChildClass) ? new InteractionAttribute(InteractionTrigger.InteractKey) : null;
+
+            [AdditionalInteraction(typeof(ExampleInteractor), "MissingMethod")]
+            public static InteractionAttribute GetAdditionalInteractionForMissingMethod(Type interactorType) => new InteractionAttribute(InteractionTrigger.RightClick);
+
             [ModifyInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod))]
             public static void ModifyInteractionOnOriginalMethod(Type interactorType, ref InteractionAttribute interaction)
             {
