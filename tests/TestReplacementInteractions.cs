@@ -30,6 +30,7 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldModifyInteraction, nameof(ShouldModifyInteraction));
             Test.Run(ShouldModifyInteractionUsingAttributesOnClass, nameof(ShouldModifyInteractionUsingAttributesOnClass));
             Test.Run(ShouldAddNewInteractionUsingAttributesOnClass, nameof(ShouldAddNewInteractionUsingAttributesOnClass));
+            Test.Run(ShouldAddNewInteractionBasedOnType, nameof(ShouldAddNewInteractionBasedOnType));
         }
         private static void ShouldReplaceSingleInteraction()
         {
@@ -239,6 +240,22 @@ namespace ReplacementInteractions.Tests
             Assert.AreEqual(InteractionTrigger.InteractKey, newInteraction.TriggerInfo.Trigger);
             Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod), newInteraction.RPCName);
         }
+        private static void ShouldAddNewInteractionBasedOnType()
+        {
+            List<InteractionAttribute> baseClassInteractions = new List<InteractionAttribute>();
+            List<InteractionAttribute> childClassInteractions = new List<InteractionAttribute>();
+            ReplacementInteractionsPlugin.AddInteractions(new Dictionary<Type, List<InteractionAttribute>>()
+            {
+                { typeof(ExampleInteractor), baseClassInteractions },
+                { typeof(ExampleInteractorChildClass), childClassInteractions },
+            });
+            Assert.AreEqual(0, baseClassInteractions.Count(interaction => interaction.RPCName == nameof(ExampleInteractor.OriginalMethod2)));
+            Assert.AreEqual(1, childClassInteractions.Count(interaction => interaction.RPCName == nameof(ExampleInteractor.OriginalMethod2)));
+
+            var newInteraction = childClassInteractions.Single(interaction => interaction.RPCName == nameof(ExampleInteractor.OriginalMethod2));
+            Assert.AreEqual(InteractionTrigger.InteractKey, newInteraction.TriggerInfo.Trigger);
+            Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod2), newInteraction.RPCName);
+        }
         static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
             Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
@@ -253,17 +270,25 @@ namespace ReplacementInteractions.Tests
         private class ExampleInteractor
         {
             public void OriginalMethod(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
+            public void OriginalMethod2(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public void ReplacementMethod1(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public void ReplacementMethod2(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public static InteractionAttribute GetReplacementInteraction() => new InteractionAttribute(InteractionTrigger.RightClick);
             public static InteractionAttribute IncorrectReplacementInteraction(object obj) => new InteractionAttribute(InteractionTrigger.RightClick);
             public static void IncorrectReplacementInteraction() { }
         }
+        private class ExampleInteractorChildClass : ExampleInteractor
+        {
+
+        }
         [DefinesInteractions]
         public static class ExampleInteractionReplacer
         {
             [AdditionalInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod))]
             public static InteractionAttribute GetAdditionalInteraction(Type interactorType) => new InteractionAttribute(InteractionTrigger.InteractKey);
+
+            [AdditionalInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod2))]
+            public static InteractionAttribute GetAdditionalInteractionOnDerivedClass(Type interactorType) => interactorType == typeof(ExampleInteractorChildClass) ? new InteractionAttribute(InteractionTrigger.InteractKey) : null;
             [ModifyInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod))]
             public static void ModifyInteractionOnOriginalMethod(Type interactorType, ref InteractionAttribute interaction)
             {
