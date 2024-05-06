@@ -32,6 +32,8 @@ namespace ReplacementInteractions.Tests
             Test.Run(ShouldAddNewInteractionUsingAttributesOnClass, nameof(ShouldAddNewInteractionUsingAttributesOnClass));
             Test.Run(ShouldAddNewInteractionBasedOnType, nameof(ShouldAddNewInteractionBasedOnType));
             Test.Run(ShouldNotAddInteractionForMissingMethod, nameof(ShouldNotAddInteractionForMissingMethod));
+            Test.Run(ShouldRemoveInteraction, nameof(ShouldRemoveInteraction));
+            Test.Run(ShouldNotRedirectInteractionUsingModifyInteractionAttribute, nameof(ShouldNotRedirectInteractionUsingModifyInteractionAttribute));
         }
         private static void ShouldReplaceSingleInteraction()
         {
@@ -263,7 +265,34 @@ namespace ReplacementInteractions.Tests
             ReplacementInteractionsPlugin.AddInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } });
             Assert.IsFalse(originalInteractions.Any(interaction => interaction.RPCName == "MissingMethod"));
         }
-        static void Check(List<InteractionAttribute> list, string expectedMethodName)
+        private static void ShouldRemoveInteraction()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod3) },
+            };
+            Dictionary<Type, List<InteractionAttribute>> interactionDict = new Dictionary<Type, List<InteractionAttribute>>() {
+                { typeof(ExampleInteractor), originalInteractions.ToList() },
+                { typeof(ExampleInteractorChildClass), originalInteractions.ToList() }
+            };
+            ReplacementInteractionsPlugin.ModifyInteractions(interactionDict);
+            //Should remove the interaction on the child class because of RemoveInteractionOnOriginalMethod2
+            Assert.AreEqual(1, interactionDict[typeof(ExampleInteractor)].Count);
+            Assert.AreEqual(0, interactionDict[typeof(ExampleInteractorChildClass)].Count);
+        }
+        private static void ShouldNotRedirectInteractionUsingModifyInteractionAttribute()
+        {
+            List<InteractionAttribute> originalInteractions = new List<InteractionAttribute>()
+            {
+                new InteractionAttribute(InteractionTrigger.LeftClick) { RPCName = nameof(ExampleInteractor.OriginalMethod3) },
+            };
+            ReplacementInteractionsPlugin.ModifyInteractions(new Dictionary<Type, List<InteractionAttribute>>() { { typeof(ExampleInteractor), originalInteractions } });
+            Assert.AreEqual(1, originalInteractions.Count);
+            var interaction = originalInteractions[0];
+            Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod3), interaction.RPCName);
+        }
+
+        private static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
             Log.WriteLine(Localizer.Do($"Check {list.Select(x => x is ReplacementInteractionAttribute r ? $"[{r.MethodName}->{x.RPCName}]" : $"<{x.RPCName}>").CommaList()}"));
 
@@ -278,6 +307,7 @@ namespace ReplacementInteractions.Tests
         {
             public void OriginalMethod(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public void OriginalMethod2(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
+            public void OriginalMethod3(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public void ReplacementMethod1(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public void ReplacementMethod2(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
             public static InteractionAttribute GetReplacementInteraction() => new InteractionAttribute(InteractionTrigger.RightClick);
@@ -307,6 +337,19 @@ namespace ReplacementInteractions.Tests
                 {
                     interaction.TriggerInfo = new InteractionTriggerInfo(InteractionTrigger.RightClick, interaction.TriggerInfo.Modifier);
                 }
+            }
+            [ModifyInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod3))]
+            public static void RemoveInteractionOnOriginalMethod3(Type interactorType, ref InteractionAttribute interaction)
+            {
+                if (interactorType == typeof(ExampleInteractorChildClass))
+                {
+                    interaction = null;
+                }
+            }
+            [ModifyInteraction(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethod3))]
+            public static void RedirectInteractionOnOriginalMethod3(Type interactorType, ref InteractionAttribute interaction)
+            {
+                interaction.RPCName = nameof(ExampleInteractor.OriginalMethod);
             }
         }
     }

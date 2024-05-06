@@ -106,8 +106,12 @@ namespace ReplacementInteractions
                     {
                         for (int i = 0; i < list.Count; i++)
                         {
+                            if (list[i].RPCName != modification.InteractorMethodName) continue;
+                            string methodName = list[i].RPCName;
                             list[i] = modification.ModificationMethod(type, list[i].Clone());
+                            list[i]?.Init(type, methodName);
                         }
+                        list.RemoveNulls();
                     }
                 }
             }
@@ -125,7 +129,7 @@ namespace ReplacementInteractions
                 return new InteractionParametersModification()
                 {
                     InteractorType = attribute.InteractorType,
-                    InteractorMethodName = method.Name,
+                    InteractorMethodName = attribute.MethodName,
                     ModificationMethod = (type, interaction) => { var parameters = new object[] { type, interaction.Clone() }; method.Invoke(null, parameters); return InteractionExtensions.AreEqual(interaction, parameters[1] as InteractionAttribute) ? interaction : parameters[1] as InteractionAttribute; }
                 };
             });
