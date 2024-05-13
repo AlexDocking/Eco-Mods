@@ -5,6 +5,7 @@ using Eco.Gameplay.Interactions.Interactors;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
+using Eco.Shared.Localization.ConstLocs;
 using Eco.Shared.Networking;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
@@ -12,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static Eco.Simulation.RouteProbing.AStarSearch;
 
 namespace ReplacementInteractions
 {
@@ -153,11 +155,23 @@ namespace ReplacementInteractions
             });
             return addModifications;
         }
-        private class Method
+        private interface INode
+        {
+            IEnumerable<INode> Children { get; }
+        }
+        private class MethodInteraction : INode
         {
             public string RPCName { get; set; }
             public List<InteractionAttribute> Interactions { get; set; } = new();
-            public List<Method> ReplacedBy { get; set; } = new();
+            public List<MethodInteraction> ReplacedBy { get; set; } = new();
+            public IEnumerable<INode> Children => ReplacedBy;
+        }
+        private class MethodRPC : INode
+        {
+            public string RPCName { get; set; }
+            public ISet<ReplacementRPCAttribute> RPCs { get; set; } = new HashSet<ReplacementRPCAttribute>();
+            public List<MethodRPC> ReplacedBy { get; set; } = new();
+            public IEnumerable<INode> Children => ReplacedBy;
         }
         public static void ReplaceInteractions(IEnumerable<KeyValuePair<Type, List<InteractionAttribute>>> interactionDict)
         {
@@ -165,13 +179,13 @@ namespace ReplacementInteractions
             {
                 Type type = interactionsForType.Key;
                 List<InteractionAttribute> list = interactionsForType.Value;
-                List<Method> methods = new List<Method>();
+                List<MethodInteraction> methods = new List<MethodInteraction>();
                 //Find all the interactions for each method
                 foreach(var interaction in list)
                 {
-                    if (methods.FirstOrDefault(method => method.RPCName == interaction.RPCName) is not Method method)
+                    if (methods.FirstOrDefault(method => method.RPCName == interaction.RPCName) is not MethodInteraction method)
                     {
-                        method = new Method() { RPCName = interaction.RPCName, Interactions = new List<InteractionAttribute>() { interaction } };
+                        method = new MethodInteraction() { RPCName = interaction.RPCName, Interactions = new List<InteractionAttribute>() { interaction } };
                         methods.Add(method);
                         Log.WriteLine(Localizer.Do($"New method {method.RPCName}"));
                     }
@@ -186,7 +200,7 @@ namespace ReplacementInteractions
                 {
                     if (interaction is ReplacementInteractionAttribute replacement)
                     {
-                        if (methods.FirstOrDefault(method => method.RPCName == replacement.MethodName) is Method method)
+                        if (methods.FirstOrDefault(method => method.RPCName == replacement.MethodName) is MethodInteraction method)
                         {
                             method.ReplacedBy.Add(methods.First(m => m.RPCName == interaction.RPCName));
                             Log.WriteLine(Localizer.Do($"Found replacement method {method.RPCName}->{replacement.RPCName}"));
@@ -198,7 +212,7 @@ namespace ReplacementInteractions
                 foreach (var method in methods.Where(m => m.Interactions.Any(interaction => interaction.GetType() == typeof(InteractionAttribute))))
                 {
                     Log.WriteLine(Localizer.Do($"Method {method.RPCName} has {method.Interactions.Count} interactions and is replaced by {method.ReplacedBy.Select(m => m.RPCName).CommaList()}"));
-                    IEnumerable<List<Method>> routeToLeaves = FindRoutesToLeaves(method, new List<Method>());
+                    IEnumerable<List<MethodInteraction>> routeToLeaves = FindRoutesToLeaves(method, new List<MethodInteraction>());
                     //Traverse each path and get the parameters of the resulting interaction, either passed along the chain from the original method or by any custom replacements on the way
                     foreach(var route in routeToLeaves)
                     {
@@ -209,7 +223,7 @@ namespace ReplacementInteractions
                         for(int i = 1; i < route.Count(); i++)
                         {
                             List<InteractionAttribute> newResults = new List<InteractionAttribute>();
-                            Method step = route[i];
+                            MethodInteraction step = route[i];
                             Log.WriteLine(Localizer.Do($"Step [{i}] has {step.Interactions.Count} interactions of which {step.Interactions.OfType<ReplacementInteractionAttribute>().Count()} are replacements"));
                             List<ReplacementInteractionAttribute> replacementAttributes = step.Interactions.OfType<ReplacementInteractionAttribute>().Where(replacement => replacement.MethodName == route[i-1].RPCName).ToList();
                             foreach(ReplacementInteractionAttribute replacement in replacementAttributes)
@@ -238,16 +252,16 @@ namespace ReplacementInteractions
                 list.Clear();
                 list.AddRange(leaves);
                 Log.WriteLine(Localizer.Do($"Results:{leaves.Select(leaf => $"{leaf.RPCName} ({leaf.GetType()})").SimpleCommaList()}"));
-                IEnumerable<List<Method>> FindRoutesToLeaves(Method root, List<Method> visited)
+                IEnumerable<List<MethodInteraction>> FindRoutesToLeaves(MethodInteraction root, List<MethodInteraction> visited)
                 {
-                    visited = new List<Method>(visited);
+                    visited = new List<MethodInteraction>(visited);
                     if (visited.Contains(root))
                     {
                         throw new InvalidOperationException($"Interaction cycle detected: {visited.Select(m => m.RPCName).TextList("->")}->{root.RPCName}");
                     }
                     visited.Add(root);
-                    ISet<List<Method>> leaves = new HashSet<List<Method>>();
-                    foreach(Method replacement in root.ReplacedBy)
+                    ISet<List<MethodInteraction>> leaves = new HashSet<List<MethodInteraction>>();
+                    foreach(MethodInteraction replacement in root.ReplacedBy)
                     {
                         var routes = FindRoutesToLeaves(replacement, visited);
                         foreach (var route in routes) { route.Insert(0, root); }
@@ -255,24 +269,10 @@ namespace ReplacementInteractions
                     }
                     if (!leaves.Any())
                     {
-                        leaves.Add(new List<Method>(new Method[] { root }));
+                        leaves.Add(new List<MethodInteraction>(new MethodInteraction[] { root }));
                     }
                     return leaves;
                 }
-                /*foreach (var replacementInteraction in list.OfType<ReplacementInteractionAttribute>().ToList())
-                {
-                    Log.WriteLine(Localizer.Do($"found override attribute RPC {replacementInteraction.RPCName}, replaces {replacementInteraction.MethodName}"));
-                    var oldAttribute = list.FirstOrDefault(attribute => attribute.RPCName == replacementInteraction.MethodName);
-                    if (replacementInteraction.CopyParameters)
-                    {
-                        EditInteraction(oldAttribute, replacementInteraction.RPCName, null);
-                        list.Remove(replacementInteraction);
-                    }
-                    else
-                    {
-                        ReplaceInteraction(list, oldAttribute, replacementInteraction);
-                    }
-                }*/
             }
         }
 
@@ -284,7 +284,7 @@ namespace ReplacementInteractions
                 var attributes = method.GetCustomAttributes<ReplacementRPCAttribute>();
                 foreach (var attribute in attributes)
                 {
-                    attribute.Func = (object caller, object[] parameters) => method.Invoke(null, caller.SingleItemAsEnumerable().Concat(parameters).ToArray());
+                    attribute.Initialize(method);
                 }
                 return attributes;
             });
@@ -292,17 +292,88 @@ namespace ReplacementInteractions
         }
         public static void ReplaceRPCs()
         {
-            foreach(var rpcMethodReplacement in FindReplacementRPCs())
+            //Discover replacement RPC attributes
+            Dictionary<Type, List<ReplacementRPCAttribute>> replacementRPCs = new Dictionary<Type, List<ReplacementRPCAttribute>>();
+
+            var nodes = new List<MethodRPC>();
+            foreach (var replacementRPC in FindReplacementRPCs())
             {
-                var dict = RPCManager.GetOrBuildLookup(rpcMethodReplacement.Type);
-                if (dict.TryGetValue(rpcMethodReplacement.RPCName, out var rpcMethods))
+                replacementRPCs.AddToList(replacementRPC.Type, replacementRPC);
+            }
+            Dictionary<RPCMethod, ReplacementRPCAttribute> rpcMethodReplacements = new Dictionary<RPCMethod, ReplacementRPCAttribute>();
+            foreach (var type in replacementRPCs.Keys)
+            {
+                foreach (var replacementRPC in replacementRPCs[type])
                 {
-                    foreach(RPCMethod rpcMethod in rpcMethods)
+                    MethodRPC rpcNode = nodes.FirstOrDefault(node => node.RPCName == replacementRPC.RPCName);
+                    if (rpcNode == null)
                     {
-                        rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), rpcMethodReplacement.Func);
+                        rpcNode = new MethodRPC();
+                        rpcNode.RPCName = replacementRPC.RPCName;
+                        nodes.Add(rpcNode);
+                    }
+                    MethodRPC replacementNode = nodes.FirstOrDefault(node => node.RPCName == replacementRPC.ReplacementRPCName);
+                    if (replacementNode == null)
+                    {
+                        replacementNode = new MethodRPC();
+                        replacementNode.RPCName = replacementRPC.ReplacementRPCName;
+                        nodes.Add(replacementNode);
+                    }
+                    replacementNode.RPCs.Add(replacementRPC);
+                    rpcNode.ReplacedBy.Add(replacementNode);
+                }
+                var rpcDict = RPCManager.GetOrBuildLookup(type);
+                foreach (var node in nodes)
+                {
+                    if (rpcDict.TryGetValue(node.RPCName, out RPCMethod[] rpcMethods))
+                    {
+                        var routes = FindRoutesToLeaves(node, new List<MethodRPC>());
+                        var leaf = routes.First().Last();
+                        if (!routes.All(route => route.Last() == leaf))
+                        {
+                            string leafNodeMethodNames = routes.Select(routes => routes.Last()).Distinct().Select(node =>
+                                                            {
+                                                                var method = node.RPCs.First().MethodInfo;
+                                                                return $"{method.DeclaringType.FullName}.{method.Name}";
+                                                            }).NewlineList();
+                            throw new Exception($"RPCs can only be replaced by a single implementation. For \"{type.FullName}.{node.RPCName}\", found:\n{leafNodeMethodNames}");
+                        }
+
+                        ReplacementRPCAttribute replacementRPC = leaf.RPCs.First();
+                        foreach(var rpcMethod in rpcMethods)
+                        {
+                            rpcMethodReplacements.Add(rpcMethod, replacementRPC);
+                        }
                     }
                 }
             }
+            //Update RPCMethods with their replacement functions
+            foreach(RPCMethod rpcMethod in rpcMethodReplacements.Keys)
+            {
+                ReplacementRPCAttribute replacementRPC = rpcMethodReplacements[rpcMethod];
+                rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), replacementRPC.Func);
+            }
+        }
+        private static IEnumerable<List<T>> FindRoutesToLeaves<T>(T root, List<T> visited) where T : INode
+        {
+            visited = new List<T>(visited);
+            if (visited.Contains(root))
+            {
+                throw new InvalidOperationException($"Interaction cycle detected: {visited.Select(m => m.ToString()).TextList("->")}->{root.ToString()}");
+            }
+            visited.Add(root);
+            ISet<List<T>> leaves = new HashSet<List<T>>();
+            foreach (T replacement in root.Children)
+            {
+                var routes = FindRoutesToLeaves<T>(replacement, visited);
+                foreach (var route in routes) { route.Insert(0, root); }
+                leaves.AddRange(routes);
+            }
+            if (!leaves.Any())
+            {
+                leaves.Add(new List<T>(new T[] { root }));
+            }
+            return leaves;
         }
     }
     static class ExtraReflectionUtils

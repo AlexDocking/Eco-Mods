@@ -302,12 +302,13 @@ namespace ReplacementInteractions.Tests
             var rpc = rpcMethods.First();
             rpc.Func(interactor, new object[] { default, default, default });
             Assert.AreEqual(1, interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
-            Assert.AreEqual(0, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacesOriginalMethodRPC)));
+            Assert.AreEqual(0, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
             interactor.Calls.Clear();
             ReplacementInteractionsPlugin.ReplaceRPCs();
             rpc.Func(interactor, new object[] { default, default, default });
             Assert.AreEqual(0, interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
-            Assert.AreEqual(1, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacesOriginalMethodRPC)));
+            Assert.AreEqual(1, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
+            ExampleRPCReplacer.Calls.Clear();
         }
         private static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
@@ -380,8 +381,13 @@ namespace ReplacementInteractions.Tests
         public class ExampleRPCReplacer
         {
             public static Dictionary<string, int> Calls { get; set; } = new Dictionary<string, int>();
+            [ReplacementRPC(typeof(ExampleInteractor), nameof(ExampleRPCReplacer.ReplacementRPC))]
+            [ReplacementRPC(typeof(ExampleInteractor), nameof(ExampleRPCReplacer.ReplacementRPCAlternative))]
+            public static void ReplacementRPCPatch(ExampleInteractor interactor, Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { Calls.AddOrUpdate(nameof(ReplacementRPCPatch), 1, (num, i) => num + i); }
             [ReplacementRPC(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethodRPC))]
-            public static void ReplacesOriginalMethodRPC(ExampleInteractor interactor, Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { Calls.AddOrUpdate(nameof(ReplacesOriginalMethodRPC), 1, (num, i) => num + i); }
+            public static void ReplacementRPCAlternative(ExampleInteractor interactor, Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { Calls.AddOrUpdate(nameof(ReplacementRPCAlternative), 1, (num, i) => num + i); }
+            [ReplacementRPC(typeof(ExampleInteractor), nameof(ExampleInteractor.OriginalMethodRPC))]
+            public static void ReplacementRPC(ExampleInteractor interactor, Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { Calls.AddOrUpdate(nameof(ReplacementRPC), 1, (num, i) => num + i); }
         }
     }
     namespace EcoTests
