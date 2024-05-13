@@ -5,6 +5,7 @@ using Eco.Gameplay.Interactions.Interactors;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
+using Eco.Shared.Networking;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
 using System;
@@ -273,6 +274,43 @@ namespace ReplacementInteractions
                     }
                 }*/
             }
+        }
+
+        private static IEnumerable<ReplacementRPCAttribute> FindReplacementRPCs()
+        {
+            var classesWithReplacementRPCs = ReflectionCache.GetAssemblies().SelectMany(assembly => assembly.DefinedTypes.Where(type => type.HasAttribute<DefinesInteractionsAttribute>()));
+            var replacementRPCMethods = classesWithReplacementRPCs.SelectMany(type => type.MethodsWithAttribute<ReplacementRPCAttribute>()).Where(method => method.IsPublic && method.IsStatic && !method.IsGenericMethod);
+            var replacementRPCAttributes = replacementRPCMethods.SelectMany(method => {
+                var attributes = method.GetCustomAttributes<ReplacementRPCAttribute>();
+                foreach (var attribute in attributes)
+                {
+                    attribute.Func = (object caller, object[] parameters) => method.Invoke(null, caller.SingleItemAsEnumerable().Concat(parameters).ToArray());
+                }
+                return attributes;
+            });
+            return replacementRPCAttributes;
+        }
+        public static void ReplaceRPCs()
+        {
+            foreach(var rpcMethodReplacement in FindReplacementRPCs())
+            {
+                var dict = RPCManager.GetOrBuildLookup(rpcMethodReplacement.Type);
+                if (dict.TryGetValue(rpcMethodReplacement.RPCName, out var rpcMethods))
+                {
+                    foreach(RPCMethod rpcMethod in rpcMethods)
+                    {
+                        rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), rpcMethodReplacement.Func);
+                    }
+                }
+            }
+        }
+    }
+    static class ExtraReflectionUtils
+    {
+        public static void SetPropertyWithBackingFieldByName(this object obj, string name, object value)
+        {
+            var field = obj.GetType().GetField($"<{name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(obj, value);
         }
     }
     static class InteractionExtensions
