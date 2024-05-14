@@ -206,7 +206,7 @@ namespace Eco.Mods.Organisms
 
             this.UpdateMinimapObjectScale();
             if (!this.Fallen)
-                MinimapManager.Obj.Objects.Add(this.minimapObject);
+                MinimapManager.Obj.DeltaHashSetObjects.Add(this.minimapObject);
         }
 
         //The scale formula for the minimap is based on the Species's Scale and the Tree's Growth.
@@ -486,7 +486,7 @@ namespace Eco.Mods.Organisms
 
             if (player != null)
                 PlantSimEvents.TreeFelledEvent.Invoke(player.User, this.Species);
-            MinimapManager.Obj.Objects.Remove(this.minimapObject);
+            MinimapManager.Obj.DeltaHashSetObjects.Remove(this.minimapObject);
 
             this.MarkDirty();
         }
@@ -814,7 +814,7 @@ namespace Eco.Mods.Organisms
                     break;
                 treeBlockCheck += Vector3i.Up;
             }
-            MinimapManager.Obj.Objects.Remove(this.minimapObject);
+            MinimapManager.Obj.DeltaHashSetObjects.Remove(this.minimapObject);
             base.Destroy();
         }
     }
