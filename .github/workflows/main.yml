@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Package code
         run: |
-          cp -r "./src" "./package"
+          cp -r "./XP Benefits/src" "./package"
           sed -i "1s/.*/# XP Benefits ${{ github.event.inputs.version }} for Eco ${{ github.event.inputs.eco_version}}/" "./package/Mods/UserCode/XP Benefits/README.md"
           cp "LICENSE" "./package/Mods/UserCode/XP Benefits/LICENSE"
       - name: Install zip

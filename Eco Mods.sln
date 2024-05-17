@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompatibleTools", "Compatib
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplacementInteractions", "ReplacementInteractions\ReplacementInteractions.csproj", "{8C2D1C02-8366-4C39-8875-CE8365A1B163}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPBenefits", "XPBenefits.csproj", "{5BEB8359-C83D-4570-A257-0290474A6B02}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPBenefits", "XP Benefits\XPBenefits.csproj", "{22B73056-2E90-4B0F-826F-BB91C3004266}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{8C2D1C02-8366-4C39-8875-CE8365A1B163}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C2D1C02-8366-4C39-8875-CE8365A1B163}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C2D1C02-8366-4C39-8875-CE8365A1B163}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5BEB8359-C83D-4570-A257-0290474A6B02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5BEB8359-C83D-4570-A257-0290474A6B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5BEB8359-C83D-4570-A257-0290474A6B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5BEB8359-C83D-4570-A257-0290474A6B02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22B73056-2E90-4B0F-826F-BB91C3004266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22B73056-2E90-4B0F-826F-BB91C3004266}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22B73056-2E90-4B0F-826F-BB91C3004266}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22B73056-2E90-4B0F-826F-BB91C3004266}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
