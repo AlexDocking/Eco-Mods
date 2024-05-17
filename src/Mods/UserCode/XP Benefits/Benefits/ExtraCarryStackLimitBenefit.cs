@@ -48,7 +48,6 @@ namespace XPBenefits
     }
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
-        public override bool Enabled => XPConfig.ExtraCarryStackLimitEnabled;
         /// <summary>
         /// Used by shovels to work out how much their size should increase
         /// </summary>
@@ -58,6 +57,7 @@ namespace XPBenefits
         {
             base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
+            Enabled = XPConfig.ExtraCarryStackLimitEnabled;
             MaxBenefitValue = XPConfig.ExtraCarryStackLimitMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCarryStackLimitXPLimitEnabled;
             ModsPreInitialize();
@@ -65,9 +65,9 @@ namespace XPBenefits
             ModsPostInitialize();
             if (!Enabled) return;
             ShovelBenefit ??= BenefitFunction;
-            ShovelItem.MaxTakeResolver.Add(new ExtraCarryStackLimitModifier());
-            TreeEntity.MaxPickupResolver.Add(new ExtraCarryStackLimitModifier());
-            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(new ExtraCarryStackLimitModifier());
+            ShovelItem.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
+            TreeEntity.MaxPickupResolver.Add(100, new ExtraCarryStackLimitModifier());
+            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();
@@ -158,10 +158,9 @@ namespace XPBenefits
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
         public string ExtraCarryStackLimitBenefitFunction { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCarryStackLimitBenefitFunction); set { extraCarryStackLimitBenefitFunction = value; } }
     }
-    public class ExtraCarryStackLimitModifier : IPriorityModifyInPlaceDynamicValueHandler
+    public class ExtraCarryStackLimitModifier : IModifyValueInPlaceHandler
     {
-        public float Priority { get; } = 100;
-        public void ModifyValue(IModifyInPlaceDynamicValueContext context)
+        public void ModifyValue(IModifyValueInPlaceContext context)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return;

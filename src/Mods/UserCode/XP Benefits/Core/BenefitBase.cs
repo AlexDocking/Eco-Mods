@@ -39,7 +39,7 @@ namespace XPBenefits
             if (factory == null)
             {
                 Enabled = false;
-                Log.WriteWarningLineLoc($"Warning: {GetType().Name} has an invalid benefit function. Set a valid option and restart the server. Until then this benefit will be disabled.");
+                Log.WriteWarningLineLoc($"Warning: {GetType().Name} has an invalid benefit function \"{benefitFunctionType}\". Set a valid option and restart the server. Until then this benefit will be disabled.");
                 return null;
             }
             return factory.Create(XPConfig, MaxBenefitValue, XPLimitEnabled);

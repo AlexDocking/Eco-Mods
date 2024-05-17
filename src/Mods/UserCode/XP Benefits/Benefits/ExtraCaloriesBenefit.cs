@@ -44,12 +44,12 @@ namespace XPBenefits
     }
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
-        public override bool Enabled => XPConfig.ExtraCaloriesEnabled;
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
         public override void OnPluginLoaded()
         {
             base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
+            Enabled = XPConfig.ExtraCaloriesEnabled;
             MaxBenefitValue = XPConfig.ExtraCaloriesMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraCaloriesXPLimitEnabled;
             ModsPreInitialize();

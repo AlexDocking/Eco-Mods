@@ -25,6 +25,7 @@ using Eco.Gameplay.Items;
 using Eco.Gameplay.Items.Actionbar;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
+using Eco.Shared.Utils;
 
 namespace XPBenefits
 {
@@ -46,19 +47,19 @@ namespace XPBenefits
     }
     public partial class ExtraWeightLimitBenefit : BenefitBase
     {
-        public override bool Enabled => XPConfig.ExtraWeightLimitEnabled;
-
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
 
         public override void OnPluginLoaded()
         {
             base.OnPluginLoaded();
             XPConfig = XPBenefitsPlugin.Obj.Config;
+            Enabled = XPConfig.ExtraWeightLimitEnabled;
             MaxBenefitValue = XPConfig.ExtraWeightLimitMaxBenefitValue;
             XPLimitEnabled = XPConfig.ExtraWeightLimitXPLimitEnabled;
             ModsPreInitialize();
             BenefitFunction = CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunction);
             ModsPostInitialize();
+            Log.WriteLine(Localizer.Do($"weight benefit function:{BenefitFunction?.GetType()}"));
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();
