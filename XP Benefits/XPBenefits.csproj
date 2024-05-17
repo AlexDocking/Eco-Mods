@@ -16,5 +16,9 @@
     <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.1.5-beta-release-619" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Compatible Tools\CompatibleTools.csproj" />
+  </ItemGroup>
+
 
 </Project>

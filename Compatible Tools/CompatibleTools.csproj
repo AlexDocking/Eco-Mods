@@ -8,4 +8,8 @@
     <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.2.1-beta-release-647" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Replacement Interactions\ReplacementInteractions.csproj" />
+  </ItemGroup>
+
 </Project>
