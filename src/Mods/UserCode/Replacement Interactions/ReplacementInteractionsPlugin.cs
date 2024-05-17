@@ -27,6 +27,7 @@ namespace ReplacementInteractions
         public void Initialize(TimedTask timer)
         {
             ReplaceInteractions();
+            ReplaceRPCs();
         }
         public static void EditInteraction(Type type, string methodName, string replacementMethodName)
         {
@@ -279,9 +280,9 @@ namespace ReplacementInteractions
         private static IEnumerable<ReplacementRPCAttribute> FindReplacementRPCs()
         {
             var classesWithReplacementRPCs = ReflectionCache.GetAssemblies().SelectMany(assembly => assembly.DefinedTypes.Where(type => type.HasAttribute<DefinesInteractionsAttribute>()));
-            var replacementRPCMethods = classesWithReplacementRPCs.SelectMany(type => type.MethodsWithAttribute<ReplacementRPCAttribute>()).Where(method => method.IsPublic && method.IsStatic && !method.IsGenericMethod);
+            var replacementRPCMethods = classesWithReplacementRPCs.SelectMany(type => type.MethodsWithAttribute<ReplacementRPCAttribute>()).Where(method => method.IsPublic && !method.IsGenericMethod);
             var replacementRPCAttributes = replacementRPCMethods.SelectMany(method => {
-                var attributes = method.GetCustomAttributes<ReplacementRPCAttribute>();
+                var attributes = method.GetCustomAttributes<ReplacementRPCAttribute>(true);
                 foreach (var attribute in attributes)
                 {
                     attribute.Initialize(method);
@@ -300,7 +301,6 @@ namespace ReplacementInteractions
             {
                 replacementRPCs.AddToList(replacementRPC.Type, replacementRPC);
             }
-            Dictionary<RPCMethod, ReplacementRPCAttribute> rpcMethodReplacements = new Dictionary<RPCMethod, ReplacementRPCAttribute>();
             foreach (var type in replacementRPCs.Keys)
             {
                 foreach (var replacementRPC in replacementRPCs[type])
@@ -342,16 +342,11 @@ namespace ReplacementInteractions
                         ReplacementRPCAttribute replacementRPC = leaf.RPCs.First();
                         foreach(var rpcMethod in rpcMethods)
                         {
-                            rpcMethodReplacements.Add(rpcMethod, replacementRPC);
+                            Log.WriteLine(Localizer.Do($"Replaced RPC {type}.{rpcMethod.Name} with {replacementRPC.MethodInfo.DeclaringType}.{replacementRPC.ReplacementRPCName}"));
+                            rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), replacementRPC.Func);
                         }
                     }
                 }
-            }
-            //Update RPCMethods with their replacement functions
-            foreach(RPCMethod rpcMethod in rpcMethodReplacements.Keys)
-            {
-                ReplacementRPCAttribute replacementRPC = rpcMethodReplacements[rpcMethod];
-                rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), replacementRPC.Func);
             }
         }
         private static IEnumerable<List<T>> FindRoutesToLeaves<T>(T root, List<T> visited) where T : INode

@@ -7,12 +7,12 @@ using Eco.Shared.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Eco.Shared.Localization;
+using Eco.Shared.Networking;
+using ReplacementInteractions.Tests.EcoTests;
 
 namespace ReplacementInteractions.Tests
 {
-    using Eco.Shared.Localization;
-    using Eco.Shared.Networking;
-    using EcoTests;
     [ChatCommandHandler]
     public static class TestReplacementInteractions
     {
@@ -293,22 +293,77 @@ namespace ReplacementInteractions.Tests
             var interaction = originalInteractions[0];
             Assert.AreEqual(nameof(ExampleInteractor.OriginalMethod3), interaction.RPCName);
         }
+        /// <summary>
+        /// Test replacing an RPC with a static method in another class
+        /// </summary>
+        private class StaticRPCTest
+        {
+            private RPCMethod RPCMethod { get; }
+            private ExampleInteractor Interactor { get; }
+            public StaticRPCTest()
+            {
+                Dictionary<string, RPCMethod[]> rpcDict = RPCManager.GetOrBuildLookup(typeof(ExampleInteractor));
+                var rpcMethods = rpcDict[nameof(ExampleInteractor.OriginalMethodRPC)];
+                Assert.AreEqual(1, rpcMethods.Length);
+                RPCMethod = rpcMethods.First();
+                Interactor = new ExampleInteractor();
+            }
+            public void Setup()
+            {
+                Assert.AreEqual(0, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
+                RPCMethod.Func(Interactor, new object[] { default, default, default });
+                Assert.AreEqual(1, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
+                Assert.AreEqual(0, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
+                Interactor.Calls.Clear();
+            }
+            public void Test()
+            {
+                RPCMethod.Func(Interactor, new object[] { default, default, default });
+                Assert.AreEqual(0, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
+                Assert.AreEqual(1, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
+                ExampleRPCReplacer.Calls.Clear();
+            }
+        }
+        /// <summary>
+        /// Test replacing an RPC with a method in the same class
+        /// </summary>
+        private class LocalRPCTest
+        {
+            private RPCMethod RPCMethod { get; }
+            private ExampleInteractor Interactor { get; }
+            public LocalRPCTest()
+            {
+                Dictionary<string, RPCMethod[]> rpcDict = RPCManager.GetOrBuildLookup(typeof(ExampleInteractor));
+                var rpcMethods = rpcDict[nameof(ExampleInteractor.SecondMethodRPC)];
+                Assert.AreEqual(1, rpcMethods.Length);
+                RPCMethod = rpcMethods.First();
+                Interactor = new ExampleInteractor();
+            }
+            public void Setup()
+            {
+                Assert.AreEqual(0, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.SecondMethodRPC)));
+                RPCMethod.Func(Interactor, new object[0]);
+                Assert.AreEqual(1, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.SecondMethodRPC)));
+                Assert.AreEqual(0, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.ReplacementSecondMethodRPC)));
+                Interactor.Calls.Clear();
+            }
+            public void Test()
+            {
+                RPCMethod.Func(Interactor, new object[0]);
+                Assert.AreEqual(0, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.SecondMethodRPC)));
+                Assert.AreEqual(1, Interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.ReplacementSecondMethodRPC)));
+                Interactor.Calls.Clear();
+            }
+        }
         private static void ShouldReplaceRPCMethodFunc()
         {
-            var rpcMethods = RPCManager.GetOrBuildLookup(typeof(ExampleInteractor))[nameof(ExampleInteractor.OriginalMethodRPC)];
-            Assert.AreEqual(1, rpcMethods.Length);
-            var interactor = new ExampleInteractor();
-            Assert.AreEqual(0, interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
-            var rpc = rpcMethods.First();
-            rpc.Func(interactor, new object[] { default, default, default });
-            Assert.AreEqual(1, interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
-            Assert.AreEqual(0, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
-            interactor.Calls.Clear();
+            StaticRPCTest staticRPCTest = new StaticRPCTest();
+            LocalRPCTest localRPCTest = new LocalRPCTest();
+            staticRPCTest.Setup();
+            localRPCTest.Setup();
             ReplacementInteractionsPlugin.ReplaceRPCs();
-            rpc.Func(interactor, new object[] { default, default, default });
-            Assert.AreEqual(0, interactor.Calls.GetValueOrDefault(nameof(ExampleInteractor.OriginalMethodRPC)));
-            Assert.AreEqual(1, ExampleRPCReplacer.Calls.GetValueOrDefault(nameof(ExampleRPCReplacer.ReplacementRPCPatch)));
-            ExampleRPCReplacer.Calls.Clear();
+            staticRPCTest.Test();
+            localRPCTest.Test();
         }
         private static void Check(List<InteractionAttribute> list, string expectedMethodName)
         {
@@ -372,10 +427,15 @@ namespace ReplacementInteractions.Tests
                 interaction.RPCName = nameof(ExampleInteractor.OriginalMethod);
             }
         }
+        [DefinesInteractions]
         public partial class ExampleInteractor
         {
             [ReplacementInteraction(nameof(OriginalMethod))]
             public void ReplacesOriginalMethod(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target) { }
+            [RPC]
+            public void SecondMethodRPC() { Calls.AddOrUpdate(nameof(SecondMethodRPC), 1, (num, i) => num + i); }
+            [ReplacementRPC(nameof(SecondMethodRPC))]
+            public void ReplacementSecondMethodRPC() { Calls.AddOrUpdate(nameof(ReplacementSecondMethodRPC), 1, (num, i) => num + i); }
         }
         [DefinesInteractions]
         public class ExampleRPCReplacer

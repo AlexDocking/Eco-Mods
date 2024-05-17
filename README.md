@@ -1,10 +1,12 @@
 ﻿# Replacement Interactions - Modding tool
-Replace interaction methods in partial classes without an override.cs file. Add, remove or modify interaction attributes for any existing interaction method.
+Replace interaction methods and attributes without using override.cs files, and replace *some* RPCs (server data queried by the client) from outside the class. Also add, remove or modify interaction attributes for any existing interaction method.
 
 <u>*This is a tool for modders and does nothing by itself*</u>
 
 ### What's the motivation behind it?
 Several mods override the same files to edit the interaction implementations or change the interaction parameters. Naturally they are not only incompatible with each other without the end user manually combining files, but also with any other modifications to unrelated sections of the file. By moving changes to interactions out of the override file it leaves the override file free for those other changes which cannot be done any other way.
+
+There are also some limited use cases for changing what data is sent to back to the client which otherwise could not be done without modifying the server's source code.
 ## Usage:
 ### Replace an interaction method
 If you want to make changes to an interaction method in a partial class you can do so without overriding the file, therefore making your mod more compatible with other mods.
@@ -71,6 +73,26 @@ public partial class ShovelItem
 	public bool CompatabilityPatchMod1Mod2Dig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
 	{
 		//The original "Dig" interaction now bypasses "Mod1Dig" and "Mod2Dig" to be replaced by this method
+	}
+}
+```
+### Replace an RPC from outside the class
+You can redirect some (but not all) RPCs to your own implementations from an external class using `ReplacementRPCAttribute`. It works similarly to replacement interactions.
+
+Your replacement method must be `public static`, and the class you put it in must have the `DefinesInteractionsAttribute`. The method will be only be called on the type you specify, not any of their derived types. Your method will be called with the class instance, followed by all of the method's arguments. It also needs the same return type.
+
+The attribute's constructor is `ReplacementRPCAttribute(Type interactorType, string rpcName)`. The first parameter is the type of object the RPC is defined on, the second parameter is the name of the RPC method to replace. Replacements are not inherited, so a new attribute is needed for each of the target class' derived classes. Like interactions, you can also override other mods' replacements using additional attributes with the names of the other mods' replacement methods.
+
+In this example, if there were a method `[RPC] int QueryData(string str)` in a class `ClassWithRPC` then this code would replace its implementation as far as the RPCManager is concerned. However, many RPCs seem to bypass this.
+```csharp
+[DefinesInteractions]
+public class ExampleRPCReplacer
+{
+	[ReplacementRPC(typeof(ClassWithRPC), nameof(ClassWithRPC.QueryData))]
+	[ReplacementRPC(typeof(ClassWithRPC), "NameOfOtherModsReplacementRPCMethod")] //take priority over another mod's replacement of the RPC, if it exists
+	public static int ReplacementRPC(ClassWithRPC instance, string str)
+	{
+		return 1;
 	}
 }
 ```
