@@ -1,8 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="package\**" />
+    <EmbeddedResource Remove="package\**" />
+    <None Remove="package\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.2.1-beta-release-647" />

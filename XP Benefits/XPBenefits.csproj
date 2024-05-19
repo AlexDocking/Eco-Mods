@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="package\**" />
+    <EmbeddedResource Remove="package\**" />
+    <None Remove="package\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="tests\Mods\UserCode\Ecopedia\XP Benefits;Disabled Benefit.xml" />
   </ItemGroup>
 
