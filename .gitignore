@@ -7,6 +7,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 >>>>>>> 26bb399 (Initial commit)
 
+package/
+
 # User-specific files
 *.rsuser
 *.suo
