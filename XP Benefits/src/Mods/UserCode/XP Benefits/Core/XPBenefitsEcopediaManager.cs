@@ -14,16 +14,13 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core;
-using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace XPBenefits
 {
@@ -35,6 +32,11 @@ namespace XPBenefits
         }
         private Dictionary<IUserBenefit, IBenefitEcopediaGenerator> EcopediaGenerators { get; } = new Dictionary<IUserBenefit, IBenefitEcopediaGenerator>();
         public IBenefitEcopediaGenerator GetEcopedia(IUserBenefit userBenefit) => EcopediaGenerators.TryGetValue(userBenefit, out var generator) ? generator : null;
+        /// <summary>
+        /// Register a benefit with a corresponding object to create the ecopedia page, and the page will be created when the server finishes startup so long as the benefit is enabled.
+        /// </summary>
+        /// <param name="benefit"></param>
+        /// <param name="ecopediaGenerator"></param>
         public void RegisterEcopediaPageGenerator(IUserBenefit benefit, IBenefitEcopediaGenerator ecopediaGenerator)
         {
             EcopediaGenerators.Add(benefit, ecopediaGenerator);

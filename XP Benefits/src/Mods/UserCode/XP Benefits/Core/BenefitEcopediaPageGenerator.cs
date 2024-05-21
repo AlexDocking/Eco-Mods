@@ -67,6 +67,11 @@ namespace XPBenefits
     {
         BenefitBase Benefit { get; }
         EcopediaPage CreateEcopediaPage();
+        /// <summary>
+        /// The information about a benefit which is user-specific or is dependent on mod settings. It will be added to the bottom of the Ecopedia page.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         LocString GenerateEcopediaDescription(User user);
     }
     public abstract class BenefitEcopediaGenerator : IBenefitEcopediaGenerator
