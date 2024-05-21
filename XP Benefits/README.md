@@ -52,6 +52,8 @@ Enjoy!
 
 
 ## Changelog
+### v1.2.1
+- Update for Eco v0.10.2.3
 ### v1.2.0
 - Update for Eco v0.10.0. Remove option to exclude the bonus from shovels (IncreaseShovelSize) - now it is always applied
 ### v1.1.0
