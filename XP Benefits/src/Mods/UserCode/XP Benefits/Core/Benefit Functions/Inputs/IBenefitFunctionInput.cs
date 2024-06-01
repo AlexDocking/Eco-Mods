@@ -13,29 +13,14 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
-using Eco.Mods.TechTree;
-using Eco.Shared.Localization;
-using Eco.Shared.Utils;
-using System;
+using Eco.Shared.Math;
 
-namespace XPBenefits.Tests
+namespace XPBenefits
 {
-    public static class TestingUtils
+    public interface IBenefitFunctionInput
     {
-        public static Type[] SingleFood => new Type[] { typeof(WildStewItem) };
-        public static void ResetStomach(this User user, params Type[] foodTypes)
-        {
-            user.Stomach.Contents.Clear();
-
-            foreach (Type foodType in foodTypes)
-            {
-                if (Item.Get(foodType) is not FoodItem foodItem) continue;
-                
-                user.Stomach.Eat(foodItem, out _, force: true);
-            }
-        }
-
+        float GetInput(User user);
+        Range GetInputRange(User user);
     }
 }
