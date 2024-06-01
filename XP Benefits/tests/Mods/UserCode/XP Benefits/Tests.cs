@@ -31,7 +31,7 @@ namespace XPBenefits.Tests
     using Eco.Gameplay.Players;
     using Eco.Mods.TechTree;
     using Eco.Shared.Localization;
-    using EcoTests;
+    using EcoTestTools;
     using System.Collections.Generic;
 
     [ChatCommandHandler]
@@ -224,86 +224,6 @@ namespace XPBenefits.Tests
             food.Food = Item.Get<WildStewItem>();
             food.TimeEaten = TimeUtil.Days;
             user.Stomach.Contents.Add(food);
-        }
-    }
-}
-namespace EcoTests
-{
-    public class Assert
-    {
-        public static void AreEqual(object expected, object actual)
-        {
-            if (!Equals(expected, actual))
-            {
-                throw new Exception($"AreEqual failed.\nExpected={expected}\nActual={actual}");
-            }
-        }
-        public static void AreEqual(float expected, float actual, float delta = 0.0001f)
-        {
-            if (Math.Abs(expected - actual) > delta)
-            {
-                throw new Exception($"AreEqual failed.\nExpected={expected}\nActual={actual}\nwith difference no greater than {delta}");
-            }
-        }
-        public static void AreNotEqual(object notExpected, object actual)
-        {
-            if (Equals(notExpected, actual))
-            {
-                throw new Exception($"AreNotEqual failed.\nNot Expected={notExpected}\nActual={actual}");
-            }
-        }
-        public static void IsNull(object obj)
-        {
-            if (obj is not null)
-            {
-                throw new Exception($"IsNull failed.\nGot={obj}");
-            }
-        }
-        public static void IsNotNull(object obj)
-        {
-            if (obj is null)
-            {
-                throw new Exception($"IsNotNull failed.");
-            }
-        }
-        public static void IsTrue(bool value)
-        {
-            if (!value)
-            {
-                throw new Exception($"IsTrue failed.");
-            }
-        }
-        public static void IsFalse(bool value)
-        {
-            if (value)
-            {
-                throw new Exception($"IsFalse failed.");
-            }
-        }
-    }
-    public static class Test
-    {
-        /// <summary>
-        /// Unhandled exceptions in tests will cause the server to shut down and not run
-        /// any remaining tests, so we need to catch any exceptions the tests throw
-        /// </summary>
-        /// <param name="test"></param>
-        public static void Run(Action test)
-        {
-            float skillGainMultiplier = DifficultySettings.SkillGainMultiplier;
-            DifficultySettings.SkillGainMultiplier = 1;
-            try
-            {
-                test();
-            }
-            catch (Exception ex)
-            {
-                Log.WriteException(ex);
-            }
-            finally
-            {
-                DifficultySettings.SkillGainMultiplier = skillGainMultiplier;
-            }
         }
     }
 }

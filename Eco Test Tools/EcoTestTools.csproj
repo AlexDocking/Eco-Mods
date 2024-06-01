@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="Eco.ReferenceAssemblies" Version="0.10.2.3-beta-release-669" />
+  </ItemGroup>
+</Project>

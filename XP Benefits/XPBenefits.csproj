@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Compatible Tools\CompatibleTools.csproj" />
+    <ProjectReference Include="..\Eco Test Tools\EcoTestTools.csproj" />
   </ItemGroup>
 
 
