@@ -82,7 +82,7 @@ namespace XPBenefits
         public abstract LocString DisplayName { get; }
         public abstract string Summary { get; }
         public virtual string IconName { get; }
-        public virtual IEnumerable<LocString> Sections { get; }
+        public virtual IEnumerable<LocString> Sections { get; } = Enumerable.Empty<LocString>();
         public abstract LocString BenefitDescription { get; }
         public BenefitBase Benefit { get; }
         public IBenefitDescriber BenefitDescriber { get; }

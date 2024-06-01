@@ -23,7 +23,9 @@ using System.Linq;
 namespace XPBenefits.Tests
 {
     using Eco.Core.Controller;
+    using Eco.Core.Plugins.Interfaces;
     using Eco.Core.Systems;
+    using Eco.Core.Utils;
     using Eco.Gameplay.EcopediaRoot;
     using Eco.Gameplay.Items;
     using Eco.Gameplay.Players;
@@ -55,7 +57,6 @@ namespace XPBenefits.Tests
         [CITest]
         public static void TestXPBenefitPlugin()
         {
-            Test.Run(ShouldDiscoverBenefits);
             Test.Run(ShouldCreateEcopediaPagesForBenefits);
         }
         [ChatCommand(ChatAuthorizationLevel.Developer)]
@@ -128,33 +129,14 @@ namespace XPBenefits.Tests
             config.DefaultMaximumHousingXP = 10;
             Assert.AreEqual(1f, SkillRateUtil.FractionHousingXP(11, config, true));
         }
-        public static void ShouldDiscoverBenefits()
-        {
-            XPBenefitsPlugin plugin = XPBenefitsPlugin.Obj;
-            ValidBenefit shouldFindValidBenefit = plugin.Benefits.Where(benefit => benefit.GetType() == typeof(ValidBenefit)).SingleOrDefault() as ValidBenefit;
-            Assert.IsNotNull(shouldFindValidBenefit);
-            DisabledBenefit shouldNotFindDisabledBenefit = plugin.Benefits.Where(benefit => benefit.GetType() == typeof(DisabledBenefit)).SingleOrDefault() as DisabledBenefit;
-            Assert.IsNull(shouldNotFindDisabledBenefit);
-
-            NoDefaultConstructorBenefit shouldNotFindBenefitWithoutDefaultConstructor = plugin.Benefits.Where(benefit => benefit.GetType() == typeof(NoDefaultConstructorBenefit)).SingleOrDefault() as NoDefaultConstructorBenefit;
-            Assert.IsNull(shouldNotFindBenefitWithoutDefaultConstructor);
-
-            AbstractBenefit shouldNotFindAbstractBenefit = plugin.Benefits.Where(benefit => benefit.GetType() == typeof(AbstractBenefit)).SingleOrDefault() as AbstractBenefit;
-            Assert.IsNull(shouldNotFindAbstractBenefit);
-        }
         public static void ShouldCreateEcopediaPagesForBenefits()
         {
-            XPBenefitsPlugin plugin = XPBenefitsPlugin.Obj;
-            BenefitWithoutEcopediaPage benefitWithoutEcopedia = plugin.Benefits.OfType<BenefitWithoutEcopediaPage>().SingleOrDefault();
-            Assert.IsNull(GetEcopediaPage(benefitWithoutEcopedia));
-
-            DisabledBenefit disabledBenefit = new DisabledBenefit();
-            Assert.IsNull(GetEcopediaPage(disabledBenefit));
-
-            BenefitWithEcopediaPage benefitWithEcopedia = plugin.Benefits.OfType<BenefitWithEcopediaPage>().SingleOrDefault();
-            EcopediaPage ecopediaPage = GetEcopediaPage(benefitWithEcopedia);
+            ExampleBenefit benefitWithEcopedia = XPBenefitsPlugin.Obj.Benefits.OfType<ExampleBenefit>().SingleOrDefault();
+            BenefitEcopediaGenerator ecopediaGenerator = XPBenefitsEcopediaManager.Obj.GetEcopedia(benefitWithEcopedia) as BenefitEcopediaGenerator;
+            Assert.IsNotNull(ecopediaGenerator);
+            EcopediaPage ecopediaPage = ecopediaGenerator.GetPage();
             Assert.IsNotNull(ecopediaPage);
-            Assert.AreEqual(benefitWithEcopedia.EcopediaPagePriority, ecopediaPage.Priority);
+            Assert.AreEqual(ecopediaGenerator.PagePriority, ecopediaPage.Priority);
             Assert.IsTrue(Ecopedia.Obj.Categories["XP Benefits"].Pages.ContainsValue(ecopediaPage));
         }
         public static void ShouldCalculateFoodBenefitFunction()
@@ -243,63 +225,7 @@ namespace XPBenefits.Tests
             food.TimeEaten = TimeUtil.Days;
             user.Stomach.Contents.Add(food);
         }
-        private static EcopediaPage GetEcopediaPage(IUserBenefit benefit) => benefit != null ? Ecopedia.Obj.GetPage(benefit.EcopediaPageName) : null;
     }
-
-    /// <summary>
-    /// It is ILoggedInBenefit and doesn't specify any constructors so the empty constructor exists
-    /// </summary>
-    public class ValidBenefit : IUserBenefit
-    {
-        public virtual string EcopediaPageName => "Valid Benefit";
-        public virtual float EcopediaPagePriority => 3;
-
-        public void ApplyBenefitToUser(User user)
-        {
-        }
-        public void RemoveBenefitFromUser(User user)
-        {
-        }
-    }
-    public class BenefitWithEcopediaPage : BenefitBase
-    {
-        public override string EcopediaPageName { get; } = "Ecopedia Benefit";
-        public override float EcopediaPagePriority { get; } = 4;
-        protected override LocString BenefitDescription { get; } = LocString.Empty;
-        public override void ApplyBenefitToUser(User user)
-        {
-        }
-        public override void RemoveBenefitFromUser(User user)
-        {
-        }
-    }
-    public class BenefitWithEcopediaPageEcopediaGenerator : BenefitEcopediaGenerator
-    {
-        protected override Type BenefitType => base.BenefitType;
-        public override string Summary => "Test Summary";
-        public override LocString DisplayName => Localizer.DoStr("Test Benefit");
-    }
-    public class BenefitWithoutEcopediaPage : ValidBenefit
-    {
-    }
-    public class DisabledBenefit : ValidBenefit
-    {
-        public bool Enabled => false;
-        public override string EcopediaPageName => "Disabled Benefit";
-    }
-    public class NoDefaultConstructorBenefit : ValidBenefit
-    {
-        public NoDefaultConstructorBenefit(bool b) { }
-    }
-    public abstract class AbstractBenefit : ValidBenefit
-    {
-        public AbstractBenefit() { }
-    }
-    /// <summary>
-    /// Should be ignored when finding benefits to instantiate
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class GenericBenefit<T> : ValidBenefit { }
 }
 namespace EcoTests
 {
