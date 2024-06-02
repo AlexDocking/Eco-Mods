@@ -20,9 +20,9 @@ namespace XPBenefits
 {
     public class FoodXPInput : IBenefitFunctionInput
     {
-        public FoodXPInput(XPConfig xPConfig)
+        public FoodXPInput(XPConfig xpConfig)
         {
-            XPConfig = xPConfig;
+            XPConfig = xpConfig;
         }
 
         XPConfig XPConfig { get; }

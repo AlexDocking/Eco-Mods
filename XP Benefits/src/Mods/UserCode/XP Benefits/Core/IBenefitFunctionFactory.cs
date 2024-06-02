@@ -29,25 +29,12 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Gameplay.Players;
-using Eco.Shared.Localization;
-
 namespace XPBenefits
 {
-    public class InputDescriber
+    public interface IBenefitFunctionFactory
     {
-        public InputDescriber(IBenefitFunctionInput input, string inputName)
-        {
-            Input = input;
-            InputName = inputName;
-        }
-
-        string InputName { get; }
-        IBenefitFunctionInput Input { get; }
-        public LocString DescribeInput(User user)
-        {
-            float inputValue = Input.GetInput(user); 
-            return Localizer.Do($"{DisplayUtils.GradientNumLoc(inputValue, inputValue.ToString("0.#"), Input.GetInputRange(user))} {InputName}");
-        }
+        string Name { get; }
+        string Description { get; }
+        IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false);
     }
 }

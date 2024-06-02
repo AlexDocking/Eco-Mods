@@ -26,7 +26,7 @@ namespace XPBenefits.Tests
     {
         [ChatCommand(ChatAuthorizationLevel.Developer)]
         [CITest]
-        public static void TestBenefitFunctionInputDescriptions()
+        public static void TestBenefitFunctionDescriptions()
         {
             Test.Run(ShouldDescribeFoodBenefitFunction);
         }
@@ -39,8 +39,8 @@ namespace XPBenefits.Tests
             //User has 1/3 of the maximum food xp
             config.DefaultMaximumFoodXP = SkillRateUtil.FoodXP(user) * 3;
             BenefitValue maximumBenefit = new BenefitValue(10);
-            FoodBenefitFunction benefitFunction = new FoodBenefitFunction(config, maximumBenefit, false);
-            IBenefitDescriber benefitDescriber = benefitFunction;
+            IBenefitFunction benefitFunction = new FoodBenefitFunctionFactory().Create(config, maximumBenefit, false);
+            IBenefitDescriber benefitDescriber = benefitFunction.Describer;
 
             Assert.AreEqual("<style=\"Positive\">2.44</style>", (string)benefitDescriber.CurrentBenefit(user));
             Assert.AreEqual("<color=#FF7C00FF>34</color> food XP", (string)benefitDescriber.CurrentInput(user));

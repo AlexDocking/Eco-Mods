@@ -46,7 +46,7 @@ namespace XPBenefits.Tests
             xpConfig.DefaultBaseFoodXP = foodXP * 0.5f;
             xpConfig.DefaultMaximumFoodXP = foodXP * 2;
 
-            IBenefitFunction foodBenefitFunction = new FoodBenefitFunction(xpConfig, 10, false);
+            IBenefitFunction foodBenefitFunction = new FoodBenefitFunctionFactory().Create(xpConfig, 10, false);
             Assert.AreEqual(10 / 3f, foodBenefitFunction.CalculateBenefit(testUser));
         }
 
