@@ -53,21 +53,27 @@ namespace XPBenefits
         /// </summary>
         public IBenefitFunction ShovelBenefit { get; set; }
 
-        public override void OnPluginLoaded()
+        public void Initialize(bool enabled, BenefitValue maxBenefitValue, bool xpLimitEnabled, IBenefitFunction benefitFunction)
         {
-            base.OnPluginLoaded();
-            XPConfig = XPBenefitsPlugin.Obj.Config;
-            Enabled = XPConfig.ExtraCarryStackLimitEnabled;
-            MaxBenefitValue = XPConfig.ExtraCarryStackLimitMaxBenefitValue;
-            XPLimitEnabled = XPConfig.ExtraCarryStackLimitXPLimitEnabled;
             ModsPreInitialize();
-            BenefitFunction = CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunction);
+            Enabled = enabled;
+            MaxBenefitValue = maxBenefitValue;
+            XPLimitEnabled = xpLimitEnabled;
+            BenefitFunction = benefitFunction;
             ModsPostInitialize();
             if (!Enabled) return;
             ShovelBenefit ??= BenefitFunction;
             ShovelItem.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
             TreeEntity.MaxPickupResolver.Add(100, new ExtraCarryStackLimitModifier());
             MiningSweepingHandsTalent.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
+        }
+        public override void Initialize()
+        {
+            XPConfig config = XPBenefitsPlugin.Obj.Config;
+            Initialize(enabled: config.ExtraCarryStackLimitEnabled,
+                       maxBenefitValue: config.ExtraCarryStackLimitMaxBenefitValue,
+                       xpLimitEnabled: config.ExtraCarryStackLimitXPLimitEnabled,
+                       benefitFunction: CreateBenefitFunction(config.ExtraCarryStackLimitBenefitFunction));
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();

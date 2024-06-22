@@ -68,7 +68,7 @@ namespace XPBenefits
             Config.AvailableBenefitFunctionTypesDescription = CreatableBenefitFunctions.Select(factory => factory.Name + ": " + Localizer.LocalizeString(factory.Description)).Order().ToList();
             foreach (var benefit in Benefits)
             {
-                benefit.OnPluginLoaded();
+                benefit.Initialize();
             }
             ModsChangeBenefits();
             Log.WriteLine(Localizer.DoStr("XP Benefits Status:" + GetStatus()));

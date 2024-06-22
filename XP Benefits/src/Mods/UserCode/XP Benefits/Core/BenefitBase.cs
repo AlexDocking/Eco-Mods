@@ -27,7 +27,7 @@ namespace XPBenefits
         /// e.g. 55 food xp is the same as 50 if the config says the maximum food is 50.
         /// </summary>
         public virtual bool XPLimitEnabled { get; protected set; }
-        public virtual XPConfig XPConfig { get; protected set; }
+        protected virtual XPConfig XPConfig { get; set; }
         public virtual BenefitValue MaxBenefitValue { get; protected set; }
         public virtual IBenefitFunction BenefitFunction { get; protected set; }
         public virtual bool Enabled { get; protected set; } = true;
@@ -42,10 +42,9 @@ namespace XPBenefits
                 Log.WriteWarningLineLoc($"Warning: {GetType().Name} has an invalid benefit function \"{benefitFunctionType}\". Set a valid option and restart the server. Until then this benefit will be disabled.");
                 return null;
             }
+            Log.WriteLine(Eco.Shared.Localization.Localizer.Do($"Benefit factory:{benefitFunctionType}:{factory.GetType()}"));
             return factory.Create(XPConfig, MaxBenefitValue, XPLimitEnabled);
         }
-        public virtual void OnPluginLoaded()
-        {
-        }
+        public abstract void Initialize();
     }
 }

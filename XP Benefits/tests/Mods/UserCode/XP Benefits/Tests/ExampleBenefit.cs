@@ -17,11 +17,6 @@ using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace XPBenefits.Tests
 {
@@ -72,6 +67,11 @@ namespace XPBenefits.Tests
         public override void ApplyBenefitToUser(User user)
         {
         }
+
+        public override void Initialize()
+        {
+        }
+
         public override void RemoveBenefitFromUser(User user)
         {
         }

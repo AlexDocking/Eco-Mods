@@ -17,7 +17,10 @@ using Eco.Core.Tests;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using Eco.Gameplay.Utils;
+using Eco.Shared.Localization;
+using Eco.Shared.Utils;
 using EcoTestTools;
+using System.Reflection;
 
 namespace XPBenefits.Tests
 {
@@ -29,6 +32,8 @@ namespace XPBenefits.Tests
         public static void TestBenefitFunctionDescriptions()
         {
             Test.Run(ShouldDescribeFoodBenefitFunction);
+
+            Test.Run(ShouldDescribeExtraCarryStackLimitBenefit);
         }
 
         public static void ShouldDescribeFoodBenefitFunction()
@@ -52,6 +57,37 @@ namespace XPBenefits.Tests
 
             //Generate the above asserts
             /*LocStringBuilder locStringBuilder = new LocStringBuilder();
+            foreach (MethodInfo method in typeof(IBenefitDescriber).GetMethods())
+            {
+                locStringBuilder.AppendLine(Localizer.Do($"Assert.AreEqual(\"{method.Invoke(benefitDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitDescriber)}.{method.Name}({nameof(user)}));"));
+            }
+            Log.WriteLine(locStringBuilder.ToLocString());
+            */
+        }
+        public static void ShouldDescribeExtraCarryStackLimitBenefit()
+        {
+            User user = TestUtils.TestUser;
+            user.ResetStomach(TestingUtils.SingleFood);
+            XPConfig config = new XPConfig();
+            //User has 1/3 of the maximum food xp
+            config.DefaultMaximumFoodXP = SkillRateUtil.FoodXP(user) * 3;
+            config.ExtraCarryStackLimitBenefitFunction = new FoodBenefitFunctionFactory().Name;
+            config.ExtraCarryStackLimitMaxBenefitValue = 10;
+            ExtraCarryStackLimitBenefit benefit = new ExtraCarryStackLimitBenefit();
+            benefit.Initialize(true, 10, false, new FoodBenefitFunctionFactory().Create(config, 10));
+            IBenefitDescriber benefitDescriber = new ExtraCarryStackLimitBenefitDescriber(benefit);
+
+            Assert.AreEqual("<style=\"Positive\">+244%</style>", (string)benefitDescriber.CurrentBenefit(user));
+            Assert.AreEqual("<color=#FF7C00FF>34</color> food XP", (string)benefitDescriber.CurrentInput(user));
+            Assert.AreEqual("<color=#FF7C00FF>+244%</color>", (string)benefitDescriber.CurrentBenefitEcopedia(user));
+            Assert.AreEqual("<link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitDescriber.InputName(user));
+            Assert.AreEqual("<style=\"Positive\">+1000%</style>", (string)benefitDescriber.MaximumBenefit(user));
+            Assert.AreEqual("<style=\"Positive\">102</style> food XP", (string)benefitDescriber.MaximumInput(user));
+            Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitDescriber.MeansOfImprovingStat(user));
+            
+            //Generate the above asserts
+            /*
+            LocStringBuilder locStringBuilder = new LocStringBuilder();
             foreach (MethodInfo method in typeof(IBenefitDescriber).GetMethods())
             {
                 locStringBuilder.AppendLine(Localizer.Do($"Assert.AreEqual(\"{method.Invoke(benefitDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitDescriber)}.{method.Name}({nameof(user)}));"));

@@ -31,6 +31,6 @@ namespace XPBenefits
         /// Called during the XP Benefits plugin Initialize.
         /// Can be used for any setup that can't be done until the XP Benefits config and the available calculation types are loaded.
         /// </summary>
-        void OnPluginLoaded();
+        void Initialize();
     }
 }
