@@ -20,30 +20,33 @@ namespace XPBenefits
 {
     public class BenefitDescriber : IBenefitDescriber
     {
-        public BenefitDescriber(IBenefitInputDescriber inputDescriber, IBenefitFunction benefitFunction, BenefitValue maximumBenefit)
+        public BenefitDescriber(IBenefitInputDescriber inputDescriber, IBenefitOutputDescriber outputDescriber)
         {
             InputDescriber = inputDescriber;
-            BenefitFunction = benefitFunction;
-            MaximumBenefit = maximumBenefit;
+            OutputDescriber = outputDescriber;
         }
 
         public IBenefitInputDescriber InputDescriber { get; }
-        public IBenefitFunction BenefitFunction { get; }
-        public BenefitValue MaximumBenefit { get; }
-        
-        LocString IBenefitDescriber.MaximumBenefit(User user) => TextLoc.StyledNum(MaximumBenefit.GetValue(user));
-        
-        LocString IBenefitDescriber.CurrentBenefit(User user) => TextLoc.StyledNum(BenefitFunction.CalculateBenefit(user));
+        public IBenefitOutputDescriber OutputDescriber { get; }
 
-        LocString IBenefitDescriber.CurrentBenefitEcopedia(User user)
+        public LocString CurrentBenefit(User user)
         {
-            float currentBenefit = BenefitFunction.CalculateBenefit(user);
-            return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)));
+            return OutputDescriber.CurrentBenefit(user);
+        }
+
+        public LocString CurrentBenefitEcopedia(User user)
+        {
+            return OutputDescriber.CurrentBenefitEcopedia(user);
         }
 
         public LocString CurrentInput(User user) => InputDescriber.CurrentInput(user);
 
         public LocString InputName(User user) => InputDescriber.InputName(user);
+
+        public LocString MaximumBenefit(User user)
+        {
+            return OutputDescriber.MaximumBenefit(user);
+        }
 
         public LocString MaximumInput(User user) => InputDescriber.MaximumInput(user);
 

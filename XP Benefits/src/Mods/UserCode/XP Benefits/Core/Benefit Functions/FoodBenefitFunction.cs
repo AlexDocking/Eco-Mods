@@ -43,7 +43,7 @@ namespace XPBenefits
             {
                 InputName = "food XP",
                 InputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()} multiplier"),
-            }, benefitFunction, maximumBenefit);
+            }, new BenefitOutputDescriber(benefitFunction, maximumBenefit));
             return benefitFunction;
         }
     }

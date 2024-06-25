@@ -29,7 +29,7 @@ namespace XPBenefits
             Input = input;
             MaximumBenefit = maximumBenefit;
             ClampBenefit = clampBenefit;
-            Describer = new BenefitDescriber(new InputDescriber(Input), this, maximumBenefit);
+            Describer = new BenefitDescriber(new InputDescriber(Input), new BenefitOutputDescriber(this, maximumBenefit));
         }
 
         public IBenefitDescriber Describer { get; set; }
