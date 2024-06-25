@@ -13,11 +13,16 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+using Eco.Gameplay.Housing;
 using Eco.Gameplay.Items;
+using Eco.Gameplay.Objects;
 using Eco.Gameplay.Players;
+using Eco.Gameplay.Property;
 using Eco.Mods.TechTree;
-using Eco.Shared.Localization;
-using Eco.Shared.Utils;
+using Eco.Shared.Items;
+using Eco.Shared.Math;
+using Eco.Shared.Voxel;
+using Eco.World.Blocks;
 using System;
 
 namespace XPBenefits.Tests
@@ -36,6 +41,13 @@ namespace XPBenefits.Tests
                 user.Stomach.Eat(foodItem, out _, force: true);
             }
         }
+        public static void BuildHouse(this User user)
+        {
+            if (user.GetResidencyHouse()?.PropertyValue.Value >= 0) return;
 
+            var (objectWithHousingValue, BuildingSize) = BuildingSpawner.SpawnBuildingWithObject(typeof(KitchenObject), user, new Vector3i(0, 100, 0));
+            Deed deed = PropertyUtils.ForceClaim(objectWithHousingValue.GetDeed(), user, BuildingSize.ToXZRect());
+            deed.SetResidency(user);
+        }
     }
 }
