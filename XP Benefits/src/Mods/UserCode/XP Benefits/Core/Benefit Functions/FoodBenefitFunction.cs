@@ -39,11 +39,11 @@ namespace XPBenefits
         {
             FoodXPInput input = new FoodXPInput(xpConfig);
             SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(input, maximumBenefit, xpLimitEnabled);
-            benefitFunction.Describer = new InputDescriber(input, benefitFunction, maximumBenefit)
+            benefitFunction.Describer = new BenefitDescriber(new InputDescriber(input)
             {
                 InputName = "food XP",
                 InputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()} multiplier"),
-            };
+            }, benefitFunction, maximumBenefit);
             return benefitFunction;
         }
     }
