@@ -60,7 +60,7 @@ namespace XPBenefits.Tests
             XPConfig xpConfig = new XPConfig();
             xpConfig.DefaultMaximumHousingXP = housingXP;
 
-            IBenefitFunction housingBenefitFunction = new HousingBenefitFunction(xpConfig, 10, false);
+            IBenefitFunction housingBenefitFunction = new HousingBenefitFunctionFactory().Create(xpConfig, 10, false);
             Assert.AreEqual(10, housingBenefitFunction.CalculateBenefit(testUser));
 
             xpConfig.DefaultMaximumHousingXP = housingXP * 2;
@@ -86,7 +86,7 @@ namespace XPBenefits.Tests
             //Fraction of food xp is 1/3
             //Fraction of housing xp is 1/2
             //Geometric mean is 1/sqrt(6)
-            IBenefitFunction geometricMeanFoodHousingBenefitFunction = new GeometricMeanFoodHousingBenefitFunction(xpConfig, 10, false);
+            IBenefitFunction geometricMeanFoodHousingBenefitFunction = new GeometricMeanFoodHousingBenefitFunctionFactory().Create(xpConfig, 10, false);
             Assert.AreEqual(10 * (float)(1 / Math.Sqrt(6)), geometricMeanFoodHousingBenefitFunction.CalculateBenefit(testUser));
         }
         public static void ShouldCalculateSkillRateBenefitFunction()
@@ -108,7 +108,7 @@ namespace XPBenefits.Tests
             //Maximum xp is 1.5 * food xp + 0.5 * housing xp
             //Actual xp is (1 - 0.5) * food xp + housing xp
             //Fraction therefore is (1/3 * food + housing) / (1.5 * food + 0.5 * housing)
-            IBenefitFunction skillRateBenefitFunction = new SkillRateBenefitFunction(xpConfig, 10, false);
+            IBenefitFunction skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, false);
             Assert.AreEqual(10 * (0.5f * foodXP + housingXP) / (1.5f * foodXP + 0.5f * housingXP), skillRateBenefitFunction.CalculateBenefit(testUser));
         }
     }
