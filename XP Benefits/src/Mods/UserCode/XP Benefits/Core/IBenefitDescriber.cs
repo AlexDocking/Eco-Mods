@@ -13,25 +13,10 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Gameplay.Players;
-using Eco.Shared.Localization;
 
 namespace XPBenefits
 {
-    public interface IBenefitDescriber
+    public interface IBenefitDescriber : IBenefitInputDescriber, IBenefitOutputDescriber
     {
-        LocString CurrentBenefit(User user);
-
-        LocString CurrentInput(User user);
-
-        LocString CurrentBenefitEcopedia(User user);
-
-        LocString InputName(User user);
-
-        LocString MaximumBenefit(User user);
-
-        LocString MaximumInput(User user);
-
-        LocString MeansOfImprovingStat(User user);
     }
 }

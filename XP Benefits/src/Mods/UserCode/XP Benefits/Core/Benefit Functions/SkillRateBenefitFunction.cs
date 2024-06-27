@@ -33,7 +33,7 @@ namespace XPBenefits
     /// Scale the benefit by the amount of food and housing xp the player has,
     /// treating both sources of xp equally
     /// </summary>
-    public class SkillRateBenefitFunction : IBenefitFunction, IBenefitDescriber
+    public class SkillRateBenefitFunction : IBenefitFunction, IBenefitInputDescriber
     {
         public XPConfig XPConfig { get; set; }
         public bool XPLimitEnabled { get; set; }
@@ -59,28 +59,21 @@ namespace XPBenefits
             return 0;
         }
         private string ExperienceEcopediaPageLink => Ecopedia.Obj.GetPage("Experience").UILink(Localizer.DoStr("XP Multiplier"));
-        #region IBenefitDescriber
-        IBenefitDescriber IBenefitFunction.Describer => this;
-        LocString IBenefitDescriber.InputName(User user) => Localizer.Do($"{ExperienceEcopediaPageLink}");
-        LocString IBenefitDescriber.MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {ExperienceEcopediaPageLink}");
-        LocString IBenefitDescriber.MaximumInput(User user)
+        #region IBenefitInputDescriber
+        public IBenefitInputDescriber Describer => this;
+        public LocString InputName(User user) => Localizer.Do($"{ExperienceEcopediaPageLink}");
+        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {ExperienceEcopediaPageLink}");
+        public LocString MaximumInput(User user)
         {
             float maxXPMultiplier = XPConfig.MaximumFoodXP + XPConfig.MaximumHousingXP;
             return Localizer.Do($"an XP multiplier of {TextLoc.StyledNumLoc(maxXPMultiplier, maxXPMultiplier.ToString("0.#"))}");
         }
-        LocString IBenefitDescriber.MaximumBenefit(User user) => TextLoc.StyledNum(MaximumBenefit.GetValue(user));
-        LocString IBenefitDescriber.CurrentInput(User user)
+        public LocString CurrentInput(User user)
         {
             float housingXP = SkillRateUtil.HousingXP(user);
             float foodXP = SkillRateUtil.FoodXP(user);
             float xpMultiplier = foodXP + housingXP;
             return Localizer.Do($"an XP multiplier of {DisplayUtils.GradientNumLoc(xpMultiplier, xpMultiplier.ToString("0.#"), new Range(XPConfig.BaseFoodXP, XPConfig.MaximumFoodXP + XPConfig.MaximumHousingXP))}");
-        }
-        LocString IBenefitDescriber.CurrentBenefit(User user) => TextLoc.StyledNum(CalculateBenefit(user));
-        LocString IBenefitDescriber.CurrentBenefitEcopedia(User user)
-        {
-            float currentBenefit = CalculateBenefit(user);
-            return Localizer.Do($"{DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("0.#"), new Eco.Shared.Math.Range(0, MaximumBenefit.GetValue(user)))}");
         }
         #endregion
     }

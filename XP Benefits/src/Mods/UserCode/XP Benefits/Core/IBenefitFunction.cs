@@ -14,13 +14,12 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Gameplay.Players;
-using Eco.Shared.Localization;
 
 namespace XPBenefits
 {
     public interface IBenefitFunction
     {
         public float CalculateBenefit(User user);
-        IBenefitDescriber Describer { get; }
+        IBenefitInputDescriber Describer { get; }
     }
 }
