@@ -98,7 +98,7 @@ namespace XPBenefits
             var locStringBuilder = new LocStringBuilder();
             IBenefitDescriber describer = BenefitDescriber;
 
-            locStringBuilder.AppendLineLoc($"{describer.MeansOfImprovingStat(user)}.");
+            locStringBuilder.AppendLineLoc($"{describer.MeansOfImprovingStat(user)}");
             locStringBuilder.AppendLine();
             var note = Benefit.XPLimitEnabled ? "Note that the benefit will be capped at this." : "Note that the benefit will not be capped at this if you can do even better.";
             if (Benefit.XPLimitEnabled)

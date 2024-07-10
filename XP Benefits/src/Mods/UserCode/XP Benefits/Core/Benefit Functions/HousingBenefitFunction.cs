@@ -29,53 +29,24 @@ namespace XPBenefits
             XPBenefitsPlugin.RegisterBenefitFunctionFactory(new HousingBenefitFunctionFactory());
         }
     }
-    /// <summary>
-    /// Scale the benefit by the amount of housing xp the player has
-    /// </summary>
-    public class HousingBenefitFunction : IBenefitFunction, IBenefitInputDescriber
-    {
-        public XPConfig XPConfig { get; set; }
-        public bool XPLimitEnabled { get; set; }
-        public BenefitValue MaximumBenefit { get; set; }
-        public HousingBenefitFunction(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
-        {
-            XPConfig = xpConfig;
-            XPLimitEnabled = xpLimitEnabled;
-            MaximumBenefit = maximumBenefit;
-        }
-        public float CalculateBenefit(User user)
-        {
-            try
-            {
-                float fractionOfBenefitToApply = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
 
-                if (XPLimitEnabled)
-                {
-                    fractionOfBenefitToApply = Math.Min(1, fractionOfBenefitToApply);
-                }
-                return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
-            }
-            catch
-            {
-            }
-            return 0;
-        }
-        private static string HousingEcopediaPageLink => Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"));
-        #region IBenefitInputDescriber
-        public IBenefitInputDescriber Describer => this;
-        public LocString InputName(User user) => Localizer.Do($"{HousingEcopediaPageLink} multiplier");
-        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {HousingEcopediaPageLink} multiplier");
-        public LocString MaximumInput(User user) => Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} housing XP");
-        public LocString CurrentInput(User user) => Localizer.Do($"{TextLoc.StyledNum(SkillRateUtil.HousingXP(user))} housing XP");
-        #endregion
-    }
     public class HousingBenefitFunctionFactory : IBenefitFunctionFactory
     {
         public string Name { get; } = "HousingOnly";
         public string Description { get; } = "Uses only the amount of housing xp the player has.";
+
         public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
-            return new HousingBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);
+            HousingXPInput input = new HousingXPInput(xpConfig);
+            SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(input, maximumBenefit, xpLimitEnabled);
+            LocString inputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"))} multiplier");
+            benefitFunction.Describer = new InputDescriber(input)
+            {
+                InputName = "housing XP",
+                InputTitle = inputTitle,
+                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {inputTitle}"),
+            };
+            return benefitFunction;
         }
     }
 }

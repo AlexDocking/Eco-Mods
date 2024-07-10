@@ -28,10 +28,11 @@ namespace XPBenefits
         public string InputName { get; set; }
         public LocString InputTitle { get; set; }
         private IBenefitFunctionInput Input { get; }
+        public LocString MeansOfImprovingStatDescription { get; set; }
 
         LocString IBenefitInputDescriber.InputName(User user) => InputTitle;
 
-        LocString IBenefitInputDescriber.MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {InputTitle}. Note that 'Base Gain' is ignored when calculating your nutrition percentage");
+        LocString IBenefitInputDescriber.MeansOfImprovingStat(User user) => MeansOfImprovingStatDescription;
 
         LocString IBenefitInputDescriber.MaximumInput(User user)
         {

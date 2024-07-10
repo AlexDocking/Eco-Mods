@@ -105,9 +105,9 @@ namespace XPBenefits.Tests
             IBenefitFunction benefitFunction = new HousingBenefitFunctionFactory().Create(config, maximumBenefit, false);
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
 
-            Assert.AreEqual("<style=\"Positive\">3</style> housing XP", (string)benefitInputDescriber.CurrentInput(user));
+            Assert.AreEqual("<color=#FF6600FF>3</color> housing XP", (string)benefitInputDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multiplier", (string)benefitInputDescriber.InputName(user));
-            Assert.AreEqual("<style=\"Positive\">102</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
+            Assert.AreEqual("<style=\"Positive\">15</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multiplier", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
