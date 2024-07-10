@@ -20,6 +20,8 @@ using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace XPBenefits
 {
@@ -39,20 +41,25 @@ namespace XPBenefits
         public XPConfig XPConfig { get; set; }
         public bool XPLimitEnabled { get; set; }
         public BenefitValue MaximumBenefit { get; set; }
+        private List<IBenefitFunctionInput> Inputs { get; set; }
         public GeometricMeanFoodHousingBenefitFunction(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
             XPConfig = xpConfig;
             XPLimitEnabled = xpLimitEnabled;
             MaximumBenefit = maximumBenefit;
+            Inputs = new List<IBenefitFunctionInput>()
+            {
+                new FoodXPInput(xpConfig),
+                new HousingXPInput(xpConfig)
+            };
         }
 
         public float CalculateBenefit(User user)
         {
             try
             {
-                float housingXP = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
-                float foodXP = SkillRateUtil.FractionFoodXP(user, XPConfig, XPLimitEnabled);
-                float fractionOfBenefitToApply = (float)Math.Sqrt(housingXP * foodXP);
+                float product = Inputs.Select(input => input.GetInputRange(user).PercentThrough(input.GetInput(user))).Mult();
+                float fractionOfBenefitToApply = (float)Math.Pow(product, 1f / Inputs.Count);
                 return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
             }
             catch
