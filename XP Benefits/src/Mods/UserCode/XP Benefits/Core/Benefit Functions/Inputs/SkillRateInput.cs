@@ -13,23 +13,23 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 using Eco.Gameplay.Players;
 using Eco.Shared.Math;
 
 namespace XPBenefits
 {
-    public interface IBenefitFunctionInput
+    public class SkillRateInput : IBenefitFunctionInput
     {
-        float GetInput(User user);
-        Range GetInputRange(User user);
-    }
-    public static class BenefitFunctionInputExtensions
-    {
-        public static float GetScaledInput(this IBenefitFunctionInput input, User user)
+        public SkillRateInput(XPConfig xpConfig)
         {
-            Range range = input.GetInputRange(user);
-            float val = input.GetInput(user);
-            return (val - range.Min) / (range.Max - range.Min);
+            XPConfig = xpConfig;
         }
+
+        private XPConfig XPConfig { get; }
+
+        public float GetInput(User user) => user.UserXP.SkillRate;
+
+        public Range GetInputRange(User user) => new Range(XPConfig.BaseFoodXP, XPConfig.MaximumFoodXP);
     }
 }

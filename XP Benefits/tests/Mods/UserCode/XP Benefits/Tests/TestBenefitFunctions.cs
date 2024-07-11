@@ -105,11 +105,11 @@ namespace XPBenefits.Tests
             xpConfig.DefaultMaximumFoodXP = foodXP * 2;
             xpConfig.DefaultMaximumHousingXP = housingXP * 0.5f;
 
-            //Maximum xp is 1.5 * food xp + 0.5 * housing xp
-            //Actual xp is (1 - 0.5) * food xp + housing xp
-            //Fraction therefore is (1/3 * food + housing) / (1.5 * food + 0.5 * housing)
+            //Food is 1 in range 0.5-2 -> 1/3 of max
+            //Housing is 1 in range 0-0.5 -> 2x max
+            //Calculation is based on the average of those
             IBenefitFunction skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, false);
-            Assert.AreEqual(10 * (0.5f * foodXP + housingXP) / (1.5f * foodXP + 0.5f * housingXP), skillRateBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * (0.5f * (1/3f + 2)), skillRateBenefitFunction.CalculateBenefit(testUser));
         }
     }
 }
