@@ -32,6 +32,7 @@ namespace XPBenefits
             XPBenefitsPlugin.RegisterBenefitFunctionFactory(new GeometricMeanFoodHousingBenefitFunctionFactory());
         }
     }
+
     /// <summary>
     /// Scale the benefit by the amount of food and housing xp the player has
     /// in such a way as to require both sources of xp to give any benefit
@@ -42,15 +43,40 @@ namespace XPBenefits
         public bool XPLimitEnabled { get; set; }
         public BenefitValue MaximumBenefit { get; set; }
         private List<IBenefitFunctionInput> Inputs { get; set; }
+        private List<InputDescriber> InputDescribers { get; set; }
+
         public GeometricMeanFoodHousingBenefitFunction(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
             XPConfig = xpConfig;
             XPLimitEnabled = xpLimitEnabled;
             MaximumBenefit = maximumBenefit;
+
+            FoodXPInput foodInput = new FoodXPInput(xpConfig);
+            HousingXPInput housingInput = new HousingXPInput(xpConfig);
             Inputs = new List<IBenefitFunctionInput>()
             {
-                new FoodXPInput(xpConfig),
-                new HousingXPInput(xpConfig)
+                foodInput,
+                housingInput
+            };
+            LocString foodInputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()}");
+            InputDescriber foodInputDescriber = new InputDescriber(foodInput)
+            {
+                InputName = "food XP",
+                InputTitle = foodInputTitle,
+                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {foodInputTitle}"),
+                AdditionalInfo = Localizer.DoStr("Note that 'Base Gain' is ignored when calculating your nutrition percentage"),
+            };
+            LocString housingInputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"))}");
+            InputDescriber housingInputDescriber = new InputDescriber(housingInput)
+            {
+                InputName = "housing XP",
+                InputTitle = housingInputTitle,
+                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {housingInputTitle}"),
+            };
+            InputDescribers = new List<InputDescriber>()
+            {
+                foodInputDescriber,
+                housingInputDescriber
             };
         }
 
@@ -58,7 +84,7 @@ namespace XPBenefits
         {
             try
             {
-                float product = Inputs.Select(input => input.GetInputRange(user).PercentThrough(input.GetInput(user))).Mult();
+                float product = Inputs.Select(input => input.GetScaledInput(user)).Mult();
                 float fractionOfBenefitToApply = (float)Math.Pow(product, 1f / Inputs.Count);
                 return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
             }
@@ -67,26 +93,43 @@ namespace XPBenefits
             }
             return 0;
         }
-        private static string NutritionEcopediaPageLink => Ecopedia.Obj.GetPage("Nutrition").UILink();
-        private static string HousingEcopediaPageLink => Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"));
 
         #region IBenefitInputDescriber
+
         public IBenefitInputDescriber Describer => this;
-        public LocString InputName(User user) => Localizer.Do($"{NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers");
-        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {NutritionEcopediaPageLink} and {HousingEcopediaPageLink} multipliers. If you want to see the greatest improvement you should improve the lower of the two percentages first. Note that 'Base Gain' is ignored when calculating your food XP percentage");
-        public LocString MaximumInput(User user) => Localizer.Do($"{TextLoc.StyledNum(XPConfig.MaximumFoodXP)} food XP and {TextLoc.StyledNum(XPConfig.MaximumHousingXP)} housing XP");
+
+        public LocString InputName(User user) => Localizer.Do($"{InputDescribers.Select(describer => (describer as IBenefitInputDescriber).InputName(user)).CommaList()} {Localizer.PluralNoNum("multiplier")}");
+
+        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {InputDescribers.Select(describer => (describer as IBenefitInputDescriber).InputName(user)).CommaList()} {Localizer.PluralNoNum("multiplier")}. If you want to see the greatest improvement you should improve the lowest percentage first. {InputDescribers.Select(describer => describer.AdditionalInfo).Where(s => s.IsSet()).JoinList(". ")}");
+
+        public LocString MaximumInput(User user)
+        {
+            List<LocString> locs = new List<LocString>();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                locs.Add(Localizer.Do($"{Text.StyledNum(Inputs[i].GetInputRange(user).Max)} {InputDescribers[i].InputName}"));
+            }
+            return locs.CommaList();
+        }
+
         public LocString CurrentInput(User user)
         {
-            float housingXP = SkillRateUtil.FractionHousingXP(user, XPConfig, XPLimitEnabled);
-            float foodXP = SkillRateUtil.FractionFoodXP(user, XPConfig, XPLimitEnabled);
-            return Localizer.Do($"{Text.GradientColoredPercent(foodXP)} food XP and {Text.GradientColoredPercent(housingXP)} housing XP");
+            List<LocString> locs = new List<LocString>();
+            for (int i = 0; i < Inputs.Count; i++)
+            {
+                locs.Add(Localizer.Do($"{Text.GradientColoredPercent(Inputs[i].GetScaledInput(user))} {InputDescribers[i].InputName}"));
+            }
+            return locs.CommaList();
         }
-        #endregion
+
+        #endregion IBenefitInputDescriber
     }
+
     public class GeometricMeanFoodHousingBenefitFunctionFactory : IBenefitFunctionFactory
     {
         public string Name => "GeometricMeanFoodHousing";
         public string Description => "Uses a combination of the amount of food and housing xp the player has in such a way as to require both sources of xp to give any benefit.";
+
         public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
             return new GeometricMeanFoodHousingBenefitFunction(xpConfig, maximumBenefit, xpLimitEnabled);

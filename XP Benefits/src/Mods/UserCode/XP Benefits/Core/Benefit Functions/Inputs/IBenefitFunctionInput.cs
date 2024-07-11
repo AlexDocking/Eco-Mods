@@ -23,4 +23,8 @@ namespace XPBenefits
         float GetInput(User user);
         Range GetInputRange(User user);
     }
+    public static class BenefitFunctionInputExtensions
+    {
+        public static float GetScaledInput(this IBenefitFunctionInput input, User user) => input.GetInputRange(user).PercentThrough(input.GetInput(user));
+    }
 }

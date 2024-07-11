@@ -27,12 +27,13 @@ namespace XPBenefits
 
         public string InputName { get; set; }
         public LocString InputTitle { get; set; }
+        public LocString AdditionalInfo { get; set; }
         private IBenefitFunctionInput Input { get; }
         public LocString MeansOfImprovingStatDescription { get; set; }
 
         LocString IBenefitInputDescriber.InputName(User user) => InputTitle;
 
-        LocString IBenefitInputDescriber.MeansOfImprovingStat(User user) => MeansOfImprovingStatDescription;
+        LocString IBenefitInputDescriber.MeansOfImprovingStat(User user) => MeansOfImprovingStatDescription + (AdditionalInfo.IsSet() ? ". " + AdditionalInfo : LocString.Empty);
 
         LocString IBenefitInputDescriber.MaximumInput(User user)
         {

@@ -44,7 +44,8 @@ namespace XPBenefits
             {
                 InputName = "food XP",
                 InputTitle = inputTitle,
-                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {inputTitle}. Note that 'Base Gain' is ignored when calculating your nutrition percentage"),
+                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {inputTitle}"),
+                AdditionalInfo = Localizer.DoStr("Note that 'Base Gain' is ignored when calculating your nutrition percentage"),
             };
             return benefitFunction;
         }
