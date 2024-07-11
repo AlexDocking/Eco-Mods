@@ -63,7 +63,8 @@ namespace XPBenefits
                 foodInputDescriber,
                 housingInputDescriber
             };
-            return new GeometricMeanBenefitFunction(inputs, inputDescribers, maximumBenefit);
+            GeometricMeanInputDescriber describer = new GeometricMeanInputDescriber(inputs, inputDescribers);
+            return new GeometricMeanBenefitFunction(inputs, describer, maximumBenefit);
         }
     }
 }
