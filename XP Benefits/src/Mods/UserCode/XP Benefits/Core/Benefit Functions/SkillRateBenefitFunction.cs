@@ -51,6 +51,7 @@ namespace XPBenefits
                 foodInput,
                 housingInput
             };
+            inputs = inputs.Select(input => new ClampInput(input, xpLimitEnabled)).Cast<IBenefitFunctionInput>().ToList();
             Inputs = inputs;
         }
         public float CalculateBenefit(User user)

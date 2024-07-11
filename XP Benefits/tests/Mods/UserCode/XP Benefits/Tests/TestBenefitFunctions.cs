@@ -110,6 +110,10 @@ namespace XPBenefits.Tests
             //Calculation is based on the average of those
             IBenefitFunction skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, false);
             Assert.AreEqual(10 * (0.5f * (1/3f + 2)), skillRateBenefitFunction.CalculateBenefit(testUser));
+
+            //Clamp % housing score to 1
+            skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, true);
+            Assert.AreEqual(10 * (0.5f * (1/3f + 1)), skillRateBenefitFunction.CalculateBenefit(testUser));
         }
     }
 }
