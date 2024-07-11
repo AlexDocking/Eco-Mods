@@ -18,6 +18,7 @@ using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace XPBenefits
 {
@@ -43,6 +44,7 @@ namespace XPBenefits
                 foodInput,
                 housingInput
             };
+            inputs = inputs.Select(input => new ClampInput(input, xpLimitEnabled)).Cast<IBenefitFunctionInput>().ToList();
             LocString foodInputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()}");
             InputDescriber foodInputDescriber = new InputDescriber(foodInput)
             {
@@ -63,6 +65,7 @@ namespace XPBenefits
                 foodInputDescriber,
                 housingInputDescriber
             };
+
             GeometricMeanInputDescriber describer = new GeometricMeanInputDescriber(inputs, inputDescribers);
             return new GeometricMeanBenefitFunction(inputs, describer, maximumBenefit);
         }
