@@ -43,11 +43,14 @@ namespace XPBenefits.Tests
             Assert.AreNotEqual(0, foodXP);
 
             XPConfig xpConfig = new XPConfig();
-            xpConfig.DefaultBaseFoodXP = foodXP * 0.5f;
-            xpConfig.DefaultMaximumFoodXP = foodXP * 2;
+            xpConfig.DefaultBaseFoodXP = foodXP * 0.25f;
+            xpConfig.DefaultMaximumFoodXP = foodXP * 0.75f;
 
             IBenefitFunction foodBenefitFunction = new FoodBenefitFunctionFactory().Create(xpConfig, 10, false);
-            Assert.AreEqual(10 / 3f, foodBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * 1.5f, foodBenefitFunction.CalculateBenefit(testUser));
+
+            foodBenefitFunction = new FoodBenefitFunctionFactory().Create(xpConfig, 10, true);
+            Assert.AreEqual(10, foodBenefitFunction.CalculateBenefit(testUser));
         }
 
         public static void ShouldCalculateHousingBenefitFunction()
@@ -58,14 +61,13 @@ namespace XPBenefits.Tests
             Assert.AreNotEqual(0, housingXP);
 
             XPConfig xpConfig = new XPConfig();
-            xpConfig.DefaultMaximumHousingXP = housingXP;
+            xpConfig.DefaultMaximumHousingXP = housingXP / 1.5f;
 
             IBenefitFunction housingBenefitFunction = new HousingBenefitFunctionFactory().Create(xpConfig, 10, false);
+            Assert.AreEqual(10 * 1.5f, housingBenefitFunction.CalculateBenefit(testUser));
+
+            housingBenefitFunction = new HousingBenefitFunctionFactory().Create(xpConfig, 10, true);
             Assert.AreEqual(10, housingBenefitFunction.CalculateBenefit(testUser));
-
-            xpConfig.DefaultMaximumHousingXP = housingXP * 2;
-
-            Assert.AreEqual(10 * 0.5f, housingBenefitFunction.CalculateBenefit(testUser));
         }
         public static void ShouldCalculateGeometricFoodHousingBenefitFunction()
         {

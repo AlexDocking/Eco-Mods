@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Systems.TextLinks;
@@ -27,7 +28,7 @@ namespace XPBenefits
             XPBenefitsPlugin.RegisterBenefitFunctionFactory(new FoodBenefitFunctionFactory());
         }
     }
-    
+
     /// <summary>
     /// Create a function that scales the benefit by the amount of food xp the player has
     /// </summary>
@@ -35,10 +36,11 @@ namespace XPBenefits
     {
         public string Name { get; } = "FoodOnly";
         public string Description { get; } = "Uses only the amount of food xp the player has.";
+
         public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
             FoodXPInput input = new FoodXPInput(xpConfig);
-            SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(input, maximumBenefit, xpLimitEnabled);
+            SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(new ClampInput(input, xpLimitEnabled), maximumBenefit);
             LocString inputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()} multiplier");
             benefitFunction.Describer = new InputDescriber(input)
             {

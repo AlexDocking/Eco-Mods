@@ -13,8 +13,8 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 using Eco.Gameplay.Players;
-using System;
 
 namespace XPBenefits
 {
@@ -24,11 +24,10 @@ namespace XPBenefits
         public BenefitValue MaximumBenefit { get; }
         public bool ClampBenefit { get; }
 
-        public SimpleBenefitFunction(IBenefitFunctionInput input, BenefitValue maximumBenefit, bool clampBenefit)
+        public SimpleBenefitFunction(IBenefitFunctionInput input, BenefitValue maximumBenefit)
         {
             Input = input;
             MaximumBenefit = maximumBenefit;
-            ClampBenefit = clampBenefit;
             Describer = new InputDescriber(Input);
         }
 
@@ -38,7 +37,6 @@ namespace XPBenefits
         {
             var range = Input.GetInputRange(user);
             float benefit = (Input.GetInput(user) - range.Min) / (range.Max - range.Min);
-            benefit = ClampBenefit ? Math.Clamp(benefit, 0, 1) : benefit;
             return benefit * MaximumBenefit.GetValue(user);
         }
     }

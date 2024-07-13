@@ -38,7 +38,7 @@ namespace XPBenefits
         public IBenefitFunction Create(XPConfig xpConfig, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
             HousingXPInput input = new HousingXPInput(xpConfig);
-            SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(input, maximumBenefit, xpLimitEnabled);
+            SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(new ClampInput(input, xpLimitEnabled), maximumBenefit);
             LocString inputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"))} multiplier");
             benefitFunction.Describer = new InputDescriber(input)
             {

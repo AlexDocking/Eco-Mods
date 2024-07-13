@@ -41,16 +41,9 @@ namespace XPBenefits
 
         public float CalculateBenefit(User user)
         {
-            try
-            {
-                float product = Inputs.Select(input => input.GetScaledInput(user)).Mult();
-                float fractionOfBenefitToApply = (float)Math.Pow(product, 1f / Inputs.Count);
-                return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
-            }
-            catch
-            {
-            }
-            return 0;
+            float product = Inputs.Select(input => input.GetScaledInput(user)).Mult();
+            float fractionOfBenefitToApply = (float)Math.Pow(product, 1f / Inputs.Count);
+            return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
         }
     }
 }
