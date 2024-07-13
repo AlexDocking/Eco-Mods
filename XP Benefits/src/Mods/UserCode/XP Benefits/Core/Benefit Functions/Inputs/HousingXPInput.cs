@@ -23,7 +23,7 @@ namespace XPBenefits
     {
         public HousingXPInput(XPConfig xpConfig)
         {
-            XPConfig = xpConfig;
+            XPConfig = xpConfig ?? throw new System.ArgumentNullException(nameof(xpConfig));
         }
 
         private XPConfig XPConfig { get; }

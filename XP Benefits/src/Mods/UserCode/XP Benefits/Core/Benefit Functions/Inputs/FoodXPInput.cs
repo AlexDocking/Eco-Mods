@@ -22,7 +22,7 @@ namespace XPBenefits
     {
         public FoodXPInput(XPConfig xpConfig)
         {
-            XPConfig = xpConfig;
+            XPConfig = xpConfig ?? throw new System.ArgumentNullException(nameof(xpConfig));
         }
 
         XPConfig XPConfig { get; }

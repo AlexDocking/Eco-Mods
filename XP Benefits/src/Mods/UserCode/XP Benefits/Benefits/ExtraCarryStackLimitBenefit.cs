@@ -69,11 +69,11 @@ namespace XPBenefits
         }
         public override void Initialize()
         {
-            XPConfig config = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: config.ExtraCarryStackLimitEnabled,
-                       maxBenefitValue: config.ExtraCarryStackLimitMaxBenefitValue,
-                       xpLimitEnabled: config.ExtraCarryStackLimitXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(config.ExtraCarryStackLimitBenefitFunction));
+            XPConfig = XPBenefitsPlugin.Obj.Config;
+            Initialize(enabled: XPConfig.ExtraCarryStackLimitEnabled,
+                       maxBenefitValue: XPConfig.ExtraCarryStackLimitMaxBenefitValue,
+                       xpLimitEnabled: XPConfig.ExtraCarryStackLimitXPLimitEnabled,
+                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunction));
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();

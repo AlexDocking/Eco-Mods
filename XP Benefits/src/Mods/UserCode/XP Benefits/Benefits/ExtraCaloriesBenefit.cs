@@ -56,11 +56,11 @@ namespace XPBenefits
         }
         public override void Initialize()
         {
-            XPConfig config = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: config.ExtraCaloriesEnabled,
-                       maxBenefitValue: config.ExtraCaloriesMaxBenefitValue,
-                       xpLimitEnabled: config.ExtraCaloriesXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(config.ExtraCaloriesBenefitFunctionType));
+            XPConfig = XPBenefitsPlugin.Obj.Config;
+            Initialize(enabled: XPConfig.ExtraCaloriesEnabled,
+                       maxBenefitValue: XPConfig.ExtraCaloriesMaxBenefitValue,
+                       xpLimitEnabled: XPConfig.ExtraCaloriesXPLimitEnabled,
+                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType));
         }
         /// <summary>
         /// Override to change how much extra calorie space the player can earn

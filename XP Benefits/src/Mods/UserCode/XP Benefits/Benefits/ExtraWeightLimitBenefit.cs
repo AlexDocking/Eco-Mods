@@ -60,11 +60,11 @@ namespace XPBenefits
         }
         public override void Initialize()
         {
-            XPConfig config = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: config.ExtraWeightLimitEnabled,
-                       maxBenefitValue: config.ExtraWeightLimitMaxBenefitValue,
-                       xpLimitEnabled: config.ExtraWeightLimitXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(config.ExtraWeightLimitBenefitFunction));
+            XPConfig = XPBenefitsPlugin.Obj.Config;
+            Initialize(enabled: XPConfig.ExtraWeightLimitEnabled,
+                       maxBenefitValue: XPConfig.ExtraWeightLimitMaxBenefitValue,
+                       xpLimitEnabled: XPConfig.ExtraWeightLimitXPLimitEnabled,
+                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunction));
         }
         partial void ModsPreInitialize();
         partial void ModsPostInitialize();

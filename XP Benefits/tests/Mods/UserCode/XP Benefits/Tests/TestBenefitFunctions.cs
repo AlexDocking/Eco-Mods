@@ -33,6 +33,7 @@ namespace XPBenefits.Tests
             Test.Run(ShouldCalculateHousingBenefitFunction);
             Test.Run(ShouldCalculateGeometricFoodHousingBenefitFunction);
             Test.Run(ShouldCalculateSkillRateBenefitFunction);
+            Test.Run(ShouldThrowExceptionInInputConstructorsIfNoConfig);
         }
         public static void ShouldCalculateFoodBenefitFunction()
         {
@@ -123,6 +124,13 @@ namespace XPBenefits.Tests
             //Clamp % housing score to 1
             skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, true);
             Assert.AreEqual(10 * (0.5f * (1/3f + 1)), skillRateBenefitFunction.CalculateBenefit(testUser));
+        }
+
+        public static void ShouldThrowExceptionInInputConstructorsIfNoConfig()
+        {
+            Assert.Throws<ArgumentNullException>(() => new FoodXPInput(null));
+            Assert.Throws<ArgumentNullException>(() => new HousingXPInput(null));
+            Assert.Throws<ArgumentNullException>(() => new SkillRateInput(null));
         }
     }
 }
