@@ -42,7 +42,11 @@ namespace XPBenefits.Tests
         private static XPConfig CreateConfig(User user)
         {
             user.ResetStomach(TestingUtils.SingleFood);
-            user.BuildHouse();
+            user.CreateTestResidencyWithValue(3);
+
+            if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
+            if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");
+
             XPConfig config = new XPConfig();
             //User has 1/3 of the maximum food xp
             config.DefaultMaximumFoodXP = SkillRateUtil.FoodXP(user) * 3f;
@@ -146,7 +150,7 @@ namespace XPBenefits.Tests
             config.ExtraCarryStackLimitBenefitFunction = new FoodBenefitFunctionFactory().Name;
             config.ExtraCarryStackLimitMaxBenefitValue = 10;
             ExtraCarryStackLimitBenefit benefit = new ExtraCarryStackLimitBenefit();
-            benefit.Initialize(true, 10, false, new FoodBenefitFunctionFactory().Create(config, 10));
+            benefit.Initialize(true, config, 10, false, new FoodBenefitFunctionFactory().Create(config, 10));
             IBenefitDescriber benefitDescriber = new ExtraCarryStackLimitBenefitDescriber(benefit);
 
             Assert.AreEqual("<style=\"Positive\">+244%</style>", (string)benefitDescriber.CurrentBenefit(user));

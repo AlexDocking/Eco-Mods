@@ -13,16 +13,12 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
-using Eco.Gameplay.Housing;
+using Eco.Gameplay.Housing.PropertyValues;
 using Eco.Gameplay.Items;
-using Eco.Gameplay.Objects;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Property;
 using Eco.Mods.TechTree;
-using Eco.Shared.Items;
-using Eco.Shared.Math;
 using Eco.Shared.Voxel;
-using Eco.World.Blocks;
 using System;
 
 namespace XPBenefits.Tests
@@ -30,6 +26,20 @@ namespace XPBenefits.Tests
     public static class TestingUtils
     {
         public static Type[] SingleFood => new Type[] { typeof(WildStewItem) };
+
+        public static void CreateTestResidencyWithValue(this User user, float propertyValue)
+        {
+            Deed deed = DeedFactory.CreateDeed(user);
+            //Claim the plot at (0, 0) so that the deed can have a housing score
+            PropertyManager.ForceClaim(deed, user, new PlotPos(), true);
+            deed.Residency.DebugForceResidency(user);
+            deed.PropertyValueBoost = propertyValue;
+            PropertyValueManager.Obj.UpdateProperty(deed);
+            deed.Save();
+        }
+
+        public static void MakeHomeless(this User user) => user.GetResidencyHouse()?.Residency?.DebugForceEvict(user);
+
         public static void ResetStomach(this User user, params Type[] foodTypes)
         {
             user.Stomach.Contents.Clear();
@@ -37,17 +47,9 @@ namespace XPBenefits.Tests
             foreach (Type foodType in foodTypes)
             {
                 if (Item.Get(foodType) is not FoodItem foodItem) continue;
-                
+
                 user.Stomach.Eat(foodItem, out _, force: true);
             }
-        }
-        public static void BuildHouse(this User user)
-        {
-            if (user.GetResidencyHouse()?.PropertyValue.Value >= 0) return;
-
-            var (objectWithHousingValue, BuildingSize) = BuildingSpawner.SpawnBuildingWithObject(typeof(KitchenObject), user, new Vector3i(0, 100, 0));
-            Deed deed = PropertyUtils.ForceClaim(objectWithHousingValue.GetDeed(), user, BuildingSize.ToXZRect());
-            deed.SetResidency(user);
         }
     }
 }

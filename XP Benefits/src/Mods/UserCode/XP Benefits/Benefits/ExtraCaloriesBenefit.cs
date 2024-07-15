@@ -45,31 +45,16 @@ namespace XPBenefits
     public partial class ExtraCaloriesBenefit : BenefitBase
     {
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
-        public void Initialize(bool enabled, BenefitValue maxBenefitValue, bool xpLimitEnabled, IBenefitFunction benefitFunction)
-        {
-            ModsPreInitialize();
-            Enabled = enabled;
-            MaxBenefitValue = maxBenefitValue;
-            XPLimitEnabled = xpLimitEnabled;
-            BenefitFunction = benefitFunction;
-            ModsPostInitialize();
-        }
+        
         public override void Initialize()
         {
-            XPConfig = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: XPConfig.ExtraCaloriesEnabled,
-                       maxBenefitValue: XPConfig.ExtraCaloriesMaxBenefitValue,
-                       xpLimitEnabled: XPConfig.ExtraCaloriesXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraCaloriesBenefitFunctionType));
+            XPConfig xpConfig = XPBenefitsPlugin.Obj.Config;
+            bool enabled = xpConfig.ExtraCaloriesEnabled;
+            BenefitValue maxBenefitValue = xpConfig.ExtraCaloriesMaxBenefitValue;
+            bool xpLimitEnabled = xpConfig.ExtraCaloriesXPLimitEnabled;
+            string benefitFunctionType = xpConfig.ExtraCaloriesBenefitFunctionType;
+            Initialize(enabled, xpConfig, maxBenefitValue, xpLimitEnabled, benefitFunctionType);
         }
-        /// <summary>
-        /// Override to change how much extra calorie space the player can earn
-        /// </summary>
-        partial void ModsPreInitialize();
-        /// <summary>
-        /// Override to change how the amount of benefit is calculated from a user
-        /// </summary>
-        partial void ModsPostInitialize();
 
         public override void ApplyBenefitToUser(User user)
         {

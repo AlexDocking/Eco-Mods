@@ -13,6 +13,7 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 using CompatibleTools;
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
@@ -33,7 +34,9 @@ namespace XPBenefits
     public class RegisterExtraCarryStackLimitBenefit : IModKitPlugin, IInitializablePlugin
     {
         public string GetCategory() => "Mods";
+
         public string GetStatus() => "";
+
         public void Initialize(TimedTask timer)
         {
             var benefit = new ExtraCarryStackLimitBenefit();
@@ -46,6 +49,7 @@ namespace XPBenefits
             UserManager.OnUserLoggedOut.Add(user => { if (benefit.Enabled) benefit.RemoveBenefitFromUser(user); });
         }
     }
+
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
         /// <summary>
@@ -53,30 +57,21 @@ namespace XPBenefits
         /// </summary>
         public IBenefitFunction ShovelBenefit { get; set; }
 
-        public void Initialize(bool enabled, BenefitValue maxBenefitValue, bool xpLimitEnabled, IBenefitFunction benefitFunction)
+        public override void Initialize()
         {
-            ModsPreInitialize();
-            Enabled = enabled;
-            MaxBenefitValue = maxBenefitValue;
-            XPLimitEnabled = xpLimitEnabled;
-            BenefitFunction = benefitFunction;
-            ModsPostInitialize();
+            XPConfig xpConfig = XPBenefitsPlugin.Obj.Config;
+            bool enabled = xpConfig.ExtraCarryStackLimitEnabled;
+            BenefitValue maxBenefitValue = xpConfig.ExtraCarryStackLimitMaxBenefitValue;
+            bool xpLimitEnabled = xpConfig.ExtraCarryStackLimitXPLimitEnabled;
+            string benefitFunctionType = xpConfig.ExtraCarryStackLimitBenefitFunction;
+            Initialize(enabled, xpConfig, maxBenefitValue, xpLimitEnabled, benefitFunctionType);
+
             if (!Enabled) return;
             ShovelBenefit ??= BenefitFunction;
             ShovelItem.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
             TreeEntity.MaxPickupResolver.Add(100, new ExtraCarryStackLimitModifier());
             MiningSweepingHandsTalent.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
         }
-        public override void Initialize()
-        {
-            XPConfig = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: XPConfig.ExtraCarryStackLimitEnabled,
-                       maxBenefitValue: XPConfig.ExtraCarryStackLimitMaxBenefitValue,
-                       xpLimitEnabled: XPConfig.ExtraCarryStackLimitXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraCarryStackLimitBenefitFunction));
-        }
-        partial void ModsPreInitialize();
-        partial void ModsPostInitialize();
 
         public override void ApplyBenefitToUser(User user)
         {
@@ -87,20 +82,24 @@ namespace XPBenefits
                 carryInventory.AddInvRestriction(new StackLimitBenefitInventoryRestriction(user, BenefitFunction));
             }
         }
+
         public override void RemoveBenefitFromUser(User user)
         {
             Inventory carryInventory = user.Inventory.Carried;
             carryInventory.RemoveAllRestrictions(restriction => restriction is StackLimitBenefitInventoryRestriction);
         }
     }
+
     public class ExtraCarryStackLimitEcopediaGenerator : BenefitEcopediaGenerator
     {
         public ExtraCarryStackLimitEcopediaGenerator(BenefitBase benefit, IBenefitDescriber benefitDescriber) : base(benefit, benefitDescriber)
         {
         }
+
         public override LocString DisplayName { get; } = Localizer.DoStr("Bigger Hands");
         public override string Summary { get; } = "Earn extra carry capacity, so you can hold more blocks in your hands.";
         public override string IconName { get; } = "HandsItem";
+
         public override IEnumerable<LocString> Sections
         {
             get
@@ -113,39 +112,50 @@ namespace XPBenefits
                 return sections;
             }
         }
+
         public override LocString BenefitDescription { get; } = Localizer.DoStr("extra carry capacity");
         public override string PageName { get; } = "Bigger Hands";
         public override float PagePriority { get; } = -6;
     }
+
     public class ExtraCarryStackLimitBenefitDescriber : IBenefitDescriber
     {
-        ExtraCarryStackLimitBenefit Benefit { get; }
+        private ExtraCarryStackLimitBenefit Benefit { get; }
 
         public ExtraCarryStackLimitBenefitDescriber(ExtraCarryStackLimitBenefit benefit)
         {
             Benefit = benefit;
         }
-        IBenefitFunction BenefitFunction => Benefit.BenefitFunction;
+
+        private IBenefitFunction BenefitFunction => Benefit.BenefitFunction;
+
         public LocString MaximumBenefit(User user)
         {
             float maxBenefit = Benefit.MaxBenefitValue.GetValue(user);
             return TextLoc.StyledNumLoc(maxBenefit, maxBenefit.ToString("+0%;-0%"));
         }
+
         public LocString CurrentBenefit(User user)
         {
             float currentBenefit = BenefitFunction.CalculateBenefit(user);
             return TextLoc.StyledNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"));
         }
+
         public LocString CurrentBenefitEcopedia(User user)
         {
             float currentBenefit = BenefitFunction.CalculateBenefit(user);
             return DisplayUtils.GradientNumLoc(currentBenefit, currentBenefit.ToString("+0%;-0%"), new Eco.Shared.Math.Range(0, Benefit.MaxBenefitValue.GetValue(user)));
         }
+
         public LocString CurrentInput(User user) => BenefitFunction.Describer.CurrentInput(user);
+
         public LocString InputName(User user) => BenefitFunction.Describer.InputName(user);
+
         public LocString MaximumInput(User user) => BenefitFunction.Describer.MaximumInput(user);
+
         public LocString MeansOfImprovingStat(User user) => BenefitFunction.Describer.MeansOfImprovingStat(user);
     }
+
     public partial class XPConfig
     {
         private string extraCarryStackLimitBenefitFunction = "GeometricMeanFoodHousing";
@@ -162,8 +172,10 @@ namespace XPBenefits
         public bool ExtraCarryStackLimitXPLimitEnabled { get; set; } = false;
 
         [Category("Benefit - Extra Carry Stack Limit"), LocDisplayName("Benefit Function"), LocDescription(XPConfigServerDescriptions.BenefitFunctionTypeDescription)]
-        public string ExtraCarryStackLimitBenefitFunction { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCarryStackLimitBenefitFunction); set { extraCarryStackLimitBenefitFunction = value; } }
+        public string ExtraCarryStackLimitBenefitFunction
+        { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCarryStackLimitBenefitFunction); set { extraCarryStackLimitBenefitFunction = value; } }
     }
+
     public class ExtraCarryStackLimitModifier : IModifyValueInPlaceHandler
     {
         public void ModifyValue(IModifyValueInPlaceContext context)
@@ -176,10 +188,12 @@ namespace XPBenefits
             context.IntValue = (int)context.FloatValue;
         }
     }
+
     [TooltipLibrary]
     public static class ExtraCarryStackLimitTooltipLibrary
     {
         public static IBenefitDescriber BenefitDescriber { get; set; }
+
         [NewTooltip(Eco.Shared.Items.CacheAs.Disabled, 14)]
         public static LocString ExtraCarryStackLimitShovelTooltip(this ShovelItem shovel, User user)
         {

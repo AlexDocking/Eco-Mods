@@ -49,25 +49,15 @@ namespace XPBenefits
     {
         protected virtual SkillRateBasedStatModifiersRegister ModifiersRegister { get; } = new SkillRateBasedStatModifiersRegister();
 
-        public void Initialize(bool enabled, BenefitValue maxBenefitValue, bool xpLimitEnabled, IBenefitFunction benefitFunction)
-        {
-            ModsPreInitialize();
-            Enabled = enabled;
-            MaxBenefitValue = maxBenefitValue;
-            XPLimitEnabled = xpLimitEnabled;
-            BenefitFunction = benefitFunction;
-            ModsPostInitialize();
-        }
         public override void Initialize()
         {
-            XPConfig = XPBenefitsPlugin.Obj.Config;
-            Initialize(enabled: XPConfig.ExtraWeightLimitEnabled,
-                       maxBenefitValue: XPConfig.ExtraWeightLimitMaxBenefitValue,
-                       xpLimitEnabled: XPConfig.ExtraWeightLimitXPLimitEnabled,
-                       benefitFunction: CreateBenefitFunction(XPConfig.ExtraWeightLimitBenefitFunction));
+            XPConfig xpConfig = XPBenefitsPlugin.Obj.Config;
+            bool enabled = xpConfig.ExtraWeightLimitEnabled;
+            BenefitValue maxBenefitValue = xpConfig.ExtraWeightLimitMaxBenefitValue;
+            bool xpLimitEnabled = xpConfig.ExtraWeightLimitXPLimitEnabled;
+            string benefitFunctionType = xpConfig.ExtraWeightLimitBenefitFunction;
+            Initialize(enabled, xpConfig, maxBenefitValue, xpLimitEnabled, benefitFunctionType);
         }
-        partial void ModsPreInitialize();
-        partial void ModsPostInitialize();
 
         public override void ApplyBenefitToUser(User user)
         {

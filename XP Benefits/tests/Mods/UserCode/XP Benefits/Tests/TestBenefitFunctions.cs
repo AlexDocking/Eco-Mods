@@ -14,8 +14,13 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core.Tests;
+using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
+using Eco.Gameplay.Utils;
+using Eco.Mods.TechTree;
+using Eco.Shared.Localization;
+using Eco.Shared.Utils;
 using EcoTestTools;
 using System;
 using System.Linq;
@@ -29,15 +34,17 @@ namespace XPBenefits.Tests
         [CITest]
         public static void TestBenefitFunctionTypes()
         {
+            Test.Run(SmokeTest, "Smoke test for calorie, weight and stack limit benefits");
             Test.Run(ShouldCalculateFoodBenefitFunction);
             Test.Run(ShouldCalculateHousingBenefitFunction);
             Test.Run(ShouldCalculateGeometricFoodHousingBenefitFunction);
             Test.Run(ShouldCalculateSkillRateBenefitFunction);
             Test.Run(ShouldThrowExceptionInInputConstructorsIfNoConfig);
         }
+
         public static void ShouldCalculateFoodBenefitFunction()
         {
-            User testUser = UserManager.Users.First();
+            User testUser = TestUtils.TestUser;
 
             testUser.ResetStomach(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
@@ -70,6 +77,7 @@ namespace XPBenefits.Tests
             housingBenefitFunction = new HousingBenefitFunctionFactory().Create(xpConfig, 10, true);
             Assert.AreEqual(10, housingBenefitFunction.CalculateBenefit(testUser));
         }
+
         public static void ShouldCalculateGeometricFoodHousingBenefitFunction()
         {
             User testUser = UserManager.Users.MaxBy(user => SkillRateUtil.HousingXP(user));
@@ -90,15 +98,16 @@ namespace XPBenefits.Tests
             //Fraction of housing xp is 2
             //Geometric mean is sqrt(2/3f)
             IBenefitFunction geometricMeanFoodHousingBenefitFunction = new GeometricMeanFoodHousingBenefitFunctionFactory().Create(xpConfig, 10, false);
-            Assert.AreEqual(10 * (float)Math.Sqrt(2/3f), geometricMeanFoodHousingBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * (float)Math.Sqrt(2 / 3f), geometricMeanFoodHousingBenefitFunction.CalculateBenefit(testUser));
 
             //After clamp:
             //Fraction of food xp is 1/3
             //Fraction of housing xp is 1
             //Geometric mean is sqrt(1/3f)
             geometricMeanFoodHousingBenefitFunction = new GeometricMeanFoodHousingBenefitFunctionFactory().Create(xpConfig, 10, true);
-            Assert.AreEqual(10 * (float)Math.Sqrt(1/3f), geometricMeanFoodHousingBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * (float)Math.Sqrt(1 / 3f), geometricMeanFoodHousingBenefitFunction.CalculateBenefit(testUser));
         }
+
         public static void ShouldCalculateSkillRateBenefitFunction()
         {
             User testUser = UserManager.Users.MaxBy(user => SkillRateUtil.HousingXP(user));
@@ -119,11 +128,11 @@ namespace XPBenefits.Tests
             //Housing is 1 in range 0-0.5 -> 2x max
             //Calculation is based on the average of those
             IBenefitFunction skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, false);
-            Assert.AreEqual(10 * (0.5f * (1/3f + 2)), skillRateBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * (0.5f * (1 / 3f + 2)), skillRateBenefitFunction.CalculateBenefit(testUser));
 
             //Clamp % housing score to 1
             skillRateBenefitFunction = new SkillRateBenefitFunctionFactory().Create(xpConfig, 10, true);
-            Assert.AreEqual(10 * (0.5f * (1/3f + 1)), skillRateBenefitFunction.CalculateBenefit(testUser));
+            Assert.AreEqual(10 * (0.5f * (1 / 3f + 1)), skillRateBenefitFunction.CalculateBenefit(testUser));
         }
 
         public static void ShouldThrowExceptionInInputConstructorsIfNoConfig()
@@ -132,5 +141,45 @@ namespace XPBenefits.Tests
             Assert.Throws<ArgumentNullException>(() => new HousingXPInput(null));
             Assert.Throws<ArgumentNullException>(() => new SkillRateInput(null));
         }
+
+        /// <summary>
+        /// Test that the benefits change the relevant user stats in some way when food and housing is changed.
+        /// </summary>
+        public static void SmokeTest()
+        {
+            TestCalorieBenefit(XPBenefitsPlugin.Obj.Benefits.OfType<ExtraCaloriesBenefit>().Single());
+            TestCarryStackLimitBenefit(XPBenefitsPlugin.Obj.Benefits.OfType<ExtraCarryStackLimitBenefit>().Single());
+            TestCarryWeightLimitBenefit(XPBenefitsPlugin.Obj.Benefits.OfType<ExtraWeightLimitBenefit>().Single());
+        }
+
+        private static void TestCalorieBenefit(ExtraCaloriesBenefit benefit) => TestBenefit(benefit, GetCalorieCapacity);
+
+        private static void TestCarryStackLimitBenefit(ExtraCarryStackLimitBenefit benefit) => TestBenefit(benefit, GetCarryStackLimitMultiplier);
+
+        private static void TestCarryWeightLimitBenefit(ExtraWeightLimitBenefit benefit) => TestBenefit(benefit, GetCarryWeightLimit);
+
+        private static void TestBenefit(BenefitBase benefit, Func<User, float> getStat)
+        {
+            User user = TestUtils.TestUser;
+            Assert.IsNotNull(benefit);
+            user.ResetStomach(typeof(VegetableMedleyItem));
+            user.MakeHomeless();
+
+            benefit.ApplyBenefitToUser(user);
+
+            float initialStat = getStat(user);
+            user.ResetStomach(typeof(BisonChowFunItem));
+            user.CreateTestResidencyWithValue(3);
+            if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
+            if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");
+            float modifiedStat = getStat(user);
+            Assert.AreNotEqual(initialStat, modifiedStat);
+        }
+
+        private static float GetCalorieCapacity(User user) => user.Stomach.MaxCalories;
+
+        private static float GetCarryStackLimitMultiplier(User user) => user.Inventory.Carried.Restrictions.OfType<StackLimitBenefitInventoryRestriction>().First().BenefitFunction.CalculateBenefit(user);
+
+        private static float GetCarryWeightLimit(User user) => user.Inventory.ToolbarBackpack.WeightComponent.MaxWeight;
     }
 }
