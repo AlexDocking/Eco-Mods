@@ -58,7 +58,7 @@ namespace XPBenefits
             List<LocString> locs = new List<LocString>();
             for (int i = 0; i < Inputs.Count; i++)
             {
-                locs.Add(Localizer.Do($"{Text.GradientColoredPercent(Inputs[i].GetScaledInput(user))} {InputDescribers[i].InputName}"));
+                locs.Add(Localizer.Do($"{Text.GradientColoredPercent(Inputs[i].GetNormalizedInput(user))} {InputDescribers[i].InputName}"));
             }
             return locs.CommaList();
         }

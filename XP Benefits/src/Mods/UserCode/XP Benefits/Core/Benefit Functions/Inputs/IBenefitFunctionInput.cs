@@ -25,7 +25,7 @@ namespace XPBenefits
     }
     public static class BenefitFunctionInputExtensions
     {
-        public static float GetScaledInput(this IBenefitFunctionInput input, User user)
+        public static float GetNormalizedInput(this IBenefitFunctionInput input, User user)
         {
             Range range = input.GetInputRange(user);
             float val = input.GetInput(user);

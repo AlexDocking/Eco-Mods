@@ -16,33 +16,32 @@
 
 using Eco.Gameplay.Players;
 using Eco.Shared.Utils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace XPBenefits
 {
     /// <summary>
-    /// Scale the benefit by the geometric mean of the scaled inputs (inputs scaled to its range).
-    /// This requires all scaled inputs to be greater than zero to give any benefit.
+    /// Normalise each input and take the average
     /// </summary>
-    public class GeometricMeanBenefitFunction : IBenefitFunction
+    public class MeanOfNormalizedInputsBenefitFunction : IBenefitFunction
     {
-        private List<IBenefitFunctionInput> Inputs { get; }
-        public IBenefitInputDescriber Describer { get; }
-        public BenefitValue MaximumBenefit { get; set; }
-
-        public GeometricMeanBenefitFunction(IEnumerable<IBenefitFunctionInput> inputs, IBenefitInputDescriber describer, BenefitValue maximumBenefit)
+        public MeanOfNormalizedInputsBenefitFunction(IEnumerable<IBenefitFunctionInput> inputs, BenefitValue maximumBenefit, bool xpLimitEnabled = false)
         {
-            Inputs = inputs.ToList();
-            Describer = describer;
             MaximumBenefit = maximumBenefit;
+
+            
+            inputs = inputs.Select(input => new ClampInput(input, xpLimitEnabled)).Cast<IBenefitFunctionInput>().ToList();
+            Inputs = inputs;
         }
+
+        public IBenefitInputDescriber Describer { get; set; }
+        public IEnumerable<IBenefitFunctionInput> Inputs { get; }
+        public BenefitValue MaximumBenefit { get; set; }
 
         public float CalculateBenefit(User user)
         {
-            float product = Inputs.Select(input => input.GetNormalizedInput(user)).Mult();
-            float fractionOfBenefitToApply = (float)Math.Pow(product, 1f / Inputs.Count);
+            float fractionOfBenefitToApply = Inputs.Select(input => input.GetNormalizedInput(user)).AverageOrDefault();
             return fractionOfBenefitToApply * MaximumBenefit.GetValue(user);
         }
     }
