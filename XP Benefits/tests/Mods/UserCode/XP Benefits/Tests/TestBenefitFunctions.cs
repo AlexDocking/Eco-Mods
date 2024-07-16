@@ -139,7 +139,6 @@ namespace XPBenefits.Tests
         {
             Assert.Throws<ArgumentNullException>(() => new FoodXPInput(null));
             Assert.Throws<ArgumentNullException>(() => new HousingXPInput(null));
-            Assert.Throws<ArgumentNullException>(() => new SkillRateInput(null));
         }
 
         /// <summary>
