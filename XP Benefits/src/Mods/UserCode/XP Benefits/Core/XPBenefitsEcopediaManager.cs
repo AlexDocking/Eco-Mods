@@ -18,6 +18,7 @@ using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,7 +31,7 @@ namespace XPBenefits
         {
             PluginManager.Controller.RunIfOrWhenInited(AmendEcopedia);
         }
-        private Dictionary<IUserBenefit, IBenefitEcopediaGenerator> EcopediaGenerators { get; } = new Dictionary<IUserBenefit, IBenefitEcopediaGenerator>();
+        private IDictionary<IUserBenefit, IBenefitEcopediaGenerator> EcopediaGenerators { get; } = new ConcurrentDictionary<IUserBenefit, IBenefitEcopediaGenerator>();
         public IBenefitEcopediaGenerator GetEcopedia(IUserBenefit userBenefit) => EcopediaGenerators.TryGetValue(userBenefit, out var generator) ? generator : null;
         /// <summary>
         /// Register a benefit with a corresponding object to create the ecopedia page, and the page will be created when the server finishes startup so long as the benefit is enabled.
