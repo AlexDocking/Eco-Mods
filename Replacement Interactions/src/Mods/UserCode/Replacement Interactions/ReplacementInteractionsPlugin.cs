@@ -46,7 +46,6 @@ namespace ReplacementInteractions
             var sim = GlobalData.Obj.ServerInteractionManager;
             if (interaction != null)
             {
-                Log.WriteLine(Localizer.Do($"Transfer {interaction.RPCName} to {newMethodName}"));
                 interaction.RPCName = newMethodName;
                 interaction.Description = overrideDescription ?? interaction.Description;
             }
@@ -64,9 +63,7 @@ namespace ReplacementInteractions
             {
                 replacementInteraction.RPCName = replacementInteraction.RPCName;
                 replacementInteraction.Description = oldInteraction.Description;
-                Log.WriteLine(Localizer.Do($"Remove {oldInteraction.GetType()} {oldInteraction.RPCName}"));
                 interactionAttributes.Remove(oldInteraction);
-                Log.WriteLine(Localizer.Do($"Add {replacementInteraction.GetType()} {replacementInteraction.RPCName}"));
 
                 interactionAttributes.AddUnique(replacementInteraction);
             }
@@ -188,12 +185,10 @@ namespace ReplacementInteractions
                     {
                         method = new MethodInteraction() { RPCName = interaction.RPCName, Interactions = new List<InteractionAttribute>() { interaction } };
                         methods.Add(method);
-                        Log.WriteLine(Localizer.Do($"New method {method.RPCName}"));
                     }
                     else
                     {
                         method.Interactions.Add(interaction);
-                        Log.WriteLine(Localizer.Do($"Found existing method {method.RPCName}, interactions:{method.Interactions.Select(interaction => $"{interaction.RPCName}").CommaList()}"));
                     }
                 }
                 //Find out which methods replace which
@@ -204,7 +199,6 @@ namespace ReplacementInteractions
                         if (methods.FirstOrDefault(method => method.RPCName == replacement.MethodName) is MethodInteraction method)
                         {
                             method.ReplacedBy.Add(methods.First(m => m.RPCName == interaction.RPCName));
-                            Log.WriteLine(Localizer.Do($"Found replacement method {method.RPCName}->{replacement.RPCName}"));
                         }
                     }
                 }
@@ -212,24 +206,19 @@ namespace ReplacementInteractions
                 List<InteractionAttribute> leaves = new List<InteractionAttribute>();
                 foreach (var method in methods.Where(m => m.Interactions.Any(interaction => interaction.GetType() == typeof(InteractionAttribute))))
                 {
-                    Log.WriteLine(Localizer.Do($"Method {method.RPCName} has {method.Interactions.Count} interactions and is replaced by {method.ReplacedBy.Select(m => m.RPCName).CommaList()}"));
                     IEnumerable<List<MethodInteraction>> routeToLeaves = FindRoutesToLeaves(method, new List<MethodInteraction>());
                     //Traverse each path and get the parameters of the resulting interaction, either passed along the chain from the original method or by any custom replacements on the way
                     foreach(var route in routeToLeaves)
                     {
                         List<InteractionAttribute> results = new List<InteractionAttribute>();
-                        Log.WriteLine(Localizer.Do($"Found route: {route.Select(m => m.RPCName).TextList("->")}"));
                         results.AddRange(route.First().Interactions);
-                        Log.WriteLine(Localizer.Do($"result[0] count:{results.Count}:{results.Select(interaction => interaction.RPCName).SimpleCommaList()}"));
                         for(int i = 1; i < route.Count(); i++)
                         {
                             List<InteractionAttribute> newResults = new List<InteractionAttribute>();
                             MethodInteraction step = route[i];
-                            Log.WriteLine(Localizer.Do($"Step [{i}] has {step.Interactions.Count} interactions of which {step.Interactions.OfType<ReplacementInteractionAttribute>().Count()} are replacements"));
                             List<ReplacementInteractionAttribute> replacementAttributes = step.Interactions.OfType<ReplacementInteractionAttribute>().Where(replacement => replacement.MethodName == route[i-1].RPCName).ToList();
                             foreach(ReplacementInteractionAttribute replacement in replacementAttributes)
                             {
-                                Log.WriteLine(Localizer.Do($"Replacement {replacement.RPCName} replaces {replacement.MethodName}"));
                                 //All interactions on the previous method get transferred
                                 if (replacement.CopyParameters)
                                 {
@@ -240,19 +229,16 @@ namespace ReplacementInteractions
                                 {
                                     var providedReplacement = replacement.GetReplacementInteraction(type);
                                     providedReplacement.RPCName = replacement.RPCName;
-                                    Log.WriteLine(Localizer.Do($"{replacement.RPCName} provided custom interaction from {type}.{replacement.InteractionParametersGetter} -> {providedReplacement?.GetType()}"));
                                     newResults.Add(providedReplacement);
                                 }
                             }
                             results = newResults;
-                            Log.WriteLine(Localizer.Do($"result[{i}] count:{results.Count}"));
                         }
                         leaves.AddRange(results);
                     }
                 }
                 list.Clear();
                 list.AddRange(leaves);
-                Log.WriteLine(Localizer.Do($"Results:{leaves.Select(leaf => $"{leaf.RPCName} ({leaf.GetType()})").SimpleCommaList()}"));
                 IEnumerable<List<MethodInteraction>> FindRoutesToLeaves(MethodInteraction root, List<MethodInteraction> visited)
                 {
                     visited = new List<MethodInteraction>(visited);
@@ -342,7 +328,6 @@ namespace ReplacementInteractions
                         ReplacementRPCAttribute replacementRPC = leaf.RPCs.First();
                         foreach(var rpcMethod in rpcMethods)
                         {
-                            Log.WriteLine(Localizer.Do($"Replaced RPC {type}.{rpcMethod.Name} with {replacementRPC.MethodInfo.DeclaringType}.{replacementRPC.ReplacementRPCName}"));
                             rpcMethod.SetPropertyWithBackingFieldByName(nameof(RPCMethod.Func), replacementRPC.Func);
                         }
                     }

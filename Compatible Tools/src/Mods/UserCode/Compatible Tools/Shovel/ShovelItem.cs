@@ -29,7 +29,6 @@ namespace Eco.Mods.TechTree
                 if (context is not ShovelMaxTakeModificationContext shovelContext) return;
                 if (context.FloatValue > 0) return;
                 if (shovelContext.TargetItem == null) return;
-                Log.WriteLine(Shared.Localization.Localizer.Do($"Carry inv fallback"));
                 int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, shovelContext.User.Inventory.Carried.TotalNumberOfItems(shovelContext.TargetItem), shovelContext.User);
                 context.FloatValue = maxAccepted;
                 context.IntValue = maxAccepted;
@@ -50,7 +49,6 @@ namespace Eco.Mods.TechTree
                 Shovel = this
             };
             int maxTake = MaxTakeResolver.ResolveInt(maxTakeContext);
-            Log.WriteLine(Shared.Localization.Localizer.Do($"DigOverride:{maxTake}"));
             if (maxTake > 0 && carry.Quantity >= maxTake)
             {
                 player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");

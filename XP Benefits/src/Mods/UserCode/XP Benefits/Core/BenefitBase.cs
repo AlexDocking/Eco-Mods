@@ -47,8 +47,6 @@ namespace XPBenefits
                 Log.WriteWarningLineLoc($"Warning: {GetType().Name} has an invalid benefit function \"{benefitFunctionType}\". Set a valid option and restart the server. Until then this benefit will be disabled.");
                 return null;
             }
-            Log.WriteLine(Eco.Shared.Localization.Localizer.Do($"Benefit factory:{benefitFunctionType}:{factory.GetType()}"));
-
             return factory.Create(xpConfig, maxBenefitValue, xpLimitEnabled);
         }
 

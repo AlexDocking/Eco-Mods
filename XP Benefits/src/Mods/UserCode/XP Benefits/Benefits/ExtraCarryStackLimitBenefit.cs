@@ -183,7 +183,6 @@ namespace XPBenefits
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return;
             float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
-            Log.WriteLine(Localizer.Do($"Benefit multiplier:{multiplier},initial:{context.FloatValue},result:{context.FloatValue * multiplier}"));
             context.FloatValue *= multiplier;
             context.IntValue = (int)context.FloatValue;
         }

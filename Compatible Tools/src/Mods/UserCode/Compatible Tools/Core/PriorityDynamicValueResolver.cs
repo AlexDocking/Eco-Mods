@@ -49,10 +49,7 @@ namespace CompatibleTools
         }
         public void Add(float priority, IModifyValueInPlaceHandler handler)
         {
-            Log.WriteLine(Localizer.Do($"Before:{RequestHandlers.Select(x => $"({x.Item1},{x.Item2.GetType()})").NewlineList()}"));
             RequestHandlers = RequestHandlers.Add((priority, handler)).Sort(Comparer);
-            Log.WriteLine(Localizer.Do($"After:{RequestHandlers.Select(x => $"({x.Item1},{x.Item2.GetType()})").NewlineList()}"));
-
         }
         public void Remove(float priority, IModifyValueInPlaceHandler handler)
         {
