@@ -46,7 +46,7 @@ namespace XPBenefits.Tests
         {
             User testUser = TestUtils.TestUser;
 
-            testUser.ResetStomach(TestingUtils.SingleFood);
+            testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
             Assert.AreNotEqual(0, foodXP);
 
@@ -85,7 +85,7 @@ namespace XPBenefits.Tests
             float housingXP = SkillRateUtil.HousingXP(testUser);
             Assert.AreNotEqual(0, housingXP);
 
-            testUser.ResetStomach(TestingUtils.SingleFood);
+            testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
             Assert.AreNotEqual(0, foodXP);
 
@@ -115,7 +115,7 @@ namespace XPBenefits.Tests
             float housingXP = SkillRateUtil.HousingXP(testUser);
             Assert.AreNotEqual(0, housingXP);
 
-            testUser.ResetStomach(TestingUtils.SingleFood);
+            testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
             Assert.AreNotEqual(0, foodXP);
 
@@ -161,13 +161,13 @@ namespace XPBenefits.Tests
         {
             User user = TestUtils.TestUser;
             Assert.IsNotNull(benefit);
-            user.ResetStomach(typeof(VegetableMedleyItem));
+            user.ReplaceStomachContentsAndMakeTasteOk();
             user.MakeHomeless();
 
             benefit.ApplyBenefitToUser(user);
 
             float initialStat = getStat(user);
-            user.ResetStomach(typeof(BisonChowFunItem));
+            user.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             user.CreateTestResidencyWithValue(3);
             if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
             if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");

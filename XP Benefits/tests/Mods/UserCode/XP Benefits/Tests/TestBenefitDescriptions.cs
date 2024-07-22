@@ -21,6 +21,7 @@ using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 using EcoTestTools;
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace XPBenefits.Tests
@@ -41,15 +42,17 @@ namespace XPBenefits.Tests
 
         private static XPConfig CreateConfig(User user)
         {
-            user.ResetStomach(TestingUtils.SingleFood);
+            user.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             user.CreateTestResidencyWithValue(3);
 
             if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
             if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");
 
+            DifficultySettings.SkillGainMultiplier = 1;
+
             XPConfig config = new XPConfig();
             //User has 1/3 of the maximum food xp
-            config.DefaultMaximumFoodXP = SkillRateUtil.FoodXP(user) * 3f;
+            config.DefaultMaximumFoodXP = config.DefaultBaseFoodXP + (SkillRateUtil.FoodXP(user) / DifficultySettings.SkillGainMultiplier - config.DefaultBaseFoodXP) * 3f;
             //User has 1/5 of the maximum housing xp
             config.DefaultMaximumHousingXP = SkillRateUtil.HousingXP(user) * 5;
             return config;
@@ -61,12 +64,12 @@ namespace XPBenefits.Tests
         /// </summary>
         /// <param name="benefitDescriber"></param>
         /// <param name="user"></param>
-        private static void PrintAssertsForIBenefitDescriberMethods(IBenefitInputDescriber benefitDescriber, User user)
+        private static void PrintAssertsForIBenefitDescriberMethods(IBenefitDescriber benefitDescriber, User user)
         {
             LocStringBuilder locStringBuilder = new LocStringBuilder();
-            foreach (MethodInfo method in typeof(IBenefitInputDescriber).GetMethods())
+            foreach (MethodInfo method in typeof(IBenefitDescriber).GetInterfaces().SelectMany(@interface => @interface.GetMethods()).OrderBy(m => m.Name))
             {
-                locStringBuilder.AppendLine(Localizer.Do($"Assert.AreEqual(\"{method.Invoke(benefitDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitDescriber)}.{method.Name}({nameof(user)}));"));
+                locStringBuilder.AppendLine(Localizer.NotLocalized($"Assert.AreEqual(\"{method.Invoke(benefitDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitDescriber)}.{method.Name}({nameof(user)}));"));
             }
             Log.WriteLine(locStringBuilder.ToLocString());
         }
@@ -80,9 +83,9 @@ namespace XPBenefits.Tests
         private static void PrintAssertsForIBenefitInputDescriberMethods(IBenefitInputDescriber benefitInputDescriber, User user)
         {
             LocStringBuilder locStringBuilder = new LocStringBuilder();
-            foreach (MethodInfo method in typeof(IBenefitInputDescriber).GetMethods())
+            foreach (MethodInfo method in typeof(IBenefitInputDescriber).GetInterfaces().SelectMany(@interface => @interface.GetMethods()).OrderBy(m => m.Name))
             {
-                locStringBuilder.AppendLine(Localizer.Do($"Assert.AreEqual(\"{method.Invoke(benefitInputDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitInputDescriber)}.{method.Name}({nameof(user)}));"));
+                locStringBuilder.AppendLine(Localizer.NotLocalized($"Assert.AreEqual(\"{method.Invoke(benefitInputDescriber, new object[] { user }).ToString().Replace("\"", "\\\"")}\", (string){nameof(benefitInputDescriber)}.{method.Name}({nameof(user)}));"));
             }
             Log.WriteLine(locStringBuilder.ToLocString());
         }
@@ -95,9 +98,9 @@ namespace XPBenefits.Tests
             IBenefitFunction benefitFunction = new FoodBenefitFunctionFactory().Create(config, maximumBenefit, false);
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
 
-            Assert.AreEqual("<color=#FF7C00FF>34</color> food XP", (string)benefitInputDescriber.CurrentInput(user));
+            Assert.AreEqual("<color=#FFAA00FF>72</color> food XP", (string)benefitInputDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitInputDescriber.InputName(user));
-            Assert.AreEqual("<style=\"Positive\">102</style> food XP", (string)benefitInputDescriber.MaximumInput(user));
+            Assert.AreEqual("<style=\"Positive\">192</style> food XP", (string)benefitInputDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
@@ -108,11 +111,12 @@ namespace XPBenefits.Tests
             BenefitValue maximumBenefit = new BenefitValue(10);
             IBenefitFunction benefitFunction = new HousingBenefitFunctionFactory().Create(config, maximumBenefit, false);
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
-
+            
             Assert.AreEqual("<color=#FF6600FF>3</color> housing XP", (string)benefitInputDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multiplier", (string)benefitInputDescriber.InputName(user));
             Assert.AreEqual("<style=\"Positive\">15</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multiplier", (string)benefitInputDescriber.MeansOfImprovingStat(user));
+
         }
 
         private static void ShouldDescribeGeometricMeanFoodHousingXPBenefitFunction()
@@ -122,10 +126,10 @@ namespace XPBenefits.Tests
             BenefitValue maximumBenefit = new BenefitValue(10);
             IBenefitFunction benefitFunction = new GeometricMeanFoodHousingBenefitFunctionFactory().Create(config, maximumBenefit, false);
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
-
-            Assert.AreEqual("<color=#FF7C00FF>24%</color> food XP and <color=#FF6600FF>20%</color> housing XP", (string)benefitInputDescriber.CurrentInput(user));
+            
+            Assert.AreEqual("<color=#FFAA00FF>33%</color> food XP and <color=#FF6600FF>20%</color> housing XP", (string)benefitInputDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multipliers", (string)benefitInputDescriber.InputName(user));
-            Assert.AreEqual("<style=\"Positive\">102</style> food XP and <style=\"Positive\">15</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
+            Assert.AreEqual("<style=\"Positive\">192</style> food XP and <style=\"Positive\">15</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <link=\"UnserializedEntry:71\"><style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style></link> multipliers. If you want to see the greatest improvement you should improve the lowest percentage first. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
@@ -136,10 +140,9 @@ namespace XPBenefits.Tests
             BenefitValue maximumBenefit = new BenefitValue(10);
             IBenefitFunction benefitFunction = new SkillRateBenefitFunctionFactory().Create(config, maximumBenefit, false);
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
-
-            Assert.AreEqual("an XP multiplier of <color=#FF7900FF>37</color>", (string)benefitInputDescriber.CurrentInput(user));
+            Assert.AreEqual("an XP multiplier of <color=#FFA400FF>75</color>", (string)benefitInputDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:86\"><style=\"Item\"><icon name=\"Skill Books\" type=\"\">XP Multiplier</icon></style></link>", (string)benefitInputDescriber.InputName(user));
-            Assert.AreEqual("an XP multiplier of <style=\"Positive\">117</style>", (string)benefitInputDescriber.MaximumInput(user));
+            Assert.AreEqual("an XP multiplier of <style=\"Positive\">207</style>", (string)benefitInputDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:86\"><style=\"Item\"><icon name=\"Skill Books\" type=\"\">XP Multiplier</icon></style></link>", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
@@ -153,12 +156,12 @@ namespace XPBenefits.Tests
             benefit.Initialize(true, config, 10, false, new FoodBenefitFunctionFactory().Create(config, 10));
             IBenefitDescriber benefitDescriber = new ExtraCarryStackLimitBenefitDescriber(benefit);
 
-            Assert.AreEqual("<style=\"Positive\">+244%</style>", (string)benefitDescriber.CurrentBenefit(user));
-            Assert.AreEqual("<color=#FF7C00FF>34</color> food XP", (string)benefitDescriber.CurrentInput(user));
-            Assert.AreEqual("<color=#FF7C00FF>+244%</color>", (string)benefitDescriber.CurrentBenefitEcopedia(user));
+            Assert.AreEqual("<style=\"Positive\">+333%</style>", (string)benefitDescriber.CurrentBenefit(user));
+            Assert.AreEqual("<color=#FFAA00FF>+333%</color>", (string)benefitDescriber.CurrentBenefitEcopedia(user));
+            Assert.AreEqual("<color=#FFAA00FF>72</color> food XP", (string)benefitDescriber.CurrentInput(user));
             Assert.AreEqual("<link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitDescriber.InputName(user));
             Assert.AreEqual("<style=\"Positive\">+1000%</style>", (string)benefitDescriber.MaximumBenefit(user));
-            Assert.AreEqual("<style=\"Positive\">102</style> food XP", (string)benefitDescriber.MaximumInput(user));
+            Assert.AreEqual("<style=\"Positive\">192</style> food XP", (string)benefitDescriber.MaximumInput(user));
             Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:87\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitDescriber.MeansOfImprovingStat(user));
         }
     }

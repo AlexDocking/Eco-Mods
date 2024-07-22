@@ -25,7 +25,7 @@ namespace XPBenefits.Tests
 {
     public static class TestingUtils
     {
-        public static Type[] SingleFood => new Type[] { typeof(WildStewItem) };
+        public static Type[] SingleFood => new Type[] { typeof(TestFood) };
 
         public static void CreateTestResidencyWithValue(this User user, float propertyValue)
         {
@@ -40,14 +40,14 @@ namespace XPBenefits.Tests
 
         public static void MakeHomeless(this User user) => user.GetResidencyHouse()?.Residency?.DebugForceEvict(user);
 
-        public static void ResetStomach(this User user, params Type[] foodTypes)
+        public static void ReplaceStomachContentsAndMakeTasteOk(this User user, params Type[] foodTypes)
         {
             user.Stomach.Contents.Clear();
 
             foreach (Type foodType in foodTypes)
             {
                 if (Item.Get(foodType) is not FoodItem foodItem) continue;
-
+                user.Stomach.TasteBuds.FoodToTaste[foodType] = new ItemTaste() { Discovered = true, Preference = ItemTaste.TastePreference.Ok };
                 user.Stomach.Eat(foodItem, out _, force: true);
             }
         }

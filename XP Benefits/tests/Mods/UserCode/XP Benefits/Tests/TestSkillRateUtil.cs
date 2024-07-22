@@ -62,7 +62,7 @@ namespace XPBenefits.Tests
             DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.First();
 
-            testUser.ResetStomach(TestingUtils.SingleFood);
+            testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
             Assert.AreNotEqual(0, foodXP);
 
@@ -77,7 +77,7 @@ namespace XPBenefits.Tests
             DifficultySettings.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.First();
 
-            testUser.ResetStomach(TestingUtils.SingleFood);
+            testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             float foodXP = SkillRateUtil.FoodXP(testUser);
             Assert.AreNotEqual(0, foodXP);
 
