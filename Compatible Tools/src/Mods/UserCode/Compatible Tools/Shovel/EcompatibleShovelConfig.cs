@@ -2,9 +2,9 @@
 using Eco.Shared.Localization;
 using System.ComponentModel;
 
-namespace CompatibleTools
+namespace EcompatibleTools
 {
-    public partial class CompatibleShovelConfig : IController
+    public partial class EcompatibleShovelConfig : IController
     {
         [Category("Settings"), LocDescription("How many blocks a wooden shovel can dig before any modifiers are applied.")]
         public int WoodenShovelBaseSize { get; set; } = 1;

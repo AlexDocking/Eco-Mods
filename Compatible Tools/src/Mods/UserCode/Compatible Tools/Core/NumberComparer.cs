@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CompatibleTools
+namespace EcompatibleTools
 {
     public class NumberComparer<T> : IComparer<T>
     {

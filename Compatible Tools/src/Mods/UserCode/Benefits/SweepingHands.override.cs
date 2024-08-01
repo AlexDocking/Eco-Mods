@@ -15,7 +15,7 @@ namespace Eco.Mods.TechTree
     using System;
     using Eco.Shared.Math;
     using Eco.Shared.Voxel;
-    using CompatibleTools;
+    using EcompatibleTools;
 
     public partial class MiningSweepingHandsTalent
     {

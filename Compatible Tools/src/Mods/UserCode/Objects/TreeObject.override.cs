@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Strange Loop Games. All rights reserved.
 // See LICENSE file in the project root for full license information.
 namespace Eco.Mods.Organisms
-{ // Compatible Tools makes changes at lines 235, 286
+{ // Ecompatible Tools makes changes at lines 235, 286
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -34,7 +34,7 @@ namespace Eco.Mods.Organisms
     using Vector3 = System.Numerics.Vector3;
     using System.ComponentModel;
     using Eco.Gameplay.Interactions.Interactors;
-    using CompatibleTools;
+    using EcompatibleTools;
     using Eco.Mods.TechTree;
 
     [Serialized]
@@ -232,7 +232,7 @@ namespace Eco.Mods.Organisms
                 this.Destroy();
         }
         
-        //Compatible Tools - Start
+        //Ecompatible Tools - Start
         /// <summary>
         /// List of modifiers that change the max log pickup.
         /// </summary>
@@ -250,7 +250,7 @@ namespace Eco.Mods.Organisms
                 context.FloatValue = context.IntValue = resource.MaxStackSize;
             }
         }
-        //Compatible Tools - Finish
+        //Ecompatible Tools - Finish
 
         void PickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
@@ -283,7 +283,7 @@ namespace Eco.Mods.Organisms
                         if (!carried.IsEmpty) // Early tests: neeed to check type mismatch and max quantity.
                         {
                             if      (carried.Stacks.First().Item.Type != resourceType)                    { player.Error(Localizer.Format("You are already carrying {0:items} and cannot pick up {1:items}.", carried.Stacks.First().Item.UILink(LinkConfig.ShowPlural), resource.UILink(LinkConfig.ShowPlural)));  return; }                        
-                            // Compatible Tools - Start
+                            // Ecompatible Tools - Start
                             else
                             {
                                 var context = new TreeEntityMaxPickUpModificationContext()
@@ -296,7 +296,7 @@ namespace Eco.Mods.Organisms
                                 int maxStackSize = MaxPickupResolver.ResolveInt(context);
                                 if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
                             }
-                            //Compatible Tools - Finish
+                            //Ecompatible Tools - Finish
                         }
 
                         // Prepare a game action pack.

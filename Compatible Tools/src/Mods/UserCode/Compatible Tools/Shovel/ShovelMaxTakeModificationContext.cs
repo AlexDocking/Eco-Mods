@@ -1,4 +1,4 @@
-﻿namespace CompatibleTools
+﻿namespace EcompatibleTools
 {
     using Eco.Gameplay.DynamicValues;
     using Eco.Gameplay.Items;

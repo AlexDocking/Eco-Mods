@@ -8,7 +8,7 @@ using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
 using Eco.Gameplay.Systems.NewTooltip;
 using Eco.Core.Utils;
 
-namespace CompatibleTools
+namespace EcompatibleTools
 {
     [TooltipLibrary]
     public static class ShovelTooltipLibrary

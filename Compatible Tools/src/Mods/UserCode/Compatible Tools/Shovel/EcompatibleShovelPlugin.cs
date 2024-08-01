@@ -7,18 +7,18 @@ using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 
-namespace CompatibleTools
+namespace EcompatibleTools
 {
-    public partial class CompatibleShovelPlugin : Singleton<CompatibleShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
+    public partial class EcompatibleShovelPlugin : Singleton<EcompatibleShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
     {
-        public CompatibleShovelConfig Config => Obj.GetEditObject() as CompatibleShovelConfig;
+        public EcompatibleShovelConfig Config => Obj.GetEditObject() as EcompatibleShovelConfig;
         public IPluginConfig PluginConfig => this.config;
-        private PluginConfig<CompatibleShovelConfig> config;
+        private PluginConfig<EcompatibleShovelConfig> config;
         public ThreadSafeAction<object, string> ParamChanged { get; set; } = new ThreadSafeAction<object, string>();
 
-        public CompatibleShovelPlugin()
+        public EcompatibleShovelPlugin()
         {
-            this.config = new PluginConfig<CompatibleShovelConfig>("CompatibleShovel");
+            this.config = new PluginConfig<EcompatibleShovelConfig>("EcompatibleShovel");
         }
 
         public string GetCategory() => Localizer.DoStr("Mods");
@@ -43,20 +43,20 @@ namespace CompatibleTools
             switch (shovelContext.Shovel)
             {
                 case WoodenShovelItem:
-                    shovelContext.FloatValue = CompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
-                    shovelContext.IntValue = CompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
+                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
+                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
                     break;
                 case IronShovelItem:
-                    shovelContext.FloatValue = CompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
-                    shovelContext.IntValue = CompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
+                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
+                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
                     break;
                 case SteelShovelItem:
-                    shovelContext.FloatValue = CompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
-                    shovelContext.IntValue = CompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
+                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
+                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
                     break;
                 case ModernShovelItem:
-                    shovelContext.FloatValue = CompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
-                    shovelContext.IntValue = CompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
+                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
+                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
         }
@@ -66,7 +66,7 @@ namespace CompatibleTools
         public void ModifyValue(IModifyValueInPlaceContext context)
         {
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
-            if (CompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
+            if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
                 shovelContext.IntValue = (int)shovelContext.FloatValue;

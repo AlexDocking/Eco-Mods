@@ -9,7 +9,7 @@ using Eco.Gameplay.Players;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
 using Eco.Gameplay.Utils;
-using CompatibleTools;
+using EcompatibleTools;
 using Eco.Gameplay.Systems.NewTooltip;
 
 namespace Eco.Mods.TechTree
