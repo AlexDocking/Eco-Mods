@@ -15,31 +15,11 @@ namespace Eco.Mods.TechTree
     using System;
     using Eco.Shared.Math;
     using Eco.Shared.Voxel;
-    using EcompatibleTools;
+    using Ecompatible;
 
     public partial class MiningSweepingHandsTalent
     {
         public readonly int PickUpRange = 4;
-        public static IPriorityValueResolver PickUpRangeResolver { get; } = new PriorityDynamicValueResolver((float.MinValue, new DefaultPickupRange()));
-        public class DefaultPickupRange : IModifyValueInPlaceHandler
-        {
-            public void ModifyValue(IModifyValueInPlaceContext context)
-            {
-                if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
-                context.FloatValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
-                context.IntValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
-            }
-        }
-        public static IPriorityValueResolver MaxStackSizeResolver { get; } = new PriorityDynamicValueResolver((float.MinValue, new MaxStackSizePickupLimit()));
-        public class MaxStackSizePickupLimit : IModifyValueInPlaceHandler
-        {
-            public void ModifyValue(IModifyValueInPlaceContext context)
-            {
-                if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
-                context.FloatValue = sweepingHandsContext.Resource.MaxStackSize;
-                context.IntValue = sweepingHandsContext.Resource.MaxStackSize;
-            }
-        }
         public override void RegisterTalent(User user)
         {
             base.RegisterTalent(user);
@@ -72,7 +52,7 @@ namespace Eco.Mods.TechTree
                 Resource = resource,
                 SweepingHandsTalent = this,
             };
-            int maxStackSize = MaxStackSizeResolver.ResolveInt(maxStackSizeContext);
+            int maxStackSize = ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.ResolveInt(maxStackSizeContext);
             // max stack size minus currently picking item
             var numToTake = maxStackSize - 1;
             if (numToTake <= 0) return;
@@ -95,7 +75,7 @@ namespace Eco.Mods.TechTree
                 Resource = resource,
                 SweepingHandsTalent = this,
             };
-            var pickUpRange = PickUpRangeResolver.ResolveInt(pickUpRangeContext);
+            var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.ResolveInt(pickUpRangeContext);
             var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, pickUpRange)
                                                      .OfType<RubbleObject>()
                                                      .Where(x => x != target && !x.IsBreakable && x is IRepresentsItem rubbleRepresentsItem && rubbleRepresentsItem.RepresentedItemType == itemType)

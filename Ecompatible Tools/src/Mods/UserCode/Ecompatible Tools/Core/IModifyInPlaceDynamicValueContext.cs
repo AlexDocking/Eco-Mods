@@ -1,6 +1,6 @@
 ﻿using Eco.Gameplay.Players;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     public interface IModifyValueInPlaceContext
     {

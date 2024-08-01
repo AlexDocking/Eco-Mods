@@ -1,4 +1,4 @@
-﻿namespace EcompatibleTools
+﻿namespace Ecompatible
 {
     public interface IModifyValueInPlaceHandler
     {

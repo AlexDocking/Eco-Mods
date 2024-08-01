@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPBenefits", "XP Benefits\X
 		{E856B018-C1B9-4AEC-B05E-4F940E74F6CE} = {E856B018-C1B9-4AEC-B05E-4F940E74F6CE}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompatibleTools", "Compatible Tools\CompatibleTools.csproj", "{2F6A07CE-C667-41AD-A412-44D90783B9E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EcompatibleTools", "Ecompatible Tools\EcompatibleTools.csproj", "{2F6A07CE-C667-41AD-A412-44D90783B9E9}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E856B018-C1B9-4AEC-B05E-4F940E74F6CE} = {E856B018-C1B9-4AEC-B05E-4F940E74F6CE}
 	EndProjectSection
@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplacementInteractions", "
 		{E856B018-C1B9-4AEC-B05E-4F940E74F6CE} = {E856B018-C1B9-4AEC-B05E-4F940E74F6CE}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcoTestTools", "Eco Test Tools\EcoTestTools.csproj", "{E856B018-C1B9-4AEC-B05E-4F940E74F6CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EcoTestTools", "Eco Test Tools\EcoTestTools.csproj", "{E856B018-C1B9-4AEC-B05E-4F940E74F6CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

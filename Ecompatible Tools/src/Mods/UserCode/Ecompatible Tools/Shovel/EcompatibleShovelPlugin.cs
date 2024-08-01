@@ -7,7 +7,7 @@ using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     public partial class EcompatibleShovelPlugin : Singleton<EcompatibleShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
     {
@@ -31,8 +31,8 @@ namespace EcompatibleTools
         public string GetStatus() => "";
         public static void Initialize()
         {
-            ShovelItem.MaxTakeResolver.Add(float.MinValue, new InitialShovelSizeModifier());
-            ShovelItem.MaxTakeResolver.Add(-100, new ShovelStackSizeModifierSettingModifier());
+            ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(float.MinValue, new InitialShovelSizeModifier());
+            ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(-100, new ShovelStackSizeModifierSettingModifier());
         }
     }
     public class InitialShovelSizeModifier : IModifyValueInPlaceHandler

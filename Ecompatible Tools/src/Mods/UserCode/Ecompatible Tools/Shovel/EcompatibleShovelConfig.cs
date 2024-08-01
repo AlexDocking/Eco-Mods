@@ -2,7 +2,7 @@
 using Eco.Shared.Localization;
 using System.ComponentModel;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     public partial class EcompatibleShovelConfig : IController
     {

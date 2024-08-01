@@ -1,4 +1,4 @@
-﻿namespace EcompatibleTools
+﻿namespace Ecompatible
 {
     using Eco.Gameplay.Players;
     using Eco.Mods.Organisms;

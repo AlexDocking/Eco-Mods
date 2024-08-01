@@ -1,4 +1,4 @@
-﻿namespace EcompatibleTools
+﻿namespace Ecompatible
 {
     using Eco.Gameplay.Items;
     using Eco.Gameplay.Players;

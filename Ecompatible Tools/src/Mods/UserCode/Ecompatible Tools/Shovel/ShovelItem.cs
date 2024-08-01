@@ -9,32 +9,13 @@ using Eco.Gameplay.Players;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
 using Eco.Gameplay.Utils;
-using EcompatibleTools;
+using Ecompatible;
 using Eco.Gameplay.Systems.NewTooltip;
 
 namespace Eco.Mods.TechTree
 {
     public abstract partial class ShovelItem
     {
-        /// <summary>
-        /// List of modifiers that change MaxTake.
-        /// </summary>
-        public static IPriorityValueResolver MaxTakeResolver { get; } = new PriorityDynamicValueResolver((float.MaxValue, new CarriedInventoryMaxTakeFallback()));
-
-        public class CarriedInventoryMaxTakeFallback : IModifyValueInPlaceHandler
-        {
-            public float Priority => float.MaxValue;
-            public void ModifyValue(IModifyValueInPlaceContext context)
-            {
-                if (context is not ShovelMaxTakeModificationContext shovelContext) return;
-                if (context.FloatValue > 0) return;
-                if (shovelContext.TargetItem == null) return;
-                int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, shovelContext.User.Inventory.Carried.TotalNumberOfItems(shovelContext.TargetItem), shovelContext.User);
-                context.FloatValue = maxAccepted;
-                context.IntValue = maxAccepted;
-            }
-        }
-
         [ReplacementInteraction("Dig")]
         public bool ModifiedDig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
         {
@@ -48,7 +29,7 @@ namespace Eco.Mods.TechTree
                 FloatValue = this.MaxTake,
                 Shovel = this
             };
-            int maxTake = MaxTakeResolver.ResolveInt(maxTakeContext);
+            int maxTake = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(maxTakeContext);
             if (maxTake > 0 && carry.Quantity >= maxTake)
             {
                 player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");

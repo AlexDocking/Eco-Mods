@@ -8,7 +8,7 @@ using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
 using Eco.Gameplay.Systems.NewTooltip;
 using Eco.Core.Utils;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     [TooltipLibrary]
     public static class ShovelTooltipLibrary
@@ -24,7 +24,7 @@ namespace EcompatibleTools
                 FloatValue = shovel.MaxTake,
                 Shovel = shovel
             };
-            int shovelLimit = ShovelItem.MaxTakeResolver.ResolveInt(modification);
+            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(modification);
             if (shovelLimit <= 0) return default;
             return new TooltipSection(Localizer.Do($"Shovel can dig {shovelLimit} {modification.TargetItem?.MarkedUpName.AppendSpaceIfSet()}blocks."));
         }

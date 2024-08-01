@@ -14,7 +14,6 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using EcompatibleTools;
 using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
@@ -28,6 +27,7 @@ using System.Linq;
 using Eco.Mods.Organisms;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
+using Ecompatible;
 
 namespace XPBenefits
 {
@@ -68,9 +68,9 @@ namespace XPBenefits
 
             if (!Enabled) return;
             ShovelBenefit ??= BenefitFunction;
-            ShovelItem.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
-            TreeEntity.MaxPickupResolver.Add(100, new ExtraCarryStackLimitModifier());
-            MiningSweepingHandsTalent.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
+            ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
+            ValueResolvers.Tools.Axe.MaxPickupLogsResolver.Add(100, new ExtraCarryStackLimitModifier());
+            ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
         }
 
         public override void ApplyBenefitToUser(User user)

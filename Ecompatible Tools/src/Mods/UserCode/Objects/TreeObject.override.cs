@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Strange Loop Games. All rights reserved.
 // See LICENSE file in the project root for full license information.
 namespace Eco.Mods.Organisms
-{ // Ecompatible Tools makes changes at lines 235, 286
+{ // Ecompatible Tools makes changes to PickupLog
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -34,7 +34,6 @@ namespace Eco.Mods.Organisms
     using Vector3 = System.Numerics.Vector3;
     using System.ComponentModel;
     using Eco.Gameplay.Interactions.Interactors;
-    using EcompatibleTools;
     using Eco.Mods.TechTree;
 
     [Serialized]
@@ -80,7 +79,7 @@ namespace Eco.Mods.Organisms
     }
 
     // gameplay version of simulations tree
-    [Serialized] public class TreeEntity : Tree, IDamageable, IHasInteractions
+    [Serialized] public partial class TreeEntity : Tree, IDamageable, IHasInteractions
     {
         readonly object sync = new();
 
@@ -231,26 +230,6 @@ namespace Eco.Mods.Organisms
             if (this.Fallen && this.stumpHealth <= 0 && this.trunkPieces.All(piece => piece.IsCollectedOrNotValid))
                 this.Destroy();
         }
-        
-        //Ecompatible Tools - Start
-        /// <summary>
-        /// List of modifiers that change the max log pickup.
-        /// </summary>
-        public static IPriorityValueResolver MaxPickupResolver { get; } = new PriorityDynamicValueResolver((float.MinValue, new MaxStackSizePickupLimit()));
-        /// <summary>
-        /// Use the log's MaxStackSize as the default value
-        /// </summary>
-        public class MaxStackSizePickupLimit : IModifyValueInPlaceHandler
-        {
-            public void ModifyValue(IModifyValueInPlaceContext context)
-            {
-                if (context is not TreeEntityMaxPickUpModificationContext treeContext) return;
-                var resourceType = treeContext.Tree.Species.ResourceItemType;
-                var resource = Item.Get(resourceType);
-                context.FloatValue = context.IntValue = resource.MaxStackSize;
-            }
-        }
-        //Ecompatible Tools - Finish
 
         void PickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
@@ -286,14 +265,14 @@ namespace Eco.Mods.Organisms
                             // Ecompatible Tools - Start
                             else
                             {
-                                var context = new TreeEntityMaxPickUpModificationContext()
+                                var context = new Ecompatible.TreeEntityMaxPickUpModificationContext()
                                 {
                                     User = player.User,
                                     InitialPickup = 0,
                                     Axe = player.User.Inventory.Toolbar.SelectedItem as AxeItem,
                                     Tree = this
                                 };
-                                int maxStackSize = MaxPickupResolver.ResolveInt(context);
+                                int maxStackSize = Ecompatible.ValueResolvers.Tools.Axe.MaxPickupLogsResolver.ResolveInt(context);
                                 if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
                             }
                             //Ecompatible Tools - Finish

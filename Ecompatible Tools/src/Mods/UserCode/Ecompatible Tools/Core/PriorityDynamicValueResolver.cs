@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     public interface IValueResolver
     {
