@@ -1,16 +1,20 @@
-﻿namespace Ecompatible
+﻿using Eco.Shared.Localization;
+
+namespace Ecompatible
 {
-    public class CarriedInventoryMaxTakeFallback : IModifyValueInPlaceHandler
+    public class CarriedInventoryMaxTakeFallback : IValueModifier
     {
         public float Priority => float.MaxValue;
-        public void ModifyValue(IModifyValueInPlaceContext context)
+        public void ModifyValue(IValueModificationContext context, out LocString description)
         {
+            description = LocString.Empty;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             if (context.FloatValue > 0) return;
             if (shovelContext.TargetItem == null) return;
             int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, shovelContext.User.Inventory.Carried.TotalNumberOfItems(shovelContext.TargetItem), shovelContext.User);
             context.FloatValue = maxAccepted;
             context.IntValue = maxAccepted;
+            description = DescriptionGenerator.Obj.BaseValue(maxAccepted);
         }
     }
 }

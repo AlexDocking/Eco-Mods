@@ -9,7 +9,7 @@
     using System;
     using System.Numerics;
 
-    public class ShovelMaxTakeModificationContext : IModifyValueInPlaceContext
+    public class ShovelMaxTakeModificationContext : IValueModificationContext
     {
         public User User { get; init; }
         public Item TargetItem { get; init; }

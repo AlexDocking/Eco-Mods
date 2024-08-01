@@ -5,7 +5,7 @@
     using Eco.Mods.TechTree;
     using System.Numerics;
 
-    public class SweepingHandsMaxTakeModificationContext : IModifyValueInPlaceContext
+    public class SweepingHandsMaxTakeModificationContext : IValueModificationContext
     {
         public User User { get; init; }
         public Item Resource { get; init; }

@@ -2,7 +2,7 @@
 
 namespace Ecompatible
 {
-    public interface IModifyValueInPlaceContext
+    public interface IValueModificationContext
     {
         User User { get; }
         float FloatValue { get; set; }

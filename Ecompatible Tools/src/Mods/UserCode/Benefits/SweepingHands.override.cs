@@ -75,7 +75,7 @@ namespace Eco.Mods.TechTree
                 Resource = resource,
                 SweepingHandsTalent = this,
             };
-            var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.ResolveInt(pickUpRangeContext);
+            var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.Resolve(pickUpRangeContext);
             var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, pickUpRange)
                                                      .OfType<RubbleObject>()
                                                      .Where(x => x != target && !x.IsBreakable && x is IRepresentsItem rubbleRepresentsItem && rubbleRepresentsItem.RepresentedItemType == itemType)

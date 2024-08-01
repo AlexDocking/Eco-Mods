@@ -35,10 +35,11 @@ namespace Ecompatible
             ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(-100, new ShovelStackSizeModifierSettingModifier());
         }
     }
-    public class InitialShovelSizeModifier : IModifyValueInPlaceHandler
+    public class InitialShovelSizeModifier : IValueModifier
     {
-        public void ModifyValue(IModifyValueInPlaceContext context)
+        public void ModifyValue(IValueModificationContext context, out LocString description)
         {
+            description = LocString.Empty;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             switch (shovelContext.Shovel)
             {
@@ -59,17 +60,20 @@ namespace Ecompatible
                     shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
+            description = DescriptionGenerator.Obj.BaseValue(shovelContext.IntValue);
         }
     }
-    public class ShovelStackSizeModifierSettingModifier : IModifyValueInPlaceHandler
+    public class ShovelStackSizeModifierSettingModifier : IValueModifier
     {
-        public void ModifyValue(IModifyValueInPlaceContext context)
+        public void ModifyValue(IValueModificationContext context, out LocString description)
         {
+            description = LocString.Empty;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
                 shovelContext.IntValue = (int)shovelContext.FloatValue;
+                description = DescriptionGenerator.Obj.Multiplier("Server stack size", DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
             }
         }
     }

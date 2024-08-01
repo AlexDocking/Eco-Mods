@@ -5,7 +5,7 @@
     using Eco.Mods.TechTree;
     using System.Numerics;
 
-    public class TreeEntityMaxPickUpModificationContext : IModifyValueInPlaceContext
+    public class TreeEntityMaxPickUpModificationContext : IValueModificationContext
     {
         public User User { get; init; }
         public TreeEntity Tree { get; init; }
