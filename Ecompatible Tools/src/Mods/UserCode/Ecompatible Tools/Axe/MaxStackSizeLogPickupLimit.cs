@@ -1,4 +1,5 @@
 ﻿using Eco.Gameplay.Items;
+using Eco.Shared.Localization;
 
 namespace Ecompatible
 {
@@ -10,12 +11,15 @@ namespace Ecompatible
     /// </summary>
     public class MaxStackSizeLogPickupLimit : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context)
+        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
         {
+            description = LocString.Empty;
+            modificationType = ModificationType.None;
             if (context is not TreeEntityMaxPickUpModificationContext treeContext) return;
             var resourceType = treeContext.Tree.Species.ResourceItemType;
             var resource = Item.Get(resourceType);
             context.FloatValue = context.IntValue = resource.MaxStackSize;
+            description = DescriptionGenerator.Obj.BaseValue(resource.MaxStackSize);
         }
     }
 }

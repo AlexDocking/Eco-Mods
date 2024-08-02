@@ -37,9 +37,10 @@ namespace Ecompatible
     }
     public class InitialShovelSizeModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, out LocString description)
+        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
         {
             description = LocString.Empty;
+            modificationType = ModificationType.None;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             switch (shovelContext.Shovel)
             {
@@ -61,19 +62,22 @@ namespace Ecompatible
                     break;
             }
             description = DescriptionGenerator.Obj.BaseValue(shovelContext.IntValue);
+            modificationType = ModificationType.BaseValue;
         }
     }
     public class ShovelStackSizeModifierSettingModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, out LocString description)
+        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
         {
             description = LocString.Empty;
+            modificationType = ModificationType.None;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
                 shovelContext.IntValue = (int)shovelContext.FloatValue;
                 description = DescriptionGenerator.Obj.Multiplier("Server stack size", DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
+                modificationType = ModificationType.Multiplier;
             }
         }
     }

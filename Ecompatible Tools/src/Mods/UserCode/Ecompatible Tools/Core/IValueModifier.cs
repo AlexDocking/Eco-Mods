@@ -4,6 +4,6 @@ namespace Ecompatible
 {
     public interface IValueModifier
     {
-        void ModifyValue(IValueModificationContext context, out LocString description);
+        void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType);
     }
 }
