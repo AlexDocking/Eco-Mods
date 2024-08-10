@@ -1,21 +1,11 @@
-﻿namespace Ecompatible
-{
-    using Eco.Gameplay.DynamicValues;
-    using Eco.Gameplay.Items;
-    using Eco.Gameplay.Objects;
-    using Eco.Gameplay.Players;
-    using Eco.Mods.TechTree;
-    using Eco.Shared.SharedTypes;
-    using System;
-    using System.Numerics;
+﻿using Eco.Gameplay.Items;
+using Eco.Mods.TechTree;
 
-    public class ShovelMaxTakeModificationContext : IValueModificationContext
+namespace Ecompatible
+{
+    public class ShovelMaxTakeModificationContext : ValueModificationContextBase
     {
-        public User User { get; init; }
         public Item TargetItem { get; init; }
         public ShovelItem Shovel { get; init; }
-        public Vector3 Position => User.Position;
-        public float FloatValue { get; set; }
-        public int IntValue { get; set; }
     }
 }

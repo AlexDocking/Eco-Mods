@@ -20,7 +20,6 @@ namespace Ecompatible
             {
                 User = user,
                 TargetItem = user.Inventory.Carried.Stacks.First().Item,
-                IntValue = shovel.MaxTake,
                 FloatValue = shovel.MaxTake,
                 Shovel = shovel
             };

@@ -25,7 +25,6 @@ namespace Eco.Mods.TechTree
             {
                 User = player.User,
                 TargetItem = target.Block()?.GetItem(),
-                IntValue = this.MaxTake,
                 FloatValue = this.MaxTake,
                 Shovel = this
             };

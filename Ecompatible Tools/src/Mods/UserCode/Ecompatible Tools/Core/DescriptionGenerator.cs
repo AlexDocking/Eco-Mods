@@ -9,7 +9,7 @@ namespace Ecompatible
         public LocString BuildModificationListDescriptionInt(AuxillaryInfo auxillaryInfo)
         {
             ResolvedValueDescriber describer = new ResolvedValueDescriber();
-            return describer.GenerateDescription(auxillaryInfo.StepOutputs);
+            return describer.GenerateDescription(auxillaryInfo);
         }
     }
 }

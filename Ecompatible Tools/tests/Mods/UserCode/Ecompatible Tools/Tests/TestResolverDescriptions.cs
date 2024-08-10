@@ -6,6 +6,7 @@ using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 using Ecompatible;
 using EcoTestTools;
+using System;
 
 namespace EcompatibleTools.Tests
 {
@@ -16,13 +17,17 @@ namespace EcompatibleTools.Tests
         [CITest]
         public static void TestDescriptions()
         {
-            Test.Run(ShouldResolveCorrectValue);
+            Setup();
+            Test.Run(ShouldResolveCorrectFloatValue);
+            Test.Run(ShouldRoundDownByDefault);
+            Test.Run(ShouldRoundUp);
             Test.Run(ShouldGenerateDescriptionOfEachStep, "Generate ecompatible resolver descriptions");
         }
-        private static float ExampleResolve(out AuxillaryInfo info)
+
+        private static void Setup()
         {
             User user = TestUtils.TestUser;
-            IValueModificationContext context = new ExampleContext() { User = user };
+            Context = new ExampleContext() { User = user };
             (float, IValueModifier)[] modifiers = new (float, IValueModifier)[]
             {
                 (1, new ExampleBaseModifier()),
@@ -31,20 +36,31 @@ namespace EcompatibleTools.Tests
                 (4, new ExampleNoOpModifier()),//No modification, so ignore
                 (5, new ExampleMultiplierModifier(1.3f))//Displays as "Example Multiplier: +30%"
             };
-            PriorityDynamicValueResolver resolver = new PriorityDynamicValueResolver(modifiers);
-            return resolver.Resolve(context, out info);
+            Resolver = new PriorityDynamicValueResolver(modifiers);
         }
-        private static void ShouldResolveCorrectValue()
+
+        private static ExampleContext Context { get; set; }
+        private static PriorityDynamicValueResolver Resolver { get; set; }
+        private static void ShouldResolveCorrectFloatValue()
         {
-            float value = ExampleResolve(out _);
+            float value = Resolver.Resolve(Context, out _);
             Assert.AreEqual(5 * 1.3f, value);
+        }
+        private static void ShouldRoundDownByDefault()
+        {
+            int value = Resolver.ResolveInt(Context, out _);
+            Assert.AreEqual((int)(5 * 1.3f), value);
+        }
+        private static void ShouldRoundUp()
+        {
+            int value = Resolver.ResolveInt(Context, out _, Rounding.RoundUp);
+            Assert.AreEqual((int)Math.Ceiling(5 * 1.3f), value);
         }
         private static void ShouldGenerateDescriptionOfEachStep()
         {
-            ExampleResolve(out AuxillaryInfo info);
+            Resolver.Resolve(Context, out AuxillaryInfo info);
             LocString description = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(info);
 
-            Log.WriteLine(description);
             string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\">5</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result:]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr></table>\r\n";
             Assert.AreEqual(expected, description.ToString());
         }
@@ -55,14 +71,12 @@ namespace EcompatibleTools.Tests
         public User User { get; set; }
 
         public float FloatValue { get; set; }
-        public int IntValue { get; set; }
     }
     internal class ExampleBaseModifier : IValueModifier
     {
         public void ModifyValue(IValueModificationContext context, ref IOperationDetails modificationDetails)
         {
             context.FloatValue = 5;
-            context.IntValue = 5;
             modificationDetails = new BaseLevelOperationDetails();
         }
     }
@@ -85,7 +99,6 @@ namespace EcompatibleTools.Tests
         {
             float multiplier = Multiplier;
             context.FloatValue *= multiplier;
-            context.IntValue = (int)context.FloatValue;
             modificationDetails = new MultiplicationOperationDetails(Localizer.DoStr("Example Multiplier"), multiplier);
         }
     }

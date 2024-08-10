@@ -45,19 +45,15 @@ namespace Ecompatible
             {
                 case WoodenShovelItem:
                     shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
-                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
                     break;
                 case IronShovelItem:
                     shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
-                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
                     break;
                 case SteelShovelItem:
                     shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
-                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
                     break;
                 case ModernShovelItem:
                     shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
-                    shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
             details = new BaseLevelOperationDetails();
@@ -71,7 +67,6 @@ namespace Ecompatible
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
-                shovelContext.IntValue = (int)shovelContext.FloatValue;
                 operationDetails = new MultiplicationOperationDetails(Localizer.DoStr("Server Stack Size"), DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
             }
         }

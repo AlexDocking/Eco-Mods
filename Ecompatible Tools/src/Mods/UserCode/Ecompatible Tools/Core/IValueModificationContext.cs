@@ -6,6 +6,5 @@ namespace Ecompatible
     {
         User User { get; }
         float FloatValue { get; set; }
-        int IntValue { get; set; }
     }
 }

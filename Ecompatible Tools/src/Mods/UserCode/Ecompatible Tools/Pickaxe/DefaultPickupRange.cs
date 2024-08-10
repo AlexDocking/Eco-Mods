@@ -9,7 +9,6 @@ namespace Ecompatible
         {
             if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
             context.FloatValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
-            context.IntValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
             operationDetails = new BaseLevelOperationDetails();
         }
     }

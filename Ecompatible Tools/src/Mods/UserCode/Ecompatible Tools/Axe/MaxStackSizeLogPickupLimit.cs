@@ -17,7 +17,7 @@ namespace Ecompatible
             if (context is not TreeEntityMaxPickUpModificationContext treeContext) return;
             var resourceType = treeContext.Tree.Species.ResourceItemType;
             var resource = Item.Get(resourceType);
-            context.FloatValue = context.IntValue = resource.MaxStackSize;
+            context.FloatValue = resource.MaxStackSize;
             operationDetails = new BaseLevelOperationDetails();
         }
     }

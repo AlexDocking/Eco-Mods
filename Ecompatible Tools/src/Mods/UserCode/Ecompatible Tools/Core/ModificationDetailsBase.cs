@@ -78,8 +78,9 @@ namespace EcompatibleTools
             }
             return new List<IOperationDetails>(stack);
         }
-        public LocString GenerateDescription(IOperationDetails[] allSteps)
+        public LocString GenerateDescription(AuxillaryInfo info)
         {
+            IOperationDetails[] allSteps = info.StepOutputs;
             var steps = SelectAppliedUsedOperations(allSteps);
             if (!steps.Any()) return LocString.Empty;
             LocStringBuilder locStringBuilder = new LocStringBuilder();
@@ -92,7 +93,7 @@ namespace EcompatibleTools
                 }
             }
             locStringBuilder.AddRow((Localizer.NotLocalizedStr("---------------------------"), LocString.Empty));
-            locStringBuilder.AddRow((Localizer.DoStr("Result") + ":", Localizer.NotLocalizedStr(Text.Num(steps[steps.Count - 1].OutputFloat)).Align("right")));
+            locStringBuilder.AddRow((Localizer.DoStr("Result") + ":", Localizer.NotLocalizedStr(Text.Num(info.IntOutput)).Align("right")));
             locStringBuilder.EndTable();
             return locStringBuilder.ToLocString();
         }

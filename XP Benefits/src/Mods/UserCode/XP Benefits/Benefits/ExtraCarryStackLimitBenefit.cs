@@ -188,7 +188,6 @@ namespace XPBenefits
             if (benefit == null || !benefit.Enabled) return;
             float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
             context.FloatValue *= multiplier;
-            context.IntValue = (int)context.FloatValue;
             operationDetails = new MultiplicationOperationDetails(XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }
     }
