@@ -1,22 +1,23 @@
 ﻿using Eco.Shared.Localization;
+using Eco.Shared.Utils;
+using EcompatibleTools;
 
 namespace Ecompatible
 {
     public class CarriedInventoryMaxTakeFallback : IValueModifier
     {
         public float Priority => float.MaxValue;
-        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
+        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
         {
-            description = LocString.Empty;
-            modificationType = ModificationType.None;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
+            Log.WriteLine(Localizer.Do($"Fallback input:{context.FloatValue},{context.IntValue},{shovelContext.TargetItem}"));
             if (context.FloatValue > 0) return;
             if (shovelContext.TargetItem == null) return;
-            int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, shovelContext.User.Inventory.Carried.TotalNumberOfItems(shovelContext.TargetItem), shovelContext.User);
+            int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, 0, shovelContext.User);
             context.FloatValue = maxAccepted;
             context.IntValue = maxAccepted;
-            description = DescriptionGenerator.Obj.BaseValue(maxAccepted);
-            modificationType = ModificationType.BaseValue;
+            Log.WriteLine(Localizer.Do($"Fallback output:{maxAccepted}"));
+            operationDetails = new BaseLevelOperationDetails("Carry Limit");
         }
     }
 }

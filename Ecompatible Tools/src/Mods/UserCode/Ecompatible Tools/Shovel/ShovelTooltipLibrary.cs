@@ -24,7 +24,8 @@ namespace Ecompatible
                 FloatValue = shovel.MaxTake,
                 Shovel = shovel
             };
-            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(modification, out AuxillaryInfo auxillaryInfo);
+            float shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.Resolve(modification, out AuxillaryInfo auxillaryInfo);
+            Log.WriteLine(Localizer.Do($"Tooltip shovel limit:{shovelLimit},maxtake {shovel.MaxTake}"));
             if (shovelLimit <= 0) return default;
             LocString modificationDescription = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(auxillaryInfo);
             if (modification.TargetItem != null && modification.TargetItem.MarkedUpName.IsSet())

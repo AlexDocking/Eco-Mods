@@ -31,6 +31,7 @@ using Ecompatible;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Utils;
 using XPBenefits.Tests;
+using EcompatibleTools;
 
 namespace XPBenefits
 {
@@ -181,16 +182,14 @@ namespace XPBenefits
 
     public class ExtraCarryStackLimitModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
+        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
         {
-            description = LocString.Empty;
-            modificationType = ModificationType.None;
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return;
             float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
             context.FloatValue *= multiplier;
             context.IntValue = (int)context.FloatValue;
-            description = DescriptionGenerator.Obj.Multiplier(XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
+            operationDetails = new MultiplicationOperationDetails(XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }
     }
 

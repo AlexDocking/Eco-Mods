@@ -1,4 +1,5 @@
 ﻿using Eco.Shared.Localization;
+using EcompatibleTools;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -15,6 +16,7 @@ namespace Ecompatible
         void Remove(float priority, IValueModifier handler);
         void Clear();
         IEnumerable<(float, IValueModifier)> Handlers { get; }
+        float Resolve(IValueModificationContext context, out AuxillaryInfo auxillaryInfo);
         int ResolveInt(IValueModificationContext context, out AuxillaryInfo auxillaryInfo);
     }
     public class PriorityDynamicValueResolver : IPriorityValueResolver
@@ -42,20 +44,14 @@ namespace Ecompatible
         }
         private void PassThroughHandlers(IValueModificationContext context, out AuxillaryInfo auxillaryInfo)
         {
-            List<StepOutput> steps = new List<StepOutput>();
-            int stepCount = 0;
+            List<IOperationDetails> steps = new List<IOperationDetails>();
             foreach ((_, IValueModifier handler) in RequestHandlers)
             {
-                handler.ModifyValue(context, out LocString description, out ModificationType modificationType);
-                steps.Add(new StepOutput()
-                {
-                    Step = stepCount++,
-                    Modifier = handler,
-                    FloatOutput = context.FloatValue,
-                    IntOutput = context.IntValue,
-                    Description = description,
-                    ModificationType = modificationType
-                });
+                IOperationDetails operationDetails = new NoOperationDetails();
+                operationDetails.InputFloat = context.IntValue;
+                handler.ModifyValue(context, ref operationDetails);
+                operationDetails.OutputFloat = context.IntValue;
+                steps.Add(operationDetails);
             }
             auxillaryInfo = new AuxillaryInfo(steps.ToArray());
         }
@@ -74,20 +70,11 @@ namespace Ecompatible
     }
     public class AuxillaryInfo
     {
-        public StepOutput[] StepOutputs { get; }
+        public IOperationDetails[] StepOutputs { get; }
 
-        public AuxillaryInfo(StepOutput[] stepOutputs)
+        public AuxillaryInfo(IOperationDetails[] stepOutputs)
         {
             StepOutputs = stepOutputs;
         }
-    }
-    public class StepOutput
-    {
-        public int Step { get; init; }
-        public IValueModifier Modifier { get; init; }
-        public float FloatOutput { get; init; }
-        public int IntOutput { get; init; }
-        public LocString Description { get; init; }
-        public ModificationType ModificationType { get; init; }
     }
 }

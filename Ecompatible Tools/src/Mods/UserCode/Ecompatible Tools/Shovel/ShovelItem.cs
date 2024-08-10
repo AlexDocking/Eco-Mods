@@ -30,7 +30,7 @@ namespace Eco.Mods.TechTree
                 Shovel = this
             };
             int maxTake = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(maxTakeContext);
-            if (maxTake > 0 && carry.Quantity >= maxTake)
+            if (carry.Quantity >= maxTake)
             {
                 player.ErrorLoc($"Can't dig while carrying {player.User.Carrying.UILink()}.");
                 return false;

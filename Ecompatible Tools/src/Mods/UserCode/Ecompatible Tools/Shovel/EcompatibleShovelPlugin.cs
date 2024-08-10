@@ -6,6 +6,7 @@ using Eco.Gameplay.Players;
 using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
+using EcompatibleTools;
 
 namespace Ecompatible
 {
@@ -37,10 +38,8 @@ namespace Ecompatible
     }
     public class InitialShovelSizeModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
+        public void ModifyValue(IValueModificationContext context, ref IOperationDetails details)
         {
-            description = LocString.Empty;
-            modificationType = ModificationType.None;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             switch (shovelContext.Shovel)
             {
@@ -61,23 +60,19 @@ namespace Ecompatible
                     shovelContext.IntValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
             }
-            description = DescriptionGenerator.Obj.BaseValue(shovelContext.IntValue);
-            modificationType = ModificationType.BaseValue;
+            details = new BaseLevelOperationDetails();
         }
     }
     public class ShovelStackSizeModifierSettingModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType)
+        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
         {
-            description = LocString.Empty;
-            modificationType = ModificationType.None;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return;
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
                 shovelContext.IntValue = (int)shovelContext.FloatValue;
-                description = DescriptionGenerator.Obj.Multiplier("Server stack size", DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
-                modificationType = ModificationType.Multiplier;
+                operationDetails = new MultiplicationOperationDetails(Localizer.DoStr("Server Stack Size"), DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
             }
         }
     }

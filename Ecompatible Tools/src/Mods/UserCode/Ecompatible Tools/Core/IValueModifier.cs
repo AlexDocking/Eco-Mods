@@ -1,9 +1,10 @@
 ﻿using Eco.Shared.Localization;
+using EcompatibleTools;
 
 namespace Ecompatible
 {
     public interface IValueModifier
     {
-        void ModifyValue(IValueModificationContext context, out LocString description, out ModificationType modificationType);
+        void ModifyValue(IValueModificationContext context, ref IOperationDetails modificationDetails);
     }
 }
