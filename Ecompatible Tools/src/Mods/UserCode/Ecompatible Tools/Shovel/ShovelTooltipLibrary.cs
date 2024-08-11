@@ -6,7 +6,6 @@ using Eco.Shared.Utils;
 using System.Linq;
 using Eco.Gameplay.Systems.NewTooltip.TooltipLibraryFiles;
 using Eco.Gameplay.Systems.NewTooltip;
-using Eco.Core.Utils;
 
 namespace Ecompatible
 {

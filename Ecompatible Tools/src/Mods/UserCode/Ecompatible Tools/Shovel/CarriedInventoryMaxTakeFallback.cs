@@ -1,8 +1,4 @@
-﻿using Eco.Shared.Localization;
-using Eco.Shared.Utils;
-using EcompatibleTools;
-
-namespace Ecompatible
+﻿namespace Ecompatible
 {
     public class CarriedInventoryMaxTakeFallback : IValueModifier
     {

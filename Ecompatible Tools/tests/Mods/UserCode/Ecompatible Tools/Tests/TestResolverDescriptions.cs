@@ -8,7 +8,7 @@ using Ecompatible;
 using EcoTestTools;
 using System;
 
-namespace EcompatibleTools.Tests
+namespace Ecompatible.Tests
 {
     [ChatCommandHandler]
     public class TestResolverDescriptions

@@ -1,9 +1,6 @@
-﻿using Eco.Shared.Localization;
-using EcompatibleTools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace Ecompatible
 {

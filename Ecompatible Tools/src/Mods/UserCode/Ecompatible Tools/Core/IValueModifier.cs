@@ -1,5 +1,4 @@
 ﻿using Eco.Shared.Localization;
-using EcompatibleTools;
 
 namespace Ecompatible
 {

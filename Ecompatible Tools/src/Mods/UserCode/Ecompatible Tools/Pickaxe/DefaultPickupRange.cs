@@ -1,7 +1,4 @@
-﻿using Eco.Shared.Localization;
-using EcompatibleTools;
-
-namespace Ecompatible
+﻿namespace Ecompatible
 {
     public class DefaultPickupRange : IValueModifier
     {

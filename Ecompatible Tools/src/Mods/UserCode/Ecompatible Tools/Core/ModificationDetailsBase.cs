@@ -1,12 +1,9 @@
 ﻿using Eco.Shared.Localization;
 using Eco.Shared.Utils;
-using Ecompatible;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace EcompatibleTools
+namespace Ecompatible
 {
     public interface IOperationDetails
     {
@@ -25,18 +22,21 @@ namespace EcompatibleTools
             ModificationName = modificationName;
         }
     }
+
     public class BaseLevelOperationDetails : OperationDetailsBase
     {
         public BaseLevelOperationDetails(string name = "Base Level") : base(Localizer.DoStr(name))
         {
         }
     }
+
     public class NoOperationDetails : OperationDetailsBase
     {
         public NoOperationDetails() : base(LocString.Empty)
         {
         }
     }
+
     public class MultiplicationOperationDetails : OperationDetailsBase
     {
         public MultiplicationOperationDetails(LocString modificationName, float multiplier) : base(modificationName)
@@ -111,7 +111,7 @@ namespace EcompatibleTools
             content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.OutputFloat)));
             return true;
         }
-        private bool TableRowContent(NoOperationDetails details, out (LocString Name, LocString Effect) content) 
+        private bool TableRowContent(NoOperationDetails details, out (LocString Name, LocString Effect) content)
         {
             content = default;
             return false;

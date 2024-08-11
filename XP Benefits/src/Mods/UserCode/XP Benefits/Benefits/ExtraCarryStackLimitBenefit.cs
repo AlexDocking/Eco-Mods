@@ -24,14 +24,9 @@ using Eco.Shared.Utils;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Eco.Mods.Organisms;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Ecompatible;
-using Eco.Gameplay.EcopediaRoot;
-using Eco.Gameplay.Utils;
-using XPBenefits.Tests;
-using EcompatibleTools;
 
 namespace XPBenefits
 {

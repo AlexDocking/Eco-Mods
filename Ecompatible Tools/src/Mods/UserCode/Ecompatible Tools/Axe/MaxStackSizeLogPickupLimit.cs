@@ -1,6 +1,4 @@
 ﻿using Eco.Gameplay.Items;
-using Eco.Shared.Localization;
-using EcompatibleTools;
 
 namespace Ecompatible
 {
