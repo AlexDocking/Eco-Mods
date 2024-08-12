@@ -5,10 +5,10 @@ namespace Ecompatible
 {
     public partial class DescriptionGenerator : AutoSingleton<DescriptionGenerator>
     {
-        public LocString BuildModificationListDescriptionInt(int intOutput, AuxillaryInfo<float> auxillaryInfo)
+        public LocString BuildModificationListDescriptionInt(int intOutput, ResolvedSequence<float> resolvedSequence)
         {
             ResolvedValueDescriber describer = new ResolvedValueDescriber();
-            return describer.GenerateDescription(intOutput, auxillaryInfo);
+            return describer.GenerateDescription(intOutput, resolvedSequence);
         }
     }
 }

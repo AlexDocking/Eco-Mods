@@ -21,10 +21,10 @@ namespace Ecompatible
                 TargetItem = user.Inventory.Carried.Stacks.First().Item,
                 Shovel = shovel
             };
-            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out AuxillaryInfo<float> auxillaryInfo);
+            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out ResolvedSequence<float> resolvedSequence);
             Log.WriteLine(Localizer.Do($"Tooltip shovel limit:{shovelLimit},maxtake {shovel.MaxTake}"));
             if (shovelLimit <= 0) return default;
-            LocString modificationDescription = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(shovelLimit, auxillaryInfo);
+            LocString modificationDescription = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(shovelLimit, resolvedSequence);
             if (modification.TargetItem != null && modification.TargetItem.MarkedUpName.IsSet())
                 return new TooltipSection(Localizer.Do($"Shovel can dig {TextLoc.InfoLight(TextLoc.Foldout(Localizer.NotLocalizedStr(Text.Num(shovelLimit)), Localizer.DoStr("Shovel Dig Limit"), modificationDescription))} {modification.TargetItem?.MarkedUpName} blocks."));
             return new TooltipSection(Localizer.Do($"Shovel can dig {TextLoc.InfoLight(TextLoc.Foldout(Localizer.NotLocalizedStr(Text.Num(shovelLimit)), Localizer.DoStr("Shovel Dig Limit"), modificationDescription))} blocks."));

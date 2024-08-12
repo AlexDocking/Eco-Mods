@@ -84,7 +84,7 @@ namespace Ecompatible
             }
             return new List<IModificationOutput<float>>(stack);
         }
-        public LocString GenerateDescription(int intOutput, AuxillaryInfo<float> info)
+        public LocString GenerateDescription(int intOutput, ResolvedSequence<float> info)
         {
             IModificationOutput<float>[] allSteps = info.StepOutputs;
             var steps = SelectAppliedUsedOperations(allSteps);
