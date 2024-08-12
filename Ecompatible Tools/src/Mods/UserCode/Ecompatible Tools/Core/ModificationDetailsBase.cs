@@ -64,68 +64,119 @@ namespace Ecompatible
             return text.Wrap($"<align=\"{alignment}\">", "</align>");
         }
     }
-    public class ResolvedValueDescriber
+    internal interface IResolvedOutputRowDescriber<U, V>
     {
-        private List<IModificationOutput<float>> SelectAppliedUsedOperations(IModificationOutput<float>[] allSteps)
+        V DescribeAsRow(ResolvedSequence<U> resolvedSequence, int index);
+        V DescribeAsResult(ResolvedSequence<U> resolvedSequence, int index);
+    }
+    internal interface IResolvedSequenceDescriber<T>
+    {
+        public LocString DescribeSequence(ResolvedSequence<T> resolvedSequence);
+    }
+    internal class TableRowInformation
+    {
+        public TableRowInformation(LocString name, LocString effect)
         {
-            Stack<IModificationOutput<float>> stack = new Stack<IModificationOutput<float>>();
-            for (int i = allSteps.Length - 1; i >= 0; i--)
-            {
-                var step = allSteps[i];
-                if (step is BaseLevelModificationOutput)
-                {
-                    stack.Push(step);
-                    break;
-                }
-                else if (step != null)
-                {
-                    stack.Push(step);
-                }
-            }
-            return new List<IModificationOutput<float>>(stack);
+            Name = name;
+            Effect = effect;
         }
-        public LocString GenerateDescription(int intOutput, ResolvedSequence<float> info)
+
+        public LocString Name { get; }
+        public LocString Effect { get; }
+    }
+    internal class ResolvedSequenceTableDescriber<T> : IResolvedSequenceDescriber<T>
+    {
+        public IResolvedOutputRowDescriber<T, TableRowInformation> StepDescriber { get; }
+
+        public ResolvedSequenceTableDescriber(IResolvedOutputRowDescriber<T, TableRowInformation> stepDescriber)
         {
-            IModificationOutput<float>[] allSteps = info.StepOutputs;
-            var steps = SelectAppliedUsedOperations(allSteps);
+            StepDescriber = stepDescriber;
+        }
+        private void AppendRow(LocStringBuilder locStringBuilder, TableRowInformation tableRowInformation)
+        {
+            if (tableRowInformation != null)
+            {
+                locStringBuilder.AddRow((tableRowInformation.Name + ":", tableRowInformation.Effect.Align("right")));
+            }
+        }
+        public LocString DescribeSequence(ResolvedSequence<T> resolvedSequence)
+        {
+            IModificationOutput<T>[] steps = resolvedSequence.StepOutputs;
             if (!steps.Any()) return LocString.Empty;
             LocStringBuilder locStringBuilder = new LocStringBuilder();
             locStringBuilder.StartTable();
-            for (int i = 0; i < steps.Count; i++)
+            for (int i = 0; i < steps.Length; i++)
             {
-                if (TableRowContent(steps[i], out (LocString Name, LocString Effect) contents))
-                {
-                    locStringBuilder.AddRow((contents.Name + ":", contents.Effect.Align("right")));
-                }
+                AppendRow(locStringBuilder, StepDescriber.DescribeAsRow(resolvedSequence, i));
             }
             locStringBuilder.AddRow((Localizer.NotLocalizedStr("---------------------------"), LocString.Empty));
-            locStringBuilder.AddRow((Localizer.DoStr("Result") + ":", Localizer.NotLocalizedStr(Text.Num(intOutput)).Align("right")));
+            AppendRow(locStringBuilder, StepDescriber.DescribeAsResult(resolvedSequence, resolvedSequence.StepOutputs.Length - 1));
             locStringBuilder.EndTable();
             return locStringBuilder.ToLocString();
         }
-        private bool TableRowContent(IModificationOutput<float> details, out (LocString Name, LocString Effect) content)
+    }
+    internal class ResolvedIntFromFloatTableDescriber : IResolvedSequenceDescriber<float>
+    {
+        private ResolvedSequenceTableDescriber<float> TableRowDescriber { get; }
+        public ResolvedIntFromFloatTableDescriber(Rounding rounding = Rounding.RoundDown)
         {
-            if (details is BaseLevelModificationOutput baseLevelOperationDetails) return TableRowContent(baseLevelOperationDetails, out content);
-            if (details is MultiplicationOperationDetails multiplicationOperationDetails) return TableRowContent(multiplicationOperationDetails, out content);
-            if (details is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase, out content);
-            content = default;
-            return false;
-        }
-        private bool TableRowContent(ModificationOutputBase details, out (LocString Name, LocString Effect) content)
-        {
-            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
-            return true;
-        }
-        private bool TableRowContent(BaseLevelModificationOutput details, out (LocString Name, LocString Effect) content)
-        {
-            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
-            return true;
+            TableRowDescriber = new ResolvedSequenceTableDescriber<float>(new TableRowInformationPopulator(rounding));
         }
 
-        private bool TableRowContent(MultiplicationOperationDetails details, out (LocString Name, LocString Effect) content)
+        public LocString DescribeSequence(ResolvedSequence<float> resolvedSequence)
         {
-            content = (details.ModificationName, Localizer.NotLocalizedStr(details.Multiplier >= 1 ? Text.Positive($"+{Text.Percent(details.Multiplier - 1)}") : Text.Negative(Text.Percent(details.Multiplier - 1))));
-            return true;
+            return TableRowDescriber.DescribeSequence(resolvedSequence);
+        }
+
+        private class TableRowInformationPopulator : IResolvedOutputRowDescriber<float, TableRowInformation>
+        {
+            public TableRowInformationPopulator(Rounding rounding)
+            {
+                Rounding = rounding;
+            }
+
+            private Rounding Rounding { get; }
+
+            private int IndexOfLastBaseLevelModification(IModificationOutput<float>[] stepOutputs)
+            {
+                for (int i = stepOutputs.Length - 1; i >= 0; i--)
+                {
+                    if (stepOutputs[i] is BaseLevelModificationOutput)
+                    {
+                        return i;
+                    }
+                }
+                return 0;
+            }
+            public TableRowInformation DescribeAsRow(ResolvedSequence<float> resolvedSequence, int index)
+            {
+                if (index < IndexOfLastBaseLevelModification(resolvedSequence.StepOutputs)) return null;
+
+                IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs[index];
+                if (stepOutput is BaseLevelModificationOutput baseLevelOperationDetails) TableRowContent(baseLevelOperationDetails);
+                if (stepOutput is MultiplicationOperationDetails multiplicationOperationDetails) return TableRowContent(multiplicationOperationDetails);
+                if (stepOutput is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase);
+                return null;
+            }
+            public TableRowInformation DescribeAsResult(ResolvedSequence<float> resolvedSequence, int index)
+            {
+                IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs[index];
+                LocString resultCell = Rounding == Rounding.RoundUp ? Localizer.DoStr("Result (rounded up)") : Localizer.DoStr("Result (rounded down)");
+                return new TableRowInformation(resultCell, Localizer.NotLocalizedStr(Text.Num(ResolverExtensions.Round(stepOutput.Output, Rounding))));
+            }
+            private TableRowInformation TableRowContent(ModificationOutputBase details)
+            {
+                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
+            }
+            private TableRowInformation TableRowContent(BaseLevelModificationOutput details)
+            {
+                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
+            }
+
+            private TableRowInformation TableRowContent(MultiplicationOperationDetails details)
+            {
+                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(details.Multiplier >= 1 ? Text.Positive($"+{Text.Percent(details.Multiplier - 1)}") : Text.Negative(Text.Percent(details.Multiplier - 1))));
+            }
         }
     }
 }

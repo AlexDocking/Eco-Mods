@@ -55,10 +55,10 @@ namespace Ecompatible.Tests
         }
         private static void ShouldGenerateDescriptionOfEachStep()
         {
-            int intOutput = Resolver.ResolveInt(0, Context, out ResolvedSequence<float> info, Rounding.RoundDown);
-            LocString description = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(intOutput, info);
+            ResolvedSequence<float> resolvedSequence = Resolver.ResolveSequence(0, Context);
+            LocString description = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);
 
-            string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\">5</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result:]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr></table>\r\n";
+            string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\">5</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result (rounded down):]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr></table>\r\n";
             Assert.AreEqual(expected, description.ToString());
         }
     }
