@@ -21,7 +21,7 @@ namespace Ecompatible
                 TargetItem = user.Inventory.Carried.Stacks.First().Item,
                 Shovel = shovel
             };
-            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out ResolvedSequence<float> resolvedSequence);
+            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out IResolvedSequence<float> resolvedSequence);
             Log.WriteLine(Localizer.Do($"Tooltip shovel limit:{shovelLimit},maxtake {shovel.MaxTake}"));
             if (shovelLimit <= 0) return default;
             LocString modificationDescription = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);

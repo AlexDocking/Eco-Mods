@@ -53,7 +53,7 @@ namespace Ecompatible.Tests
         }
         private static void ShouldGenerateDescriptionOfEachStep()
         {
-            ResolvedSequence<float> resolvedSequence = Resolver.ResolveSequence(0, Context);
+            IResolvedSequence<float> resolvedSequence = Resolver.ResolveSequence(0, Context);
             LocString description = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);
 
             string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\">5</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result (rounded down):]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr></table>\r\n";

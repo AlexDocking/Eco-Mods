@@ -66,12 +66,12 @@ namespace Ecompatible
     }
     internal interface IResolvedOutputRowDescriber<U, V>
     {
-        V DescribeAsRow(ResolvedSequence<U> resolvedSequence, int index);
-        V DescribeAsResult(ResolvedSequence<U> resolvedSequence, int index);
+        V DescribeAsRow(IResolvedSequence<U> resolvedSequence, int index);
+        V DescribeAsResult(IResolvedSequence<U> resolvedSequence, int index);
     }
     internal interface IResolvedSequenceDescriber<T>
     {
-        public LocString DescribeSequence(ResolvedSequence<T> resolvedSequence);
+        public LocString DescribeSequence(IResolvedSequence<T> resolvedSequence);
     }
     internal class TableRowInformation
     {
@@ -99,18 +99,18 @@ namespace Ecompatible
                 locStringBuilder.AddRow((tableRowInformation.Name + ":", tableRowInformation.Effect.Align("right")));
             }
         }
-        public LocString DescribeSequence(ResolvedSequence<T> resolvedSequence)
+        public LocString DescribeSequence(IResolvedSequence<T> resolvedSequence)
         {
-            IModificationOutput<T>[] steps = resolvedSequence.StepOutputs;
-            if (!steps.Any()) return LocString.Empty;
+            IReadOnlyList<IModificationOutput<T>> stepOutputs = resolvedSequence.StepOutputs;
+            if (!stepOutputs.Any()) return LocString.Empty;
             LocStringBuilder locStringBuilder = new LocStringBuilder();
             locStringBuilder.StartTable();
-            for (int i = 0; i < steps.Length; i++)
+            for (int i = 0; i < stepOutputs.Count; i++)
             {
                 AppendRow(locStringBuilder, StepDescriber.DescribeAsRow(resolvedSequence, i));
             }
             locStringBuilder.AddRow((Localizer.NotLocalizedStr("---------------------------"), LocString.Empty));
-            AppendRow(locStringBuilder, StepDescriber.DescribeAsResult(resolvedSequence, resolvedSequence.StepOutputs.Length - 1));
+            AppendRow(locStringBuilder, StepDescriber.DescribeAsResult(resolvedSequence, resolvedSequence.StepOutputs.Count - 1));
             locStringBuilder.EndTable();
             return locStringBuilder.ToLocString();
         }
@@ -123,7 +123,7 @@ namespace Ecompatible
             TableRowDescriber = new ResolvedSequenceTableDescriber<float>(new TableRowInformationPopulator(rounding));
         }
 
-        public LocString DescribeSequence(ResolvedSequence<float> resolvedSequence)
+        public LocString DescribeSequence(IResolvedSequence<float> resolvedSequence)
         {
             return TableRowDescriber.DescribeSequence(resolvedSequence);
         }
@@ -137,9 +137,9 @@ namespace Ecompatible
 
             private Rounding Rounding { get; }
 
-            private int IndexOfLastBaseLevelModification(IModificationOutput<float>[] stepOutputs)
+            private int IndexOfLastBaseLevelModification(IReadOnlyList<IModificationOutput<float>> stepOutputs)
             {
-                for (int i = stepOutputs.Length - 1; i >= 0; i--)
+                for (int i = stepOutputs.Count - 1; i >= 0; i--)
                 {
                     if (stepOutputs[i] is BaseLevelModificationOutput)
                     {
@@ -148,7 +148,7 @@ namespace Ecompatible
                 }
                 return 0;
             }
-            public TableRowInformation DescribeAsRow(ResolvedSequence<float> resolvedSequence, int index)
+            public TableRowInformation DescribeAsRow(IResolvedSequence<float> resolvedSequence, int index)
             {
                 if (index < IndexOfLastBaseLevelModification(resolvedSequence.StepOutputs)) return null;
 
@@ -158,7 +158,7 @@ namespace Ecompatible
                 if (stepOutput is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase);
                 return null;
             }
-            public TableRowInformation DescribeAsResult(ResolvedSequence<float> resolvedSequence, int index)
+            public TableRowInformation DescribeAsResult(IResolvedSequence<float> resolvedSequence, int index)
             {
                 IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs[index];
                 LocString resultCell = Rounding == Rounding.RoundUp ? Localizer.DoStr("Result (rounded up)") : Localizer.DoStr("Result (rounded down)");

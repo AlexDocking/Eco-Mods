@@ -6,7 +6,7 @@ namespace Ecompatible
     public partial class DescriptionGenerator : AutoSingleton<DescriptionGenerator>
     {
         private IResolvedSequenceDescriber<float> TableRoundDown { get; } = new ResolvedIntFromFloatTableDescriber();
-        public LocString DescribeSequenceAsTableAndRoundDown(ResolvedSequence<float> resolvedSequence)
+        public LocString DescribeSequenceAsTableAndRoundDown(IResolvedSequence<float> resolvedSequence)
         {
             return TableRoundDown.DescribeSequence(resolvedSequence);
         }
