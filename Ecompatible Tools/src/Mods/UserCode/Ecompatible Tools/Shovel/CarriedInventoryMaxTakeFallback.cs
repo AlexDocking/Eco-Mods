@@ -3,14 +3,14 @@
     public class CarriedInventoryMaxTakeFallback : IValueModifier
     {
         public float Priority => float.MaxValue;
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not ShovelMaxTakeModificationContext shovelContext) return;
-            if (context.FloatValue > 0) return;
-            if (shovelContext.TargetItem == null) return;
+            var context = functionInput.Context;
+            if (context is not ShovelMaxTakeModificationContext shovelContext) return null;
+            if (functionInput.Input > 0) return null;
+            if (shovelContext.TargetItem == null) return null;
             int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, 0, shovelContext.User);
-            context.FloatValue = maxAccepted;
-            operationDetails = new BaseLevelOperationDetails("Carry Limit");
+            return new BaseLevelModificationOutput(maxAccepted, "Carry Limit");
         }
     }
 }

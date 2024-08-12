@@ -43,22 +43,22 @@ namespace Ecompatible.Tests
         private static PriorityDynamicValueResolver Resolver { get; set; }
         private static void ShouldResolveCorrectFloatValue()
         {
-            float value = Resolver.Resolve(Context, out _);
+            float value = Resolver.Resolve(0, Context, out _);
             Assert.AreEqual(5 * 1.3f, value);
         }
         private static void ShouldRoundDownByDefault()
         {
-            int value = Resolver.ResolveInt(Context, out _);
+            int value = Resolver.ResolveInt(0, Context, out _);
             Assert.AreEqual((int)(5 * 1.3f), value);
         }
         private static void ShouldRoundUp()
         {
-            int value = Resolver.ResolveInt(Context, out _, Rounding.RoundUp);
+            int value = Resolver.ResolveInt(0, Context, out _, Rounding.RoundUp);
             Assert.AreEqual((int)Math.Ceiling(5 * 1.3f), value);
         }
         private static void ShouldGenerateDescriptionOfEachStep()
         {
-            Resolver.Resolve(Context, out AuxillaryInfo info);
+            Resolver.Resolve(0, Context, out AuxillaryInfo info);
             LocString description = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(info);
 
             string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\">5</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result:]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr></table>\r\n";
@@ -69,21 +69,19 @@ namespace Ecompatible.Tests
     internal class ExampleContext : IValueModificationContext
     {
         public User User { get; set; }
-
-        public float FloatValue { get; set; }
     }
     internal class ExampleBaseModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails modificationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            context.FloatValue = 5;
-            modificationDetails = new BaseLevelOperationDetails();
+            return new BaseLevelModificationOutput(5);
         }
     }
     internal class ExampleNoOpModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails modificationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
+            return null;
         }
     }
     internal class ExampleMultiplierModifier : IValueModifier
@@ -95,11 +93,12 @@ namespace Ecompatible.Tests
 
         public float Multiplier { get; }
 
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails modificationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
+            var context = functionInput.Context;
             float multiplier = Multiplier;
-            context.FloatValue *= multiplier;
-            modificationDetails = new MultiplicationOperationDetails(Localizer.DoStr("Example Multiplier"), multiplier);
+            float output = functionInput.Input * multiplier;
+            return new MultiplicationOperationDetails(output, Localizer.DoStr("Example Multiplier"), multiplier);
         }
     }
 }

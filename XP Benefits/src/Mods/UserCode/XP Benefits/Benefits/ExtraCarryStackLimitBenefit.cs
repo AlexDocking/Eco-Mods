@@ -177,13 +177,14 @@ namespace XPBenefits
 
     public class ExtraCarryStackLimitModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
-            if (benefit == null || !benefit.Enabled) return;
+            if (benefit == null || !benefit.Enabled) return null;
+            var context = functionInput.Context;
             float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
-            context.FloatValue *= multiplier;
-            operationDetails = new MultiplicationOperationDetails(XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
+            float output = functionInput.Input * multiplier;
+            return new MultiplicationOperationDetails(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }
     }
 

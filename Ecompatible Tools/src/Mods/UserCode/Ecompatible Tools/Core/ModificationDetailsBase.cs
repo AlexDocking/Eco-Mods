@@ -5,41 +5,61 @@ using System.Linq;
 
 namespace Ecompatible
 {
-    public interface IOperationDetails
+    internal class ModificationInput : IModificationInput
     {
-        float InputFloat { get; set; }
+        public ModificationInput(IValueResolver resolver, IValueModificationContext context, float input)
+        {
+            Resolver = resolver;
+            Input = input;
+            Context = context;
+        }
+
+        public IValueResolver Resolver { get; }
+        public IValueModificationContext Context { get; }
+        public float Input { get; }
+    }
+    public interface IModificationInput
+    {
+        IValueResolver Resolver { get; }
+        IValueModificationContext Context { get; }
+        float Input { get; }
+    }
+    public interface IModificationOutput
+    {
         LocString ModificationName { get; }
-        float OutputFloat { get; set; }
+        float Output { get; set; }
     }
 
-    public abstract class OperationDetailsBase : IOperationDetails
+    public abstract class ModificationOutputBase : IModificationOutput
     {
         public LocString ModificationName { get; set; }
-        public float InputFloat { get; set; }
-        public float OutputFloat { get; set; }
-        public OperationDetailsBase(LocString modificationName)
+        public LocString ModificationDescription { get; set; }
+        public float Output { get; set; }
+        public ModificationOutputBase(float output, LocString modificationName)
         {
+            Output = output;
             ModificationName = modificationName;
         }
     }
 
-    public class BaseLevelOperationDetails : OperationDetailsBase
+
+    public class BaseLevelModificationOutput : ModificationOutputBase
     {
-        public BaseLevelOperationDetails(string name = "Base Level") : base(Localizer.DoStr(name))
+        public BaseLevelModificationOutput(float output, string name = "Base Level") : base(output, Localizer.DoStr(name))
         {
         }
     }
 
-    public class NoOperationDetails : OperationDetailsBase
+    public class NoOperationDetails : ModificationOutputBase
     {
-        public NoOperationDetails() : base(LocString.Empty)
+        public NoOperationDetails(float output) : base(output, LocString.Empty)
         {
         }
     }
 
-    public class MultiplicationOperationDetails : OperationDetailsBase
+    public class MultiplicationOperationDetails : ModificationOutputBase
     {
-        public MultiplicationOperationDetails(LocString modificationName, float multiplier) : base(modificationName)
+        public MultiplicationOperationDetails(float output, LocString modificationName, float multiplier) : base(output, modificationName)
         {
             Multiplier = multiplier;
         }
@@ -60,13 +80,13 @@ namespace Ecompatible
     }
     public class ResolvedValueDescriber
     {
-        private List<IOperationDetails> SelectAppliedUsedOperations(IOperationDetails[] allSteps)
+        private List<IModificationOutput> SelectAppliedUsedOperations(IModificationOutput[] allSteps)
         {
-            Stack<IOperationDetails> stack = new Stack<IOperationDetails>();
+            Stack<IModificationOutput> stack = new Stack<IModificationOutput>();
             for (int i = allSteps.Length - 1; i >= 0; i--)
             {
                 var step = allSteps[i];
-                if (step is BaseLevelOperationDetails)
+                if (step is BaseLevelModificationOutput)
                 {
                     stack.Push(step);
                     break;
@@ -76,11 +96,11 @@ namespace Ecompatible
                     stack.Push(step);
                 }
             }
-            return new List<IOperationDetails>(stack);
+            return new List<IModificationOutput>(stack);
         }
         public LocString GenerateDescription(AuxillaryInfo info)
         {
-            IOperationDetails[] allSteps = info.StepOutputs;
+            IModificationOutput[] allSteps = info.StepOutputs;
             var steps = SelectAppliedUsedOperations(allSteps);
             if (!steps.Any()) return LocString.Empty;
             LocStringBuilder locStringBuilder = new LocStringBuilder();
@@ -97,18 +117,18 @@ namespace Ecompatible
             locStringBuilder.EndTable();
             return locStringBuilder.ToLocString();
         }
-        private bool TableRowContent(IOperationDetails details, out (LocString Name, LocString Effect) content)
+        private bool TableRowContent(IModificationOutput details, out (LocString Name, LocString Effect) content)
         {
             if (details is NoOperationDetails noOperationDetails) return TableRowContent(noOperationDetails, out content);
-            if (details is BaseLevelOperationDetails baseLevelOperationDetails) return TableRowContent(baseLevelOperationDetails, out content);
+            if (details is BaseLevelModificationOutput baseLevelOperationDetails) return TableRowContent(baseLevelOperationDetails, out content);
             if (details is MultiplicationOperationDetails multiplicationOperationDetails) return TableRowContent(multiplicationOperationDetails, out content);
-            if (details is OperationDetailsBase operationDetailsBase) return TableRowContent(operationDetailsBase, out content);
+            if (details is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase, out content);
             content = default;
             return false;
         }
-        private bool TableRowContent(OperationDetailsBase details, out (LocString Name, LocString Effect) content)
+        private bool TableRowContent(ModificationOutputBase details, out (LocString Name, LocString Effect) content)
         {
-            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.OutputFloat)));
+            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             return true;
         }
         private bool TableRowContent(NoOperationDetails details, out (LocString Name, LocString Effect) content)
@@ -116,9 +136,9 @@ namespace Ecompatible
             content = default;
             return false;
         }
-        private bool TableRowContent(BaseLevelOperationDetails details, out (LocString Name, LocString Effect) content)
+        private bool TableRowContent(BaseLevelModificationOutput details, out (LocString Name, LocString Effect) content)
         {
-            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.OutputFloat)));
+            content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             return true;
         }
 

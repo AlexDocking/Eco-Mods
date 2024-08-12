@@ -19,10 +19,9 @@ namespace Ecompatible
             {
                 User = user,
                 TargetItem = user.Inventory.Carried.Stacks.First().Item,
-                FloatValue = shovel.MaxTake,
                 Shovel = shovel
             };
-            float shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.Resolve(modification, out AuxillaryInfo auxillaryInfo);
+            float shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.Resolve(shovel.MaxTake, modification, out AuxillaryInfo auxillaryInfo);
             Log.WriteLine(Localizer.Do($"Tooltip shovel limit:{shovelLimit},maxtake {shovel.MaxTake}"));
             if (shovelLimit <= 0) return default;
             LocString modificationDescription = DescriptionGenerator.Obj.BuildModificationListDescriptionInt(auxillaryInfo);

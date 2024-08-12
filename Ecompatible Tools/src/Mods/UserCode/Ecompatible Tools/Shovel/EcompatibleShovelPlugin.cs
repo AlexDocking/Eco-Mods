@@ -36,37 +36,44 @@ namespace Ecompatible
     }
     public class InitialShovelSizeModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails details)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not ShovelMaxTakeModificationContext shovelContext) return;
+            var context = functionInput.Context;
+            if (context is not ShovelMaxTakeModificationContext shovelContext) return null;
+            if (shovelContext.Shovel == null) return null;
+            int output;
             switch (shovelContext.Shovel)
             {
                 case WoodenShovelItem:
-                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
+                    output = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
                     break;
                 case IronShovelItem:
-                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
+                    output = EcompatibleShovelPlugin.Obj.Config.IronShovelBaseSize;
                     break;
                 case SteelShovelItem:
-                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
+                    output = EcompatibleShovelPlugin.Obj.Config.SteelShovelBaseSize;
                     break;
                 case ModernShovelItem:
-                    shovelContext.FloatValue = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
+                    output = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
+                default:
+                    return new NoOperationDetails(functionInput.Input);
             }
-            details = new BaseLevelOperationDetails();
+            return new BaseLevelModificationOutput(output);
         }
     }
     public class ShovelStackSizeModifierSettingModifier : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not ShovelMaxTakeModificationContext shovelContext) return;
+            var context = functionInput.Context;
+            if (context is not ShovelMaxTakeModificationContext) return null;
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
-                shovelContext.FloatValue *= DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
-                operationDetails = new MultiplicationOperationDetails(Localizer.DoStr("Server Stack Size"), DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
+                float output = functionInput.Input * DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
+                return new MultiplicationOperationDetails(output, Localizer.DoStr("Server Stack Size"), DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
             }
+            return null;
         }
     }
 }

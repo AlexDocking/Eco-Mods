@@ -2,11 +2,11 @@
 {
     public class MaxStackSizePickupLimit : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
-            context.FloatValue = sweepingHandsContext.Resource.MaxStackSize;
-            operationDetails = new BaseLevelOperationDetails();
+            var context = functionInput.Context;
+            if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return null;
+            return new BaseLevelModificationOutput(sweepingHandsContext.Resource.MaxStackSize);
         }
     }
 }

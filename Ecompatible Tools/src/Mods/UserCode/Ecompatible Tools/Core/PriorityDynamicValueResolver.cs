@@ -6,8 +6,8 @@ namespace Ecompatible
 {
     public interface IValueResolver
     {
-        float Resolve(IValueModificationContext context);
-        int ResolveInt(IValueModificationContext context, Rounding rounding = Rounding.RoundDown);
+        float Resolve(float startingValue, IValueModificationContext context);
+        int ResolveInt(float startingValue, IValueModificationContext context, Rounding rounding = Rounding.RoundDown);
     }
     public enum Rounding
     {
@@ -20,8 +20,8 @@ namespace Ecompatible
         void Remove(float priority, IValueModifier handler);
         void Clear();
         IEnumerable<(float, IValueModifier)> Handlers { get; }
-        float Resolve(IValueModificationContext context, out AuxillaryInfo auxillaryInfo);
-        int ResolveInt(IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown);
+        float Resolve(float startingValue, IValueModificationContext context, out AuxillaryInfo auxillaryInfo);
+        int ResolveInt(float startingValue, IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown);
     }
     public class PriorityDynamicValueResolver : IPriorityValueResolver
     {
@@ -34,30 +34,30 @@ namespace Ecompatible
         }
         public PriorityDynamicValueResolver() { }
 
-        public float Resolve(IValueModificationContext context) => Resolve(context, out _);
-        public float Resolve(IValueModificationContext context, out AuxillaryInfo auxillaryInfo)
+        public float Resolve(float startingValue, IValueModificationContext context) => Resolve(startingValue, context, out _);
+        public float Resolve(float startingValue, IValueModificationContext context, out AuxillaryInfo auxillaryInfo)
         {
-            PassThroughHandlers(context, out auxillaryInfo);
-            return context.FloatValue;
+            PassThroughHandlers(startingValue, context, out auxillaryInfo);
+            return auxillaryInfo.FloatOutput;
         }
-        public int ResolveInt(IValueModificationContext context, Rounding rounding = Rounding.RoundDown) => ResolveInt(context, out _, rounding);
-        public int ResolveInt(IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown)
+        public int ResolveInt(float startingValue, IValueModificationContext context, Rounding rounding = Rounding.RoundDown) => ResolveInt(startingValue, context, out _, rounding);
+        public int ResolveInt(float startingValue, IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown)
         {
-            PassThroughHandlers(context, out auxillaryInfo);
-            return Round(context.FloatValue, rounding);
+            PassThroughHandlers(startingValue, context, out auxillaryInfo);
+            return Round(auxillaryInfo.FloatOutput, rounding);
         }
-        private void PassThroughHandlers(IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown)
+        private void PassThroughHandlers(float startingValue, IValueModificationContext context, out AuxillaryInfo auxillaryInfo, Rounding rounding = Rounding.RoundDown)
         {
-            List<IOperationDetails> steps = new List<IOperationDetails>();
+            List<IModificationOutput> steps = new List<IModificationOutput>();
+            float previousOutput = startingValue;
             foreach ((_, IValueModifier handler) in RequestHandlers)
             {
-                IOperationDetails operationDetails = new NoOperationDetails();
-                operationDetails.InputFloat = context.FloatValue;
-                handler.ModifyValue(context, ref operationDetails);
-                operationDetails.OutputFloat = context.FloatValue;
-                steps.Add(operationDetails);
+                IModificationInput functionInput = new ModificationInput(this, context, previousOutput);
+                IModificationOutput functionOutput = handler.ModifyValue(functionInput) ?? new NoOperationDetails(previousOutput);
+                previousOutput = functionOutput.Output;
+                steps.Add(functionOutput);
             }
-            auxillaryInfo = new AuxillaryInfo(steps.ToArray(), Round(steps[^1].OutputFloat, rounding));
+            auxillaryInfo = new AuxillaryInfo(steps.ToArray(), Round(steps[^1].Output, rounding));
         }
         public void Add(float priority, IValueModifier handler)
         {
@@ -78,14 +78,14 @@ namespace Ecompatible
     }
     public class AuxillaryInfo
     {
-        public IOperationDetails[] StepOutputs { get; }
+        public IModificationOutput[] StepOutputs { get; }
         public float FloatOutput { get; }
         public int IntOutput { get; }
 
-        public AuxillaryInfo(IOperationDetails[] stepOutputs, int intOutput)
+        public AuxillaryInfo(IModificationOutput[] stepOutputs, int intOutput)
         {
             StepOutputs = stepOutputs;
-            FloatOutput = stepOutputs[^1].OutputFloat;
+            FloatOutput = stepOutputs[^1].Output;
             IntOutput = intOutput;
         }
     }

@@ -10,13 +10,13 @@ namespace Ecompatible
     /// </summary>
     public class MaxStackSizeLogPickupLimit : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not TreeEntityMaxPickUpModificationContext treeContext) return;
+            var context = functionInput.Context;
+            if (context is not TreeEntityMaxPickUpModificationContext treeContext) return null;
             var resourceType = treeContext.Tree.Species.ResourceItemType;
             var resource = Item.Get(resourceType);
-            context.FloatValue = resource.MaxStackSize;
-            operationDetails = new BaseLevelOperationDetails();
+            return new BaseLevelModificationOutput(resource.MaxStackSize);
         }
     }
 }

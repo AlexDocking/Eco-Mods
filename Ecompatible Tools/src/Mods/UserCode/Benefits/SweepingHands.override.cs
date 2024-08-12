@@ -52,7 +52,7 @@ namespace Eco.Mods.TechTree
                 Resource = resource,
                 SweepingHandsTalent = this,
             };
-            int maxStackSize = ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.ResolveInt(maxStackSizeContext);
+            int maxStackSize = ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.ResolveInt(0, maxStackSizeContext);
             // max stack size minus currently picking item
             var numToTake = maxStackSize - 1;
             if (numToTake <= 0) return;
@@ -75,7 +75,7 @@ namespace Eco.Mods.TechTree
                 Resource = resource,
                 SweepingHandsTalent = this,
             };
-            var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.Resolve(pickUpRangeContext);
+            var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.Resolve(0, pickUpRangeContext);
             var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, pickUpRange)
                                                      .OfType<RubbleObject>()
                                                      .Where(x => x != target && !x.IsBreakable && x is IRepresentsItem rubbleRepresentsItem && rubbleRepresentsItem.RepresentedItemType == itemType)

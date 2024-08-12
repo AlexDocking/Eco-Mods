@@ -272,7 +272,7 @@ namespace Eco.Mods.Organisms
                                     Axe = player.User.Inventory.Toolbar.SelectedItem as AxeItem,
                                     Tree = this
                                 };
-                                int maxStackSize = Ecompatible.ValueResolvers.Tools.Axe.MaxPickupLogsResolver.ResolveInt(context);
+                                int maxStackSize = Ecompatible.ValueResolvers.Tools.Axe.MaxPickupLogsResolver.ResolveInt(0, context);
                                 if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
                             }
                             //Ecompatible Tools - Finish

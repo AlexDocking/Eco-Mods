@@ -2,11 +2,11 @@
 {
     public class DefaultPickupRange : IValueModifier
     {
-        public void ModifyValue(IValueModificationContext context, ref IOperationDetails operationDetails)
+        public IModificationOutput ModifyValue(IModificationInput functionInput)
         {
-            if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return;
-            context.FloatValue = sweepingHandsContext.SweepingHandsTalent.PickUpRange;
-            operationDetails = new BaseLevelOperationDetails();
+            var context = functionInput.Context;
+            if (context is not SweepingHandsMaxTakeModificationContext sweepingHandsContext) return null;
+            return new BaseLevelModificationOutput(sweepingHandsContext.SweepingHandsTalent.PickUpRange);
         }
     }
 }
