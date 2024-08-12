@@ -1,7 +1,5 @@
 ﻿using Eco.Core.Tests;
-using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
-using Eco.Gameplay.Utils;
 using Eco.Shared.Localization;
 using EcoTestTools;
 using System;
@@ -33,11 +31,11 @@ namespace Ecompatible.Tests
                 (4, new ExampleNoOpModifier()),//No modification, so ignore
                 (5, new ExampleMultiplierModifier(1.3f))//Displays as "Example Multiplier: +30%"
             };
-            Resolver = new PriorityValueResolver<float>(modifiers);
+            Resolver = ValueResolverFactory.CreatePriorityResolver<float>(modifiers);
         }
 
         private static ExampleContext Context { get; set; }
-        private static PriorityValueResolver<float> Resolver { get; set; }
+        private static IPriorityValueResolver<float> Resolver { get; set; }
         private static void ShouldResolveCorrectFloatValue()
         {
             float value = Resolver.Resolve(0, Context, out _);

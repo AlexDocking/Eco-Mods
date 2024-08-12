@@ -17,7 +17,7 @@ namespace Eco.Mods.TechTree
     public abstract partial class ShovelItem
     {
         [ReplacementInteraction("Dig")]
-        public bool ModifiedDig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
+        public bool EcompatibleDig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)
         {
             // Fallback if not enough room in carrying stack
             var carry = player.User.Carrying;

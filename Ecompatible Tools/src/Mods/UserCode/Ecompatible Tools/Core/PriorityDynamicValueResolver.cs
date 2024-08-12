@@ -40,7 +40,7 @@ namespace Ecompatible
             return rounding == Rounding.RoundDown ? (int)value : (int)Math.Ceiling(value);
         }
     }
-    public class SequentialValueResolver<T> : ISequentialValueResolver<T>
+    internal class SequentialValueResolver<T> : ISequentialValueResolver<T>
     {
         public SequentialValueResolver(IEnumerable<IValueModifier<T>> modifiers)
         {
@@ -76,7 +76,7 @@ namespace Ecompatible
             resolvedSequence = new ResolvedSequence<T>(steps.ToArray());
         }
     }
-    public class PriorityValueResolver<T> : IPriorityValueResolver<T>
+    internal class PriorityValueResolver<T> : IPriorityValueResolver<T>
     {
         private ImmutableList<(float, IValueModifier<T>)> requestHandlers = ImmutableList<(float, IValueModifier<T>)>.Empty;
 

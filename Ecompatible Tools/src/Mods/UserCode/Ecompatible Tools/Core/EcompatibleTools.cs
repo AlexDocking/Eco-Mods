@@ -15,19 +15,19 @@
         /// <summary>
         /// List of modifiers that change MaxTake.
         /// </summary>
-        public IPriorityValueResolver<float> MaxTakeResolver { get; } = new PriorityValueResolver<float>((float.MaxValue, new CarriedInventoryMaxTakeFallback()));
+        public IPriorityValueResolver<float> MaxTakeResolver { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MaxValue, new CarriedInventoryMaxTakeFallback()));
     }
     public partial class PickaxeResolvers
     {
-        public IPriorityValueResolver<float> MaxStackSizeResolver { get; } = new PriorityValueResolver<float>((float.MinValue, new MaxStackSizePickupLimit()));
+        public IPriorityValueResolver<float> MaxStackSizeResolver { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new MaxStackSizePickupLimit()));
         public MiningSweepingHandsResolvers MiningSweepingHands { get; } = new MiningSweepingHandsResolvers();
     }
     public partial class MiningSweepingHandsResolvers
     {
-        public IPriorityValueResolver<float> PickUpRangeResolver { get; } = new PriorityValueResolver<float>((float.MinValue, new DefaultPickupRange()));
+        public IPriorityValueResolver<float> PickUpRangeResolver { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new DefaultPickupRange()));
     }
     public partial class AxeResolvers
     {
-        public IPriorityValueResolver<float> MaxPickupLogsResolver { get; } = new PriorityValueResolver<float>((float.MinValue, new MaxStackSizeLogPickupLimit()));
+        public IPriorityValueResolver<float> MaxPickupLogsResolver { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new MaxStackSizeLogPickupLimit()));
     }
 }

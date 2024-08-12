@@ -4,8 +4,6 @@ namespace Ecompatible
 {
     /// <summary>
     /// List of modifiers that change the max log pickup.
-    /// </summary>
-    /// <summary>
     /// Use the log's MaxStackSize as the default value
     /// </summary>
     public class MaxStackSizeLogPickupLimit : IValueModifier<float>
