@@ -181,7 +181,8 @@ namespace XPBenefits
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return null;
-            var context = functionInput.Context;
+            var context = functionInput.Context as IValueModificationUserContext;
+            if (context == null) return null;
             float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
             float output = functionInput.Input * multiplier;
             return new MultiplicationOperationDetails(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);

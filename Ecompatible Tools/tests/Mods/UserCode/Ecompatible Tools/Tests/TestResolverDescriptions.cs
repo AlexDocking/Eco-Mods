@@ -27,7 +27,7 @@ namespace Ecompatible.Tests
         private static void Setup()
         {
             User user = TestUtils.TestUser;
-            Context = new ExampleContext() { User = user };
+            Context = new ExampleContext();
             (float, IValueModifier)[] modifiers = new (float, IValueModifier)[]
             {
                 (1, new ExampleBaseModifier()),
@@ -68,7 +68,6 @@ namespace Ecompatible.Tests
 
     internal class ExampleContext : IValueModificationContext
     {
-        public User User { get; set; }
     }
     internal class ExampleBaseModifier : IValueModifier
     {

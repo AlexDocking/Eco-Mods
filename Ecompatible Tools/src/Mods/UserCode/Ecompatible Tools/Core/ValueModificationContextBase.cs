@@ -2,7 +2,7 @@
 
 namespace Ecompatible
 {
-    public class ValueModificationContextBase : IValueModificationContext
+    public class ValueModificationContextBase : IValueModificationUserContext
     {
         public User User { get; init; }
     }
