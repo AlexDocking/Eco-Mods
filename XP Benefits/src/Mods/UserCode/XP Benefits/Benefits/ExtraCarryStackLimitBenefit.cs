@@ -175,9 +175,9 @@ namespace XPBenefits
         { get => XPBenefitsPlugin.Obj.ValidateBenefitFunctionType(extraCarryStackLimitBenefitFunction); set { extraCarryStackLimitBenefitFunction = value; } }
     }
 
-    public class ExtraCarryStackLimitModifier : IValueModifier
+    public class ExtraCarryStackLimitModifier : IValueModifier<float>
     {
-        public IModificationOutput ModifyValue(IModificationInput functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return null;

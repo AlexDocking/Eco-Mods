@@ -8,9 +8,9 @@ namespace Ecompatible
     /// <summary>
     /// Use the log's MaxStackSize as the default value
     /// </summary>
-    public class MaxStackSizeLogPickupLimit : IValueModifier
+    public class MaxStackSizeLogPickupLimit : IValueModifier<float>
     {
-        public IModificationOutput ModifyValue(IModificationInput functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
             if (context is not TreeEntityMaxPickUpModificationContext treeContext) return null;

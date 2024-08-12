@@ -34,9 +34,9 @@ namespace Ecompatible
             ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(-100, new ShovelStackSizeModifierSettingModifier());
         }
     }
-    public class InitialShovelSizeModifier : IValueModifier
+    public class InitialShovelSizeModifier : IValueModifier<float>
     {
-        public IModificationOutput ModifyValue(IModificationInput functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return null;
@@ -57,14 +57,14 @@ namespace Ecompatible
                     output = EcompatibleShovelPlugin.Obj.Config.ModernShovelBaseSize;
                     break;
                 default:
-                    return new NoOperationDetails(functionInput.Input);
+                    return null;
             }
             return new BaseLevelModificationOutput(output);
         }
     }
-    public class ShovelStackSizeModifierSettingModifier : IValueModifier
+    public class ShovelStackSizeModifierSettingModifier : IValueModifier<float>
     {
-        public IModificationOutput ModifyValue(IModificationInput functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
             if (context is not ShovelMaxTakeModificationContext) return null;

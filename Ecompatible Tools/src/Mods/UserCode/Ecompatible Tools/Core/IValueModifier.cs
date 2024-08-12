@@ -1,9 +1,7 @@
-﻿using Eco.Shared.Localization;
-
-namespace Ecompatible
+﻿namespace Ecompatible
 {
-    public interface IValueModifier
+    public interface IValueModifier<T>
     {
-        IModificationOutput ModifyValue(IModificationInput functionInput);
+        IModificationOutput<T> ModifyValue(IModificationInput<T> functionInput);
     }
 }

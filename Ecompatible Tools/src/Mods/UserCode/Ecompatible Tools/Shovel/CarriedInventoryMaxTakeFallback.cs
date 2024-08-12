@@ -1,9 +1,8 @@
 ﻿namespace Ecompatible
 {
-    public class CarriedInventoryMaxTakeFallback : IValueModifier
+    public class CarriedInventoryMaxTakeFallback : IValueModifier<float>
     {
-        public float Priority => float.MaxValue;
-        public IModificationOutput ModifyValue(IModificationInput functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
             if (context is not ShovelMaxTakeModificationContext shovelContext) return null;

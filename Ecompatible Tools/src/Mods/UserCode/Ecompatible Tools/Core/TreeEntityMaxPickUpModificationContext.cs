@@ -6,7 +6,6 @@ namespace Ecompatible
     public class TreeEntityMaxPickUpModificationContext : ValueModificationContextBase
     {
         public TreeEntity Tree { get; init; }
-        public float InitialPickup { get; init; }
         public AxeItem Axe { get; init; }
     }
 }

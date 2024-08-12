@@ -5,32 +5,31 @@ using System.Linq;
 
 namespace Ecompatible
 {
-    internal class ModificationInput : IModificationInput
+    internal class ModificationInput<T> : IModificationInput<T>
     {
-        public ModificationInput(IValueResolver resolver, IValueModificationContext context, float input)
+        public ModificationInput(IValueResolver<T> resolver, IValueModificationContext context, T input)
         {
             Resolver = resolver;
             Input = input;
             Context = context;
         }
-
-        public IValueResolver Resolver { get; }
+        public IValueResolver<T> Resolver { get; }
         public IValueModificationContext Context { get; }
-        public float Input { get; }
+        public T Input { get; }
     }
-    public interface IModificationInput
+    public interface IModificationInput<T>
     {
-        IValueResolver Resolver { get; }
+        IValueResolver<T> Resolver { get; }
         IValueModificationContext Context { get; }
-        float Input { get; }
+        T Input { get; }
     }
-    public interface IModificationOutput
+    public interface IModificationOutput<T>
     {
         LocString ModificationName { get; }
-        float Output { get; set; }
+        T Output { get; set; }
     }
 
-    public abstract class ModificationOutputBase : IModificationOutput
+    public abstract class ModificationOutputBase : IModificationOutput<float>
     {
         public LocString ModificationName { get; set; }
         public LocString ModificationDescription { get; set; }
@@ -42,17 +41,9 @@ namespace Ecompatible
         }
     }
 
-
     public class BaseLevelModificationOutput : ModificationOutputBase
     {
         public BaseLevelModificationOutput(float output, string name = "Base Level") : base(output, Localizer.DoStr(name))
-        {
-        }
-    }
-
-    public class NoOperationDetails : ModificationOutputBase
-    {
-        public NoOperationDetails(float output) : base(output, LocString.Empty)
         {
         }
     }
@@ -66,11 +57,6 @@ namespace Ecompatible
 
         public float Multiplier { get; }
     }
-    public enum Alignment
-    {
-        Left,
-        Right,
-    }
     internal static class LocStringExtensions
     {
         internal static LocString Align(this LocString text, string alignment)
@@ -80,9 +66,9 @@ namespace Ecompatible
     }
     public class ResolvedValueDescriber
     {
-        private List<IModificationOutput> SelectAppliedUsedOperations(IModificationOutput[] allSteps)
+        private List<IModificationOutput<float>> SelectAppliedUsedOperations(IModificationOutput<float>[] allSteps)
         {
-            Stack<IModificationOutput> stack = new Stack<IModificationOutput>();
+            Stack<IModificationOutput<float>> stack = new Stack<IModificationOutput<float>>();
             for (int i = allSteps.Length - 1; i >= 0; i--)
             {
                 var step = allSteps[i];
@@ -91,16 +77,16 @@ namespace Ecompatible
                     stack.Push(step);
                     break;
                 }
-                else if (step is not NoOperationDetails)
+                else if (step != null)
                 {
                     stack.Push(step);
                 }
             }
-            return new List<IModificationOutput>(stack);
+            return new List<IModificationOutput<float>>(stack);
         }
-        public LocString GenerateDescription(AuxillaryInfo info)
+        public LocString GenerateDescription(int intOutput, AuxillaryInfo<float> info)
         {
-            IModificationOutput[] allSteps = info.StepOutputs;
+            IModificationOutput<float>[] allSteps = info.StepOutputs;
             var steps = SelectAppliedUsedOperations(allSteps);
             if (!steps.Any()) return LocString.Empty;
             LocStringBuilder locStringBuilder = new LocStringBuilder();
@@ -113,13 +99,12 @@ namespace Ecompatible
                 }
             }
             locStringBuilder.AddRow((Localizer.NotLocalizedStr("---------------------------"), LocString.Empty));
-            locStringBuilder.AddRow((Localizer.DoStr("Result") + ":", Localizer.NotLocalizedStr(Text.Num(info.IntOutput)).Align("right")));
+            locStringBuilder.AddRow((Localizer.DoStr("Result") + ":", Localizer.NotLocalizedStr(Text.Num(intOutput)).Align("right")));
             locStringBuilder.EndTable();
             return locStringBuilder.ToLocString();
         }
-        private bool TableRowContent(IModificationOutput details, out (LocString Name, LocString Effect) content)
+        private bool TableRowContent(IModificationOutput<float> details, out (LocString Name, LocString Effect) content)
         {
-            if (details is NoOperationDetails noOperationDetails) return TableRowContent(noOperationDetails, out content);
             if (details is BaseLevelModificationOutput baseLevelOperationDetails) return TableRowContent(baseLevelOperationDetails, out content);
             if (details is MultiplicationOperationDetails multiplicationOperationDetails) return TableRowContent(multiplicationOperationDetails, out content);
             if (details is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase, out content);
@@ -130,11 +115,6 @@ namespace Ecompatible
         {
             content = (details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             return true;
-        }
-        private bool TableRowContent(NoOperationDetails details, out (LocString Name, LocString Effect) content)
-        {
-            content = default;
-            return false;
         }
         private bool TableRowContent(BaseLevelModificationOutput details, out (LocString Name, LocString Effect) content)
         {
