@@ -46,12 +46,11 @@ namespace Eco.Mods.TechTree
 
             var carried = user.Inventory.Carried;
             var resource = Item.Get(itemType);
-            var maxStackSizeContext = new SweepingHandsMaxTakeModificationContext()
-            {
-                User = user,
-                Resource = resource,
-                SweepingHandsTalent = this,
-            };
+            var maxStackSizeContext = Context.CreateContext(
+                (ContextProperties.User, user),
+                (ContextProperties.Resource, resource),
+                (ContextProperties.SweepingHandsTalent, this)
+                );
             int maxStackSize = ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.ResolveInt(0, maxStackSizeContext);
             // max stack size minus currently picking item
             var numToTake = maxStackSize - 1;
@@ -69,12 +68,11 @@ namespace Eco.Mods.TechTree
 
             // Get not breakable rubble around the target one and group them by their plot position.
             var originPlotPos = target.Position.XZi().ToPlotPos();
-            var pickUpRangeContext = new SweepingHandsMaxTakeModificationContext()
-            {
-                User = user,
-                Resource = resource,
-                SweepingHandsTalent = this,
-            };
+            var pickUpRangeContext = Context.CreateContext(
+                (ContextProperties.User, user),
+                (ContextProperties.Resource, resource),
+                (ContextProperties.SweepingHandsTalent, this)
+                );
             var pickUpRange = ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver.Resolve(0, pickUpRangeContext);
             var nearbyRubbleGroups = NetObjectManager.Default.GetObjectsWithin(target.Position, pickUpRange)
                                                      .OfType<RubbleObject>()

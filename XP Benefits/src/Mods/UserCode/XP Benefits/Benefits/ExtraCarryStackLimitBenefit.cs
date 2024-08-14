@@ -116,7 +116,6 @@ namespace XPBenefits
         public override string PageName { get; } = "Bigger Hands";
         public override float PagePriority { get; } = -6;
     }
-
     public class ExtraCarryStackLimitBenefitDescriber : IBenefitDescriber
     {
         private ExtraCarryStackLimitBenefit Benefit { get; }
@@ -181,9 +180,8 @@ namespace XPBenefits
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return null;
-            var context = functionInput.Context as IValueModificationUserContext;
-            if (context == null) return null;
-            float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(context.User);
+            if (!functionInput.Context.HasProperty(ContextProperties.User, out User user)) return null;
+            float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(user);
             float output = functionInput.Input * multiplier;
             return new MultiplicationOperationDetails(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }

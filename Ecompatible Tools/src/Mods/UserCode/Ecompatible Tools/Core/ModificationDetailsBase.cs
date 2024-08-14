@@ -7,20 +7,20 @@ namespace Ecompatible
 {
     internal class ModificationInput<T> : IModificationInput<T>
     {
-        public ModificationInput(IValueResolver<T> resolver, IValueModificationContext context, T input)
+        public ModificationInput(IValueResolver<T> resolver, IContext context, T input)
         {
             Resolver = resolver;
             Input = input;
             Context = context;
         }
         public IValueResolver<T> Resolver { get; }
-        public IValueModificationContext Context { get; }
+        public IContext Context { get; }
         public T Input { get; }
     }
     public interface IModificationInput<T>
     {
         IValueResolver<T> Resolver { get; }
-        IValueModificationContext Context { get; }
+        IContext Context { get; }
         T Input { get; }
     }
     public interface IModificationOutput<T>

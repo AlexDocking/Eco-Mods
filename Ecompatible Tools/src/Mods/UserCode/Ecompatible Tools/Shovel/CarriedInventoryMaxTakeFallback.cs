@@ -1,14 +1,19 @@
-﻿namespace Ecompatible
+﻿using Eco.Gameplay.Items;
+using Eco.Gameplay.Players;
+
+namespace Ecompatible
 {
     public class CarriedInventoryMaxTakeFallback : IValueModifier<float>
     {
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (context is not ShovelMaxTakeModificationContext shovelContext) return null;
+
+            if (!context.HasProperty(ContextProperties.User, out User user)) return null;
+            if (!context.HasProperty(ContextProperties.TargetItem, out Item targetItem)) return null;
+
             if (functionInput.Input > 0) return null;
-            if (shovelContext.TargetItem == null) return null;
-            int maxAccepted = shovelContext.User.Inventory.Carried.GetMaxAcceptedVal(shovelContext.TargetItem, 0, shovelContext.User);
+            int maxAccepted = user.Inventory.Carried.GetMaxAcceptedVal(targetItem, 0, user);
             return new BaseLevelModificationOutput(maxAccepted, "Carry Limit");
         }
     }

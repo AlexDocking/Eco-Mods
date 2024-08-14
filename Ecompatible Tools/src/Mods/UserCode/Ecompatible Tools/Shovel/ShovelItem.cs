@@ -21,12 +21,11 @@ namespace Eco.Mods.TechTree
         {
             // Fallback if not enough room in carrying stack
             var carry = player.User.Carrying;
-            ShovelMaxTakeModificationContext maxTakeContext = new ShovelMaxTakeModificationContext()
-            {
-                User = player.User,
-                TargetItem = target.Block()?.GetItem(),
-                Shovel = this
-            };
+            IContext maxTakeContext = Context.CreateContext(new (ContextKey, object)[]{
+                (ContextProperties.User, player.User),
+                (ContextProperties.TargetItem, target.Block()?.GetItem()),
+                (ContextProperties.Shovel,  this)
+            });
             int maxTake = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(this.MaxTake, maxTakeContext);
             if (carry.Quantity >= maxTake)
             {

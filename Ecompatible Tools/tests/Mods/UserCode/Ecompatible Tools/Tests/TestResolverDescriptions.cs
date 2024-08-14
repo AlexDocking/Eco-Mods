@@ -61,7 +61,7 @@ namespace Ecompatible.Tests
         }
     }
 
-    internal class ExampleContext : IValueModificationContext
+    internal class ExampleContext : IContext
     {
     }
     internal class ExampleBaseModifier : IValueModifier<float>

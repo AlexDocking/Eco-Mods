@@ -1,4 +1,5 @@
 ﻿using Eco.Gameplay.Items;
+using Eco.Mods.Organisms;
 
 namespace Ecompatible
 {
@@ -11,8 +12,8 @@ namespace Ecompatible
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (context is not TreeEntityMaxPickUpModificationContext treeContext) return null;
-            var resourceType = treeContext.Tree.Species.ResourceItemType;
+            if (context.HasProperty(ContextProperties.Tree, out TreeEntity tree)) return null;
+            var resourceType = tree.Species.ResourceItemType;
             var resource = Item.Get(resourceType);
             return new BaseLevelModificationOutput(resource.MaxStackSize);
         }

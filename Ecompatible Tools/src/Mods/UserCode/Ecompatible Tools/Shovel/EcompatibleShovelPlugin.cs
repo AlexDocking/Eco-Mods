@@ -39,10 +39,9 @@ namespace Ecompatible
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (context is not ShovelMaxTakeModificationContext shovelContext) return null;
-            if (shovelContext.Shovel == null) return null;
+            if (context.HasProperty(ContextProperties.Shovel, out ShovelItem shovel)) return null;
             int output;
-            switch (shovelContext.Shovel)
+            switch (shovel)
             {
                 case WoodenShovelItem:
                     output = EcompatibleShovelPlugin.Obj.Config.WoodenShovelBaseSize;
@@ -66,8 +65,6 @@ namespace Ecompatible
     {
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
-            var context = functionInput.Context;
-            if (context is not ShovelMaxTakeModificationContext) return null;
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 float output = functionInput.Input * DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
