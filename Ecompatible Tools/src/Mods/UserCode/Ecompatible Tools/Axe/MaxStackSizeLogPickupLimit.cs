@@ -12,7 +12,7 @@ namespace Ecompatible
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (context.HasProperty(ContextProperties.Tree, out TreeEntity tree)) return null;
+            if (!context.TryGetNonNull(ContextProperties.Tree, out TreeEntity tree)) return null;
             var resourceType = tree.Species.ResourceItemType;
             var resource = Item.Get(resourceType);
             return new BaseLevelModificationOutput(resource.MaxStackSize);

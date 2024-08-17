@@ -15,6 +15,7 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using Eco.Gameplay.Players;
+using Eco.Shared.Logging;
 using Eco.Shared.Utils;
 using System.Linq;
 

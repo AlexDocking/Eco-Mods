@@ -9,7 +9,7 @@ namespace Ecompatible.Tests
     [ChatCommandHandler]
     public class TestResolverDescriptions
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestDescriptions()
         {
@@ -25,11 +25,13 @@ namespace Ecompatible.Tests
             Context = new ExampleContext();
             (float, IValueModifier<float>)[] modifiers = new (float, IValueModifier<float>)[]
             {
+                (0, new ExampleNoOpModifier()),
                 (1, new ExampleBaseModifier()),
                 (2, new ExampleMultiplierModifier(0.5f)),
                 (3, new ExampleBaseModifier()),//Overwrites all previous values, so only display from here onwards. Displays as "Base Level: 5"
                 (4, new ExampleNoOpModifier()),//No modification, so ignore
-                (5, new ExampleMultiplierModifier(1.3f))//Displays as "Example Multiplier: +30%"
+                (5, new ExampleMultiplierModifier(1.3f)),//Displays as "Example Multiplier: +30%"
+                (6, new ExampleNoOpModifier())
             };
             Resolver = ValueResolverFactory.CreatePriorityResolver<float>(modifiers);
         }

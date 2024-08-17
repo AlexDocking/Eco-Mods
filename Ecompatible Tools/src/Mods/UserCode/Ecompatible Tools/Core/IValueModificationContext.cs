@@ -31,7 +31,7 @@ namespace Ecompatible
     }
     public static class ContextExtensions
     {
-        public static bool HasPropertyAllowNull<T>(this IContext context, ContextKey key, out T value)
+        public static bool TryGet<T>(this IContext context, ContextKey key, out T value)
         {
             value = default;
             if (context == null) return false;
@@ -46,12 +46,10 @@ namespace Ecompatible
         /// <param name="key">The key for the property</param>
         /// <param name="value">The value of the property</param>
         /// <returns>True if the property was found and has a non-null value of the required type</returns>
-        public static bool HasProperty<T>(this IContext context, ContextKey key, out T value)
+        public static bool TryGetNonNull<T>(this IContext context, ContextKey key, out T value)
         {
-            value = default;
-            if (context == null) return false;
-            if (context is GenericContext dynamicContext) return dynamicContext.TryGet(key, out value) && value != null;
-            return context.TryGetPropertyValueByName(key.PropertyName, out value) && value != null;
+            bool hasProperty = TryGet(context, key, out value);
+            return hasProperty && value != null;
         }
     }
     /// <summary>

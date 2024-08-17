@@ -1,12 +1,7 @@
-﻿using Eco.Gameplay.Players;
+﻿using Eco.Gameplay.Systems.Balance;
 using Eco.Shared.Localization;
-using Eco.Shared.Utils;
+using Eco.Shared.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace EcoTestTools
 {
@@ -19,8 +14,8 @@ namespace EcoTestTools
         /// <param name="test"></param>
         public static void Run(Action test, string name = null)
         {
-            float skillGainMultiplier = DifficultySettings.SkillGainMultiplier;
-            DifficultySettings.SkillGainMultiplier = 1;
+            float skillGainMultiplier = BalancePlugin.Obj.Config.SkillGainMultiplier;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
             try
             {
                 Log.WriteLine(Localizer.Do($"Running sub-test {name}"));
@@ -32,7 +27,7 @@ namespace EcoTestTools
             }
             finally
             {
-                DifficultySettings.SkillGainMultiplier = skillGainMultiplier;
+                BalancePlugin.Obj.Config.SkillGainMultiplier = skillGainMultiplier;
             }
         }
     }

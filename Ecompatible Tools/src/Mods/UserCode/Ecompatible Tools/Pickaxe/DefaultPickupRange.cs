@@ -7,7 +7,7 @@ namespace Ecompatible
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (!context.HasProperty(ContextProperties.SweepingHandsTalent, out MiningSweepingHandsTalent sweepingHands)) return null;
+            if (!context.TryGetNonNull(ContextProperties.SweepingHandsTalent, out MiningSweepingHandsTalent sweepingHands)) return null;
             return new BaseLevelModificationOutput(sweepingHands.PickUpRange);
         }
     }

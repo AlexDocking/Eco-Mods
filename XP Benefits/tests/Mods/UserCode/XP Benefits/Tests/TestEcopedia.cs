@@ -24,7 +24,7 @@ namespace XPBenefits.Tests
     [ChatCommandHandler]
     public static class TestEcopedia
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestEcopediaCreation()
         {

@@ -10,13 +10,14 @@ using System.Linq;
 using Eco.Shared.Localization;
 using Eco.Shared.Networking;
 using EcoTestTools;
+using Eco.Shared.Logging;
 
 namespace ReplacementInteractions.Tests
 {
     [ChatCommandHandler]
     public static class TestReplacementInteractions
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestReplacementInteractionPlugin()
         {

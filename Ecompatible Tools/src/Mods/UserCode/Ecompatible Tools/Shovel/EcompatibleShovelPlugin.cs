@@ -39,7 +39,7 @@ namespace Ecompatible
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var context = functionInput.Context;
-            if (context.HasProperty(ContextProperties.Shovel, out ShovelItem shovel)) return null;
+            if (!context.TryGetNonNull(ContextProperties.Shovel, out EcompatibleDig shovel)) return null;
             int output;
             switch (shovel)
             {
@@ -67,8 +67,8 @@ namespace Ecompatible
         {
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
-                float output = functionInput.Input * DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier;
-                return new MultiplicationOperationDetails(output, Localizer.DoStr("Server Stack Size"), DifficultySettings.Obj.Config.DifficultyModifiers.StackSizeModifier);
+                float output = functionInput.Input * DifficultySettingsConfig.Advanced.StackSizeMultiplier;
+                return new MultiplicationOperationDetails(output, Localizer.DoStr("Server Stack Size"), DifficultySettingsConfig.Advanced.StackSizeMultiplier);
             }
             return null;
         }

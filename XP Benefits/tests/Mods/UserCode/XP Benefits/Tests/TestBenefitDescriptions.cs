@@ -15,9 +15,11 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core.Tests;
 using Eco.Gameplay.Players;
+using Eco.Gameplay.Systems.Balance;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using Eco.Gameplay.Utils;
 using Eco.Shared.Localization;
+using Eco.Shared.Logging;
 using Eco.Shared.Utils;
 using EcoTestTools;
 using System;
@@ -29,7 +31,7 @@ namespace XPBenefits.Tests
     [ChatCommandHandler]
     public class TestBenefitDescriptions
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestBenefitFunctionDescriptions()
         {
@@ -48,11 +50,11 @@ namespace XPBenefits.Tests
             if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
             if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");
 
-            DifficultySettings.SkillGainMultiplier = 1;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
 
             XPConfig config = new XPConfig();
             //User has 1/3 of the maximum food xp
-            config.DefaultMaximumFoodXP = config.DefaultBaseFoodXP + (SkillRateUtil.FoodXP(user) / DifficultySettings.SkillGainMultiplier - config.DefaultBaseFoodXP) * 3f;
+            config.DefaultMaximumFoodXP = config.DefaultBaseFoodXP + (SkillRateUtil.FoodXP(user) / BalancePlugin.Obj.Config.SkillGainMultiplier - config.DefaultBaseFoodXP) * 3f;
             //User has 1/5 of the maximum housing xp
             config.DefaultMaximumHousingXP = SkillRateUtil.HousingXP(user) * 5;
             return config;

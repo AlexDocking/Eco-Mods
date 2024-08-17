@@ -153,14 +153,14 @@ namespace Ecompatible
                 if (index < IndexOfLastBaseLevelModification(resolvedSequence.StepOutputs)) return null;
 
                 IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs[index];
-                if (stepOutput is BaseLevelModificationOutput baseLevelOperationDetails) TableRowContent(baseLevelOperationDetails);
+                if (stepOutput is BaseLevelModificationOutput baseLevelOperationDetails) return TableRowContent(baseLevelOperationDetails);
                 if (stepOutput is MultiplicationOperationDetails multiplicationOperationDetails) return TableRowContent(multiplicationOperationDetails);
                 if (stepOutput is ModificationOutputBase operationDetailsBase) return TableRowContent(operationDetailsBase);
                 return null;
             }
             public TableRowInformation DescribeAsResult(IResolvedSequence<float> resolvedSequence, int index)
             {
-                IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs[index];
+                IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs.Take(index + 1).Reverse().First(step => step != null);
                 LocString resultCell = Rounding == Rounding.RoundUp ? Localizer.DoStr("Result (rounded up)") : Localizer.DoStr("Result (rounded down)");
                 return new TableRowInformation(resultCell, Localizer.NotLocalizedStr(Text.Num(ResolverExtensions.Round(stepOutput.Output, Rounding))));
             }

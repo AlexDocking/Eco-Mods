@@ -30,7 +30,7 @@ namespace XPBenefits.Tests
     [ChatCommandHandler]
     public class TestBenefitFunctions
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestBenefitFunctionTypes()
         {

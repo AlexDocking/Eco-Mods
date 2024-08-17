@@ -14,7 +14,7 @@ using Eco.Gameplay.Systems.NewTooltip;
 
 namespace Eco.Mods.TechTree
 {
-    public abstract partial class ShovelItem
+    public abstract partial class EcompatibleDig
     {
         [ReplacementInteraction("Dig")]
         public bool EcompatibleDig(Player player, InteractionTriggerInfo triggerInfo, InteractionTarget target)

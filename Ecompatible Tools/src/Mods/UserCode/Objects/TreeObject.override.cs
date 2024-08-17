@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Strange Loop Games. All rights reserved.
 // See LICENSE file in the project root for full license information.
 namespace Eco.Mods.Organisms
-{ // Ecompatible Tools makes changes to PickupLog
+{
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -34,8 +34,7 @@ namespace Eco.Mods.Organisms
     using Vector3 = System.Numerics.Vector3;
     using System.ComponentModel;
     using Eco.Gameplay.Interactions.Interactors;
-    using Eco.Mods.TechTree;
-    using Ecompatible;
+    using Eco.Shared.Time;
 
     [Serialized]
     [Tag(BlockTags.Choppable)]
@@ -177,12 +176,7 @@ namespace Eco.Mods.Organisms
         float ResourceMultiplier => (this.Species.ResourceRange.Diff * this.GrowthPercent) + this.Species.ResourceRange.Min;
         int GetBasePickupSize(TrunkPiece trunk) => Math.Max(Mathf.RoundUpToInt((trunk.SliceEnd - trunk.SliceStart) * this.ResourceMultiplier), 1);
 
-        [Interaction(InteractionTrigger.InteractKey, requiredEnvVars: new[] { "canPickup", "id" }, animationDriven: true)]                        //A definition for when we can actually pickup
-        public void PickUp(Player player, InteractionTriggerInfo trigger, InteractionTarget target) 
-        { 
-            if (target.TryGetParameter("id", out var id)) 
-                this.PickupLog(player, (Guid) id, target.HitPos); 
-        }
+        //Moved PickUp to EcompatiblePickupLog.cs
 
         #region IController
         int controllerID;
@@ -230,66 +224,6 @@ namespace Eco.Mods.Organisms
             // destroy the tree if it has fallen, all the trunk pieces are collected, and the stump is removed
             if (this.Fallen && this.stumpHealth <= 0 && this.trunkPieces.All(piece => piece.IsCollectedOrNotValid))
                 this.Destroy();
-        }
-
-        void PickupLog(Player player, Guid logID, Vector3 pickupPosition)
-        {
-            lock (this.sync)
-            {
-                if (!this.CanHarvest)
-                    player.ErrorLocStr("Log is not ready for harvest.  Remove all branches first.");
-
-                var trunk = this.trunkPieces.FirstOrDefault(p => p.ID == logID);
-                if (trunk?.IsCollectedOrNotValid == false)
-                {
-                    //Check log size, if its too big, it can't be picked up
-                    var canPickup = this.GetBasePickupSize(trunk) <= MaxTrunkPickupSize;
-                    if (!canPickup)
-                    {
-                        player.ErrorLocStr("Log is too large to pick up, slice into smaller pieces first.");
-                        return;
-                    }
-
-                    var resourceType = this.Species.ResourceItemType;
-                    var resource     = Item.Get(resourceType);
-                    var baseCount    = this.GetBasePickupSize(trunk);
-                    var yield        = resource.Yield;
-                    var bonusItems   = yield?.GetCurrentValueInt(player.User.DynamicValueContext, null) ?? 0;
-                    var numItems     = baseCount + bonusItems;
-                    var carried      = player.User.Inventory.Carried;
-
-                    if (numItems > 0)
-                    {
-                        if (!carried.IsEmpty) // Early tests: neeed to check type mismatch and max quantity.
-                        {
-                            if      (carried.Stacks.First().Item.Type != resourceType)                    { player.Error(Localizer.Format("You are already carrying {0:items} and cannot pick up {1:items}.", carried.Stacks.First().Item.UILink(LinkConfig.ShowPlural), resource.UILink(LinkConfig.ShowPlural)));  return; }                        
-                            // Ecompatible Tools - Start
-                            else
-                            {
-                                var context = Context.CreateContext(
-                                    (ContextProperties.User, player.User),
-                                    (ContextProperties.Axe, player.User.Inventory.Toolbar.SelectedItem as AxeItem),
-                                    (ContextProperties.Tree, this)
-                                    );
-                                int maxStackSize = ValueResolvers.Tools.Axe.MaxPickupLogsResolver.ResolveInt(0, context);
-                                if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
-                            }
-                            //Ecompatible Tools - Finish
-                        }
-
-                        // Prepare a game action pack.
-                        var pack = new GameActionPack();
-                            pack.AddPostEffect          (() => { trunk.Collected = true; this.RPC("DestroyLog", logID); this.MarkDirty(); this.CheckDestroy(); }); // Delete the log if succseeded.
-                            pack.GetOrCreateInventoryChangeSet   (carried, player.User).AddItems(this.Species.ResourceItemType, numItems);                         // Add items to the changeset.
-                            pack.AddGameAction          (new HarvestOrHunt() {   Species         = this.Species.GetType(),
-                                                                                 HarvestedStacks = new ItemStack(Item.Get(this.Species.ResourceItemType), numItems).SingleItemAsEnumerable(),
-                                                                                 ActionLocation  = pickupPosition.XYZi(),
-                                                                                 Citizen         = player.User,
-                                                                                 ChopperUserID   = this.ChopperUserID});                  
-                            pack.TryPerform(player.User); // Try to perform the action and apply changes & effects.
-                    }
-                }
-            }
         }
 
         #region RPCs
@@ -520,6 +454,13 @@ namespace Eco.Mods.Organisms
             return pack;
         }
 
+        /// <summary>Try to destroy stump by applying full damage.</summary>
+        public bool TryDestroyStump(Player damager)
+        {
+            var action = this.TryDamageStump(new(), damager, this.stumpHealth, null, false);
+            return action.TryPerform(damager.User).Success;
+        }
+
         /// <summary>Perform damaging healthy branches and trunk (if it's a fallen tree).</summary>
         private GameActionPack TrySliceTrunk(GameActionPack pack, INetObject damager, float amount, float slicePoint, Item tool)
         {
@@ -570,7 +511,7 @@ namespace Eco.Mods.Organisms
             return pack;
         }
 
-        private GameActionPack TryDamageStump(GameActionPack pack, INetObject damager, float amount, Item tool)
+        private GameActionPack TryDamageStump(GameActionPack pack, INetObject damager, float amount, Item tool, bool giveResource = true)
         {
             if (this.Fallen && this.stumpHealth > 0)
             {
@@ -596,11 +537,11 @@ namespace Eco.Mods.Organisms
                         if (World.GetBlock(this.Position.XYZi()).GetType() == this.Species.BlockType) World.DeleteBlock(this.Position.XYZi());
                         this.stumpHealth = 0;
                         //give tree resources
-                        if (player != null)
+                        if (player != null && giveResource)
                         {
                             var changes = InventoryChangeSet.New(player.User.Inventory, player.User);
                             var trunkResources = this.Species.TrunkResources;
-                            if (trunkResources != null) trunkResources.ForEach(x => changes.AddItems(x.Key, x.Value.RandInt));
+                            if (trunkResources != null) trunkResources.ForEach(x => changes.AddItemsNonUnique(x.Key, x.Value.RandInt));
                             else DebugUtils.Fail("Trunk resources missing for: " + this.Species.Name);
                             changes.TryApply();
                         }

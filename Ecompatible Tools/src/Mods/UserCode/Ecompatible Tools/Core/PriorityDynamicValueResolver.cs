@@ -75,7 +75,7 @@ namespace Ecompatible
                 inputs.Add(functionInput);
                 outputs.Add(functionOutput);
             }
-            resolvedSequence = new ResolvedSequence<T>(this, Modifiers.ToImmutableList(), startingValue, context, inputs.ToImmutableList(), outputs.ToImmutableList());
+            resolvedSequence = new ResolvedSequence<T>(this, Modifiers.ToImmutableList(), startingValue, context, inputs.ToImmutableList(), previousOutput, outputs.ToImmutableList());
         }
     }
     internal class PriorityValueResolver<T> : IPriorityValueResolver<T>
@@ -127,7 +127,7 @@ namespace Ecompatible
     }
     internal sealed class ResolvedSequence<T> : IResolvedSequence<T>
     {
-        public ResolvedSequence(ISequentialValueResolver<T> resolver, IReadOnlyList<IValueModifier<T>> modifiers, T startingValue, IContext context, IReadOnlyList<IModificationInput<T>> stepInputs, IReadOnlyList<IModificationOutput<T>> stepOutputs)
+        public ResolvedSequence(ISequentialValueResolver<T> resolver, IReadOnlyList<IValueModifier<T>> modifiers, T startingValue, IContext context, IReadOnlyList<IModificationInput<T>> stepInputs, T output, IReadOnlyList<IModificationOutput<T>> stepOutputs)
         {
             Resolver = resolver;
             Modifiers = modifiers;
@@ -135,7 +135,7 @@ namespace Ecompatible
             Context = context;
             StepInputs = stepInputs;
             StepOutputs = stepOutputs;
-            Output = stepOutputs[^1].Output;
+            Output = output;
         }
         public IContext Context { get; }
 

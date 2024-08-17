@@ -15,6 +15,7 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using Eco.Core.Tests;
 using Eco.Gameplay.Players;
+using Eco.Gameplay.Systems.Balance;
 using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using EcoTestTools;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace XPBenefits.Tests
     [ChatCommandHandler]
     public class TestSkillRateUtil
     {
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestFoodXPCalculation()
         {
@@ -33,7 +34,7 @@ namespace XPBenefits.Tests
             Test.Run(ShouldNotLimitFractionFoodXPUser);
             Test.Run(ShouldLimitFractionFoodXPUser);
         }
-        [ChatCommand(ChatAuthorizationLevel.Developer)]
+        [ChatCommand(ChatAuthorizationLevel.DevTier)]
         [CITest]
         public static void TestHousingXPCalculation()
         {
@@ -43,7 +44,7 @@ namespace XPBenefits.Tests
         public static void ShouldNotLimitFractionFoodXP()
         {
             XPConfig config = new XPConfig();
-            DifficultySettings.SkillGainMultiplier = 1;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
             config.DefaultBaseFoodXP = 5;
             config.DefaultMaximumFoodXP = 10;
             Assert.AreEqual(1.2f, SkillRateUtil.FractionFoodXP(11, config, false));
@@ -52,14 +53,14 @@ namespace XPBenefits.Tests
         {
             XPConfig config = new XPConfig();
 
-            DifficultySettings.SkillGainMultiplier = 1;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
             config.DefaultBaseFoodXP = 5;
             config.DefaultMaximumFoodXP = 10;
             Assert.AreEqual(1f, SkillRateUtil.FractionFoodXP(11, config, true));
         }
         public static void ShouldNotLimitFractionFoodXPUser()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.First();
 
             testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
@@ -74,7 +75,7 @@ namespace XPBenefits.Tests
         }
         public static void ShouldLimitFractionFoodXPUser()
         {
-            DifficultySettings.SkillGainMultiplier = 1;
+            BalancePlugin.Obj.Config.SkillGainMultiplier = 1;
             User testUser = UserManager.Users.First();
 
             testUser.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
