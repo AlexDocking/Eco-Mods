@@ -11,11 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="tests\Mods\UserCode\Ecopedia\XP Benefits;Disabled Benefit.xml" />
+    <None Remove="src\Mods\UserCode\Ecompatible\Tools\README - SERVER OWNERS.md" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="tests\Mods\UserCode\Ecopedia\Mods\XP Benefits%3bDisabled Benefit.xml" />
+    <Compile Include="src\Mods\UserCode\Ecompatible\Tools\README - SERVER OWNERS.md" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,9 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ecompatible\Ecompatible.csproj" />
     <ProjectReference Include="..\Eco Test Tools\EcoTestTools.csproj" />
+    <ProjectReference Include="..\Replacement Interactions\ReplacementInteractions.csproj" />
   </ItemGroup>
-
 
 </Project>

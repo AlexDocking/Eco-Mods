@@ -51,10 +51,6 @@ namespace XPBenefits
 
     public partial class ExtraCarryStackLimitBenefit : BenefitBase
     {
-        /// <summary>
-        /// Used by shovels to work out how much their size should increase
-        /// </summary>
-        public IBenefitFunction ShovelBenefit { get; set; }
 
         public override void Initialize()
         {
@@ -66,10 +62,8 @@ namespace XPBenefits
             Initialize(enabled, xpConfig, maxBenefitValue, xpLimitEnabled, benefitFunctionType);
 
             if (!Enabled) return;
-            ShovelBenefit ??= BenefitFunction;
-            ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier());
-            ValueResolvers.Tools.Axe.MaxPickupLogsResolver.Add(100, new ExtraCarryStackLimitModifier());
-            ValueResolvers.Tools.Pickaxe.MaxStackSizeResolver.Add(100, new ExtraCarryStackLimitModifier());
+            ValueResolvers.Inventory.User.Carried.Add(100, new ExtraCarryStackLimitModifier(BenefitFunction));
+            ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(100, new ExtraCarryStackLimitModifier(BenefitFunction));
         }
 
         public override void ApplyBenefitToUser(User user)
@@ -176,14 +170,21 @@ namespace XPBenefits
 
     public class ExtraCarryStackLimitModifier : IValueModifier<float>
     {
+        public ExtraCarryStackLimitModifier(IBenefitFunction benefitFunction)
+        {
+            BenefitFunction = benefitFunction;
+        }
+
+        public IBenefitFunction BenefitFunction { get; }
+
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
             var benefit = XPBenefitsPlugin.Obj.GetBenefit<ExtraCarryStackLimitBenefit>();
             if (benefit == null || !benefit.Enabled) return null;
             if (!functionInput.Context.TryGetNonNull(ContextProperties.User, out User user)) return null;
-            float multiplier = 1 + benefit.ShovelBenefit.CalculateBenefit(user);
+            float multiplier = 1 + BenefitFunction.CalculateBenefit(user);
             float output = functionInput.Input * multiplier;
-            return new MultiplicationOperationDetails(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
+            return new MultiplicationModificationOutput(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }
     }
 
