@@ -10,10 +10,10 @@ namespace Ecompatible
     public interface IContext
     {
     }
-    public readonly struct ContextKey
+    public class ContextKey
     {
-        public ContextKey(PropertyInfo property) : this(property.PropertyType, property.Name) { }
-        public ContextKey(Type dataType, string propertyName)
+        internal ContextKey(PropertyInfo property) : this(property.PropertyType, property.Name) { }
+        internal ContextKey(Type dataType, string propertyName)
         {
             DataType = dataType;
             PropertyName = propertyName;
@@ -21,6 +21,32 @@ namespace Ecompatible
 
         public Type DataType { get; }
         public string PropertyName { get; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ContextKey key &&
+                   EqualityComparer<Type>.Default.Equals(DataType, key.DataType) &&
+                   PropertyName == key.PropertyName;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(DataType, PropertyName);
+        }
+
+        public static bool operator ==(ContextKey left, ContextKey right)
+        {
+            return EqualityComparer<ContextKey>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(ContextKey left, ContextKey right)
+        {
+            return !(left == right);
+        }
+    }
+    public class ContextKey<T> : ContextKey
+    {
+        public ContextKey(string propertyName) : base(typeof(T), propertyName) { }
     }
     public partial class Context
     {

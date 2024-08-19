@@ -22,7 +22,7 @@ namespace Ecompatible.Tests
 
         private static void Setup()
         {
-            Context = new ExampleContext();
+            Context = Ecompatible.Context.CreateContext((new ContextKey(typeof(float), "ContextMultiplier"), 1.3f));
             (float, IValueModifier<float>)[] modifiers = new (float, IValueModifier<float>)[]
             {
                 (0, new ExampleNoOpModifier()),
@@ -31,13 +31,13 @@ namespace Ecompatible.Tests
                 (3, new ExampleBaseModifier()),//Overwrites all previous values, so only display from here onwards. Displays as "Base Level: 5"
                 (4, new ExampleNoOpModifier()),//No modification, so ignore
                 (5, new EnsureValueIsAtLeast(6)),//Overwrite previous value because the running total is too small, while still displaying the previous values except with lines through them
-                (6, new ExampleMultiplierModifier(1.3f)),//Displays as "Example Multiplier: +30%"
+                (6, new ExampleContextMultiplierModifier()),//Should read the multiplier value from the context. Displays as "Example Context Multiplier: +30%"
                 (7, new ExampleNoOpModifier())
             };
             Resolver = ValueResolverFactory.CreatePriorityResolver<float>(modifiers);
         }
 
-        private static ExampleContext Context { get; set; }
+        private static IContext Context { get; set; }
         private static IPriorityValueResolver<float> Resolver { get; set; }
         private static void ShouldResolveCorrectFloatValue()
         {
@@ -59,7 +59,7 @@ namespace Ecompatible.Tests
             IResolvedSequence<float> resolvedSequence = Resolver.ResolveSequence(0, Context);
             LocString description = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);
 
-            string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\"><s>5</s></align>]]></th></tr><tr><th><![CDATA[Must be at least 6 (got 5):]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr><tr><th><![CDATA[Example Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result (rounded down):]]></th><th><![CDATA[<align=\"right\">7</align>]]></th></tr></table>\r\n";
+            string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\"><s>5</s></align>]]></th></tr><tr><th><![CDATA[Must be at least 6 (got 5):]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr><tr><th><![CDATA[Example Context Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result (rounded down):]]></th><th><![CDATA[<align=\"right\">7</align>]]></th></tr></table>\r\n";
             Assert.AreEqual(expected, description.ToString());
         }
     }
@@ -81,14 +81,24 @@ namespace Ecompatible.Tests
             return null;
         }
     }
+    internal class ExampleContextMultiplierModifier : IValueModifier<float>
+    {
+        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        {
+            var context = functionInput.Context;
+            if (!context.TryGetNonNull(new ContextKey<float>("ContextMultiplier"), out float multiplier)) return null;
+            float output = functionInput.Input * multiplier;
+            return new MultiplicationModificationOutput(output, Localizer.DoStr("Example Context Multiplier"), multiplier);
+        }
+    }
     internal class ExampleMultiplierModifier : IValueModifier<float>
     {
+        public float Multiplier { get; }
+
         public ExampleMultiplierModifier(float multiplier)
         {
             Multiplier = multiplier;
         }
-
-        public float Multiplier { get; }
 
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {

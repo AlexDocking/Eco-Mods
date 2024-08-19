@@ -7,12 +7,12 @@ namespace Ecompatible
 {
     public static partial class ContextProperties
     {
-        public static ContextKey User { get; } = new(typeof(User), nameof(User));
-        public static ContextKey Shovel { get; } = new(typeof(ShovelItem), nameof(Shovel));
-        public static ContextKey ToolUsed { get; } = new(typeof(ToolItem), nameof(ToolUsed));
-        public static ContextKey Tree { get; } = new(typeof(TreeEntity), nameof(Tree));
-        public static ContextKey SweepingHandsTalent { get; } = new(typeof(MiningSweepingHandsTalent), nameof(SweepingHandsTalent));
-        public static ContextKey ItemToPutInInventory { get; } = new(typeof(Item), nameof(ItemToPutInInventory));
-        public static ContextKey Inventory { get; } = new ContextKey(typeof(Inventory), nameof(Inventory));
+        public static ContextKey<User> User { get; } = new(nameof(User));
+        public static ContextKey<ShovelItem> Shovel { get; } = new(nameof(Shovel));
+        public static ContextKey<ToolItem> ToolUsed { get; } = new(nameof(ToolUsed));
+        public static ContextKey<TreeEntity> Tree { get; } = new(nameof(Tree));
+        public static ContextKey<MiningSweepingHandsTalent> SweepingHandsTalent { get; } = new(nameof(SweepingHandsTalent));
+        public static ContextKey<Item> ItemToPutInInventory { get; } = new(nameof(ItemToPutInInventory));
+        public static ContextKey<Inventory> Inventory { get; } = new (nameof(Inventory));
     }
 }
