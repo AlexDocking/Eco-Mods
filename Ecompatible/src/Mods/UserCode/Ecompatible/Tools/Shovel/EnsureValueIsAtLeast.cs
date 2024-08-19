@@ -16,7 +16,7 @@ namespace Ecompatible
         {
             if (functionInput.Input < Minimum)
             {
-                return new OverwriteModificationOutput(Minimum, Localizer.DoStr($"Must be at least {Text.Num(Minimum)} (got {Text.Num(functionInput.Input)})"));
+                return Output.Overwrite(Minimum, Localizer.DoStr($"Must be at least {Text.Num(Minimum)} (got {Text.Num(functionInput.Input)})"));
             }
             return null;
         }

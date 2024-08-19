@@ -24,7 +24,7 @@ namespace Ecompatible
     }
     internal class InventorySizeRestriction : InventoryRestriction
     {
-        public override LocString Message => throw new NotImplementedException();
+        public override LocString Message => LocString.Empty;
         public override bool SurpassStackSize => true;
 
         private Inventory Inventory { get; }
@@ -54,7 +54,7 @@ namespace Ecompatible
         {
             IContext context = functionInput.Context;
             if (!context.TryGetNonNull(ContextProperties.ItemToPutInInventory, out Item item)) return null;
-            if (Item.IsRestrictedToSingleItem(item.Type)) return new BaseLevelModificationOutput(1, "Base Level (unique item)");
+            if (Item.IsRestrictedToSingleItem(item.Type)) return Output.BaseLevel(1, Localizer.DoStr("Base Level (unique item)"));
             return null;
         }
     }

@@ -71,7 +71,7 @@ namespace Ecompatible.Tests
     {
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
-            return new BaseLevelModificationOutput(5);
+            return Output.BaseLevel(5);
         }
     }
     internal class ExampleNoOpModifier : IValueModifier<float>
@@ -88,7 +88,7 @@ namespace Ecompatible.Tests
             var context = functionInput.Context;
             if (!context.TryGetNonNull(new ContextKey<float>("ContextMultiplier"), out float multiplier)) return null;
             float output = functionInput.Input * multiplier;
-            return new MultiplicationModificationOutput(output, Localizer.DoStr("Example Context Multiplier"), multiplier);
+            return Output.Multiplier(output, Localizer.DoStr("Example Context Multiplier"), multiplier);
         }
     }
     internal class ExampleMultiplierModifier : IValueModifier<float>
@@ -105,7 +105,7 @@ namespace Ecompatible.Tests
             var context = functionInput.Context;
             float multiplier = Multiplier;
             float output = functionInput.Input * multiplier;
-            return new MultiplicationModificationOutput(output, Localizer.DoStr("Example Multiplier"), multiplier);
+            return Output.Multiplier(output, Localizer.DoStr("Example Multiplier"), multiplier);
         }
     }
 }

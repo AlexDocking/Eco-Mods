@@ -184,7 +184,7 @@ namespace XPBenefits
             if (!functionInput.Context.TryGetNonNull(ContextProperties.User, out User user)) return null;
             float multiplier = 1 + BenefitFunction.CalculateBenefit(user);
             float output = functionInput.Input * multiplier;
-            return new MultiplicationModificationOutput(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
+            return Output.Multiplier(output, XPBenefitsEcopediaManager.Obj.GetEcopedia(benefit).GetPageLink(), multiplier);
         }
     }
 

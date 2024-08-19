@@ -58,7 +58,7 @@ namespace Ecompatible
                 default:
                     return null;
             }
-            return new BaseLevelModificationOutput(output);
+            return Output.BaseLevel(output);
         }
     }
     public class ShovelStackSizeModifierSettingModifier : IValueModifier<float>
@@ -68,7 +68,7 @@ namespace Ecompatible
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 float output = functionInput.Input * DifficultySettingsConfig.Advanced.StackSizeMultiplier;
-                return new MultiplicationModificationOutput(output, Localizer.DoStr("Server Stack Size"), DifficultySettingsConfig.Advanced.StackSizeMultiplier);
+                return Output.Multiplier(output, Localizer.DoStr("Server Stack Size"), DifficultySettingsConfig.Advanced.StackSizeMultiplier);
             }
             return null;
         }

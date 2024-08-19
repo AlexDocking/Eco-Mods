@@ -26,10 +26,17 @@ namespace Ecompatible
     public interface IModificationOutput<T>
     {
         LocString ModificationName { get; }
-        T Output { get; set; }
+        T Output { get; }
     }
 
-    public abstract class ModificationOutputBase : IModificationOutput<float>
+    public static class Output
+    {
+        public static IModificationOutput<float> BaseLevel(float output) => new BaseLevelModificationOutput(output, Localizer.DoStr("Base Level"));
+        public static IModificationOutput<float> BaseLevel(float output, LocString modificationName) => new BaseLevelModificationOutput(output, modificationName);
+        public static IModificationOutput<float> Multiplier(float output, LocString modificationName, float multiplier) => new MultiplicationModificationOutput(output, modificationName, multiplier);
+        public static IModificationOutput<float> Overwrite(float newOutput, LocString modificationName) => new OverwriteModificationOutput(newOutput, modificationName);
+    }
+    internal abstract class ModificationOutputBase : IModificationOutput<float>
     {
         public LocString ModificationName { get; set; }
         public LocString ModificationDescription { get; set; }
@@ -41,20 +48,20 @@ namespace Ecompatible
         }
     }
 
-    public class BaseLevelModificationOutput : ModificationOutputBase
+    internal class BaseLevelModificationOutput : ModificationOutputBase
     {
-        public BaseLevelModificationOutput(float output, string name = "Base Level") : base(output, Localizer.DoStr(name))
+        public BaseLevelModificationOutput(float output, LocString name) : base(output, name)
         {
         }
     }
 
-    public class OverwriteModificationOutput : ModificationOutputBase
+    internal class OverwriteModificationOutput : ModificationOutputBase
     {
         public OverwriteModificationOutput(float output, LocString modificationName) : base(output, modificationName)
         {
         }
     }
-    public class MultiplicationModificationOutput : ModificationOutputBase
+    internal class MultiplicationModificationOutput : ModificationOutputBase
     {
         public MultiplicationModificationOutput(float output, LocString modificationName, float multiplier) : base(output, modificationName)
         {

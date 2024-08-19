@@ -8,7 +8,7 @@ namespace Ecompatible
         {
             var context = functionInput.Context;
             if (!context.TryGetNonNull(ContextProperties.ItemToPutInInventory, out Item item)) return null;
-            return new BaseLevelModificationOutput(item.MaxStackSize);
+            return Output.BaseLevel(item.MaxStackSize);
         }
     }
 }

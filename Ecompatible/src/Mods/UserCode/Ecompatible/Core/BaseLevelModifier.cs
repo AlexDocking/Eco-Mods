@@ -17,7 +17,7 @@ namespace Ecompatible
 
         public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
         {
-            return new BaseLevelModificationOutput(BaseValue);
+            return Output.BaseLevel(BaseValue);
         }
     }
 }

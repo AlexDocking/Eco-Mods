@@ -8,7 +8,7 @@ namespace Ecompatible
         {
             var context = functionInput.Context;
             if (!context.TryGetNonNull(ContextProperties.SweepingHandsTalent, out MiningSweepingHandsTalent sweepingHands)) return null;
-            return new BaseLevelModificationOutput(sweepingHands.PickUpRange);
+            return Output.BaseLevel(sweepingHands.PickUpRange);
         }
     }
 }
