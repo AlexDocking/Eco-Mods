@@ -27,5 +27,6 @@
     }
     public partial class AxeResolvers
     {
+        public IPriorityValueResolver<float> FractionOfTreeToSliceWhenFelled { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(0)));
     }
 }
