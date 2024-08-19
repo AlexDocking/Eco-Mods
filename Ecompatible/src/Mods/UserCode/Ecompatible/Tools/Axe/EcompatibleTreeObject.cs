@@ -43,6 +43,7 @@ namespace Eco.Mods.Organisms
 
     public partial class TreeEntity
     {
+        public float StumpHealth => this.stumpHealth;
         void EcompatiblePickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
             lock (this.sync)
@@ -126,21 +127,64 @@ namespace Eco.Mods.Organisms
                     this.FellTree(damager);
                     this.ChopperUserID = damager is Player player ? player.User.Id : -1;
                     EcoSim.PlantSim.KillPlant(this, DeathType.Logging, true);
-
-                    IContext context = Context.CreateContext(
-                        (ContextProperties.User, (damager as Player)?.User),
-                        (ContextProperties.Tree, this),
-                        (ContextProperties.ToolUsed, tool as ToolItem)
-                        );
-                    float fractionOfTreeToSlice = ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled.Resolve(0, context);
-
-                    AutoSliceTrunk(damager as Player, tool, fractionOfTreeToSlice);
+                    EcompatibleOnFellTree(damager, tool, user);
                 }
-                
+
                 this.MarkDirty();
             });
             return pack;
         }
+
+        /// <summary>
+        /// Slice up tree and damage stump according to resolver values
+        /// </summary>
+        /// <param name="damager"></param>
+        /// <param name="tool"></param>
+        /// <param name="user"></param>
+        private void EcompatibleOnFellTree(INetObject damager, Item tool, User user)
+        {
+            IContext context = Context.CreateContext(
+                (ContextProperties.User, user),
+                (ContextProperties.Tree, this),
+                (ContextProperties.ToolUsed, tool as ToolItem)
+                );
+            float fractionOfTreeToSlice = ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled.Resolve(0, context);
+
+            AutoSliceTrunk(damager as Player, tool, fractionOfTreeToSlice);
+
+            float amountToDamageStump = ValueResolvers.Tools.Axe.DamageToStumpWhenFelled.Resolve(0, context);
+            EcompatibleTryDamageStumpInternal(amountToDamageStump, true, user?.Player, checkDestroyed: false);
+        }
+
+        private void EcompatibleTryDamageStumpInternal(float amount, bool giveResource, Player player, bool checkDestroyed = true)
+        {
+            this.stumpHealth = Mathf.Max(0, this.stumpHealth - amount);
+
+            if (this.stumpHealth <= 0)
+            {
+                if (World.GetBlock(this.Position.XYZi()).GetType() == this.Species.BlockType) World.DeleteBlock(this.Position.XYZi());
+                this.stumpHealth = 0;
+                //give tree resources
+                if (player != null && giveResource)
+                {
+                    var changes = InventoryChangeSet.New(player.User.Inventory, player.User);
+                    var trunkResources = this.Species.TrunkResources;
+                    if (trunkResources != null) trunkResources.ForEach(x => changes.AddItemsNonUnique(x.Key, x.Value.RandInt));
+                    else DebugUtils.Fail("Trunk resources missing for: " + this.Species.Name);
+                    changes.TryApply();
+                }
+                this.RPC("DestroyStump");
+
+                // Let another plant grow here
+                EcoSim.PlantSim.UpRootPlant(this);
+            }
+
+            this.MarkDirty();
+            // destroy the tree if it has fallen, all the trunk pieces are collected, and the stump is removed
+            if (checkDestroyed && this.Fallen && this.stumpHealth <= 0 && this.trunkPieces.All(piece => piece.IsCollectedOrNotValid))
+                this.Destroy();
+        }
+
         
         /// <summary>
         /// Slice off small pieces of the trunk until the piece remaining is smaller than the fraction allowed

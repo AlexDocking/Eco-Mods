@@ -584,29 +584,7 @@ namespace Eco.Mods.Organisms
 
                 pack.AddPostEffect(() =>
                 {
-                    this.stumpHealth = Mathf.Max(0, this.stumpHealth - amount);
-
-                    if (this.stumpHealth <= 0)
-                    {
-                        if (World.GetBlock(this.Position.XYZi()).GetType() == this.Species.BlockType) World.DeleteBlock(this.Position.XYZi());
-                        this.stumpHealth = 0;
-                        //give tree resources
-                        if (player != null && giveResource)
-                        {
-                            var changes = InventoryChangeSet.New(player.User.Inventory, player.User);
-                            var trunkResources = this.Species.TrunkResources;
-                            if (trunkResources != null) trunkResources.ForEach(x => changes.AddItemsNonUnique(x.Key, x.Value.RandInt));
-                            else DebugUtils.Fail("Trunk resources missing for: " + this.Species.Name);
-                            changes.TryApply();
-                        }
-                        this.RPC("DestroyStump");
-
-                        // Let another plant grow here
-                        EcoSim.PlantSim.UpRootPlant(this);
-                    }
-
-                    this.MarkDirty();
-                    this.CheckDestroy();
+                    EcompatibleTryDamageStumpInternal(amount, giveResource, player, checkDestroyed: true);
                 });
             }
             else this.EcompatibleTryDamageTrunk(pack, damager, amount, tool);

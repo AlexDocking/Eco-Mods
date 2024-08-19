@@ -38,6 +38,13 @@ The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is bel
 		> User User;
 		> ToolItem ToolUsed;
 		> TreeEntity Tree;
+- `ValueResolvers.Tools.Axe.DamageToStumpWhenFelled` (float).
+	- Can be used to automatically deal damage to the stump when the tree is felled.
+	- TreeEntity now exposes `StumpHealth` property
+	- Context should be at least:
+		> User User;
+		> ToolItem ToolUsed;
+		> TreeEntity Tree;
 
 - Without doing anything extra, players can also pick up split logs up to the carry limit and not just the log item's max stack size. In the vanilla game these are one and the same, but now multiple mods can apply modifiers to the carry limit and have them work together and be applied to picking up sliced logs.
 
