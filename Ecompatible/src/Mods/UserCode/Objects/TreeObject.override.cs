@@ -85,8 +85,7 @@ namespace Eco.Mods.Organisms
 
         /// <summary>This needs to be 5, because 5 is the max yield bonus, and 5+5=10 is the max log stack size.</summary>
         private const int MaxTrunkPickupSize = 5;
-        /// <summary>Max number of tree debris spawn from the tree.</summary>
-        private const int MaxTreeDebris = 20;
+        
 
         // the list of all the slices done to this trunk
         [Serialized] readonly ThreadSafeList<TrunkPiece> trunkPieces = new ThreadSafeList<TrunkPiece>();
@@ -361,74 +360,7 @@ namespace Eco.Mods.Organisms
             }
         }
 
-        [RPC]
-        public void CollideWithTerrain(Player player, Vector3i position)
-        {
-            if (player != this.Controller)
-                return;
-
-            lock (this.sync)
-            {
-                if (this.groundHits == null)
-                    this.groundHits = new ThreadSafeHashSet<Vector3i>();
-            }
-
-            // Prevent spawning more than MaxGroundHits debris for one tree
-            if (this.treeDebrisSpawned >= MaxTreeDebris)
-                return;
-
-            // destroy plants and spawn dirt within a radius under the hit position
-            var radius = 1;
-            for (var x = -radius; x <= radius; x++)
-                for (var z = -radius; z <= radius; z++)
-                {
-                    var offsetpos = position + new Vector3i(x, -1, z);
-                    if (!this.groundHits.Add(offsetpos))
-                        continue;
-
-                    var abovepos = offsetpos + Vector3i.Up;
-                    var aboveblock = World.GetBlock(abovepos);
-                    var hitblock = World.GetBlock(offsetpos);
-                    if (!aboveblock.Is<Solid>())
-                    {
-                        // turn soil into dirt
-                        if (hitblock.GetType() == typeof(GrassBlock) || hitblock.GetType() == typeof(ForestSoilBlock))
-                        {
-                            player.SpawnBlockEffect(offsetpos, typeof(DirtBlock), BlockEffect.Delete);
-                            World.SetBlock<DirtBlock>(offsetpos);
-                            BiomePusher.AddFrozenColumn(offsetpos.XZ);
-                        }
-
-                        // kill any above plants
-                        if (aboveblock is PlantBlock)
-                        {
-                            // make sure there is a plant here, sometimes world/ecosim are out of sync
-                            var plant = EcoSim.PlantSim.GetPlant(abovepos);
-                            if (plant != null)
-                            {
-                                player.SpawnBlockEffect(abovepos, aboveblock.GetType(), BlockEffect.Delete);
-                                EcoSim.PlantSim.DestroyPlant(plant, DeathType.Logging, true, player.User);
-                            }
-                            else World.DeleteBlock(abovepos);
-                        }
-
-                        if (hitblock.Is<Solid>() && World.GetBlock(abovepos).Is<Empty>() && RandomUtil.Value < this.Species.ChanceToSpawnDebris)
-                        {
-                            GameActionAccumulator.Obj.AddGameActions(new CreateTreeDebris()
-                            {
-                                Count = 1,
-                                ActionLocation = abovepos,
-                                Citizen = player.User
-                            }, player?.User);
-
-                            World.SetBlock(this.Species.DebrisType, abovepos);
-                            player.SpawnBlockEffect(abovepos, this.Species.DebrisType, BlockEffect.Place);
-                            RoomData.QueueRoomTest(abovepos);
-                            if (Interlocked.Increment(ref this.treeDebrisSpawned) >= MaxTreeDebris) return;
-                        }
-                    }
-                }
-        }
+        
         #endregion
 
         ChopTree CreateChopTreeAction(INetObject damager, Item tool, bool felled, bool branches = false) => new ChopTree()

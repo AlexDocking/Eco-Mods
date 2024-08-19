@@ -6,6 +6,7 @@ The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is bel
 
 - `ValueResolvers.Inventory.User.Carried` (float).
 	- Determines how many blocks the player can hold in the hands.
+	- Value is rounded down.
 	- Context should be at least:
 		> User User;
 		> Item ItemToPutInInventory;
@@ -13,7 +14,8 @@ The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is bel
 ## Shovel
 
 - `ValueResolvers.Tools.Shovel.MaxTakeResolver` (float).
-	- Can be used for changing how many blocks a shovel or player can dig whilst holding the shovel. Value is rounded down.
+	- Can be used for changing how many blocks a shovel or player can dig whilst holding the shovel.
+	- Value is rounded down.
 	- Context should be at least:
 		> User User;
 		> Item ItemToPutInInventory;
@@ -22,7 +24,8 @@ The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is bel
 ## Pickaxe
 
 - `ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver` (float).
-	- Can change how far from the player rocks can be collected from when using the "Sweeping Hands" perk. Value is rounded down.
+	- Can change how far from the player rocks can be collected from when using the "Sweeping Hands" perk.
+	- Value is rounded down.
 	- Context should be at least:
 		> User User;
 		> Item ItemToPutInInventory;
@@ -34,13 +37,31 @@ The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is bel
 
 - `ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled` (float).
 	- Can be used to automatically slice up this fraction of the tree when it is felled.
+	- Value should be between 0 and 1.
 	- Context should be at least:
 		> User User;
 		> ToolItem ToolUsed;
 		> TreeEntity Tree;
+
 - `ValueResolvers.Tools.Axe.DamageToStumpWhenFelled` (float).
 	- Can be used to automatically deal damage to the stump when the tree is felled.
 	- TreeEntity now exposes `StumpHealth` property
+	- Context should be at least:
+		> User User;
+		> ToolItem ToolUsed;
+		> TreeEntity Tree;
+
+- `ValueResolvers.Tools.Axe.MaxTreeDebrisToSpawn` (float).
+	- Can be used to change the maximum number of debris that can spawn. It doesn't usually reach the default limit of 20 so increasing it is unlikely to do anything.
+	- Value is rounded down.
+	- Context should be at least:
+		> User User;
+		> ToolItem ToolUsed;
+		> TreeEntity Tree;
+
+- `ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn` (float).
+	- Can be used to automatically clear debris as it spawns. Each piece of debris has a chance to be cleared before it actually spawns, when the trunk hits the ground. Calories, tool usage and experience still applies. If those checks fail then the debris will spawn as usual.
+	- Value should be between 0 and 1.
 	- Context should be at least:
 		> User User;
 		> ToolItem ToolUsed;

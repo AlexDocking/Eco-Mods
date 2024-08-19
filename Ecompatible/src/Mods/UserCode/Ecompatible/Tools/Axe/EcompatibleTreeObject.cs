@@ -40,10 +40,16 @@ namespace Eco.Mods.Organisms
     using Ecompatible;
     using Eco.Shared.Logging;
     using Eco.Mods.TechTree;
+    using static Eco.Gameplay.Civics.IfThenBlock;
+    using Eco.Gameplay.DynamicValues;
 
     public partial class TreeEntity
     {
+        /// <summary>Max number of tree debris spawn from the tree.</summary>
+        private int MaxTreeDebris { get; set; }
+        private float ChanceToClearDebrisOnSpawn { get; set; }
         public float StumpHealth => this.stumpHealth;
+        private Item ToolUsedToFellTree { get; set; }
         void EcompatiblePickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
             lock (this.sync)
@@ -105,7 +111,7 @@ namespace Eco.Mods.Organisms
                 }
             }
         }
-        
+
         private GameActionPack EcompatibleTryDamageTrunk(GameActionPack pack, INetObject damager, float amount, Item tool)
         {
             var user = (damager as Player)?.User;
@@ -124,6 +130,7 @@ namespace Eco.Mods.Organisms
                 if (this.health <= 0)
                 {
                     this.health = 0;
+                    ToolUsedToFellTree = tool;
                     this.FellTree(damager);
                     this.ChopperUserID = damager is Player player ? player.User.Id : -1;
                     EcoSim.PlantSim.KillPlant(this, DeathType.Logging, true);
@@ -154,6 +161,10 @@ namespace Eco.Mods.Organisms
 
             float amountToDamageStump = ValueResolvers.Tools.Axe.DamageToStumpWhenFelled.Resolve(0, context);
             EcompatibleTryDamageStumpInternal(amountToDamageStump, true, user?.Player, checkDestroyed: false);
+
+            MaxTreeDebris = ValueResolvers.Tools.Axe.MaxTreeDebrisToSpawn.ResolveInt(MaxTreeDebris, context);
+            ChanceToClearDebrisOnSpawn = ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn.Resolve(0, context);
+
         }
 
         private void EcompatibleTryDamageStumpInternal(float amount, bool giveResource, Player player, bool checkDestroyed = true)
@@ -234,6 +245,116 @@ namespace Eco.Mods.Organisms
                 }
                 this.TrySliceTrunkInternal(slicePoint, damager);
                 pieceToSlice = GetLargestPiece();
+            }
+        }
+
+        [RPC]
+        public void CollideWithTerrain(Player player, Vector3i position)
+        {
+            if (player != this.Controller)
+                return;
+
+            lock (this.sync)
+            {
+                if (this.groundHits == null)
+                    this.groundHits = new ThreadSafeHashSet<Vector3i>();
+            }
+
+            // Prevent spawning more than MaxGroundHits debris for one tree
+            if (this.treeDebrisSpawned >= MaxTreeDebris)
+                return;
+
+            // destroy plants and spawn dirt within a radius under the hit position
+            var radius = 1;
+            for (var x = -radius; x <= radius; x++)
+                for (var z = -radius; z <= radius; z++)
+                {
+                    var offsetpos = position + new Vector3i(x, -1, z);
+                    if (!this.groundHits.Add(offsetpos))
+                        continue;
+
+                    var abovepos = offsetpos + Vector3i.Up;
+                    var aboveblock = World.GetBlock(abovepos);
+                    var hitblock = World.GetBlock(offsetpos);
+                    if (!aboveblock.Is<Solid>())
+                    {
+                        // turn soil into dirt
+                        if (hitblock.GetType() == typeof(GrassBlock) || hitblock.GetType() == typeof(ForestSoilBlock))
+                        {
+                            player.SpawnBlockEffect(offsetpos, typeof(DirtBlock), BlockEffect.Delete);
+                            World.SetBlock<DirtBlock>(offsetpos);
+                            BiomePusher.AddFrozenColumn(offsetpos.XZ);
+                        }
+
+                        // kill any above plants
+                        if (aboveblock is PlantBlock)
+                        {
+                            // make sure there is a plant here, sometimes world/ecosim are out of sync
+                            var plant = EcoSim.PlantSim.GetPlant(abovepos);
+                            if (plant != null)
+                            {
+                                player.SpawnBlockEffect(abovepos, aboveblock.GetType(), BlockEffect.Delete);
+                                EcoSim.PlantSim.DestroyPlant(plant, DeathType.Logging, true, player.User);
+                            }
+                            else World.DeleteBlock(abovepos);
+                        }
+
+                        if (hitblock.Is<Solid>() && World.GetBlock(abovepos).Is<Empty>() && RandomUtil.Value < this.Species.ChanceToSpawnDebris)
+                        {
+                            //Attempt to chop the debris before it spawns to account for tool usage, calories and experience. If that fails, then it can spawn as normal
+                            bool clearedDebrisBeforeSpawn = true;
+                            if (RandomUtil.Value < this.ChanceToClearDebrisOnSpawn)
+                            {
+                                clearedDebrisBeforeSpawn = ClearUnspawnedDebris(player.User, ToolUsedToFellTree as ToolItem);
+                            }
+                            if (!clearedDebrisBeforeSpawn)
+                            {
+                                GameActionAccumulator.Obj.AddGameActions(new CreateTreeDebris()
+                                {
+                                    Count = 1,
+                                    ActionLocation = abovepos,
+                                    Citizen = player.User
+                                }, player?.User);
+
+                                World.SetBlock(this.Species.DebrisType, abovepos);
+                                player.SpawnBlockEffect(abovepos, this.Species.DebrisType, BlockEffect.Place);
+                                RoomData.QueueRoomTest(abovepos);
+                            }
+                            if (Interlocked.Increment(ref this.treeDebrisSpawned) >= MaxTreeDebris) return;
+                        }
+                    }
+                }
+        }
+
+        private bool ClearUnspawnedDebris(User user, ToolItem tool)
+        {
+            Log.WriteLine(Localizer.Do($"Clear unspawned debris"));
+            MultiblockActionContext multiblockContext = new MultiblockActionContext()
+            {
+                Player                = user.Player,
+                ActionDescription     = tool?.DescribeBlockAction,
+                ExperienceSkill       = tool?.ExperienceSkill,
+                ExperiencePerAction   = tool?.ExperienceRate.GetCurrentValue(user) ?? 0,
+                CaloriesPerAction     = tool?.NeededCalories(user.Player) ?? 0,
+                ToolUsed              = tool,
+                RepairableItem        = tool,
+            };
+            using (var pack = new GameActionPack()) //Create game action pack, compose and try to perform
+            {
+                //Add debris items to inventory
+                foreach (var x in this.Species.DebrisResources)
+                    pack.AddToInventory(user.Inventory, Item.Get(x.Key), x.Value.RandInt, user);
+
+                if (tool != null)
+                {
+                    //Set description and reduce XP multiplier for cleaning debris
+                    multiblockContext.ActionDescription = GameActionDescription.DoStr("clean up tree debris", "cleaning up tree debris");
+                    multiblockContext.ExperiencePerAction *= 0.1f;
+                    pack.UseTool(multiblockContext);
+                }
+                bool success = !pack.TryPerform(user).Failed;   //Return true on success and false on failure
+                Log.WriteLine(Localizer.Do($"Success:{success}"));
+                return success;
             }
         }
     }
