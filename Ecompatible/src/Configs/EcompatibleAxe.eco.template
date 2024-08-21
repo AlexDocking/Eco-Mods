@@ -1,0 +1,21 @@
+{
+    //Trees get processed when they fall, or after a timer in case they don't fall.
+    //Debris gets cleared right before it would spawn.
+    //All actions go through the law system and use calories and tool durability.
+
+    //How much of the tree should be automatically sliced up.
+    //Range:0-1. Default:0
+    "FractionOfTreeToAutoSlice": 0,
+
+    //How much damage should be dealt to the stump.
+    //Range: 0+. Default:0
+    "DamageToStumpWhenFelled": 0,
+
+    //What is the maximum number of debris to spawn per tree.
+    //Range: 0+. Default:20
+    "MaxTreeDebrisToSpawn": 20,
+
+    //What is the chance for each debris to get automatically cleared.
+    //Range: 0-1. Default:0
+    "ChanceToClearDebrisOnSpawn": 0
+}

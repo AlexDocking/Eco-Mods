@@ -8,7 +8,7 @@ using Eco.Shared.Utils;
 
 namespace Ecompatible
 {
-    public partial class EcompatibleShovelPlugin : Singleton<EcompatibleShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
+    public sealed class EcompatibleShovelPlugin : Singleton<EcompatibleShovelPlugin>, IConfigurablePlugin, IModKitPlugin, IModInit
     {
         public EcompatibleShovelConfig Config => Obj.GetEditObject() as EcompatibleShovelConfig;
         public IPluginConfig PluginConfig => this.config;

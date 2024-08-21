@@ -9,6 +9,7 @@ Modders should look first at "MODDING GUIDE.md" then "Tools/README - MODDERS.md"
 ## Standalone Features
 
 - This mod provides a server config (EcompatibleShovel.eco) where you can set how many blocks each of the shovels should dig, so you can configure your own "Big Shovel" functionality. Other mods are free to apply modifiers on top of this.
+- This mod also provides a server config (EcompatibleAxe.eco) where you can configure how trees get processed (auto sliced up, clear debris etc). Again, other mods are free to apply modifiers on these values too.
 - The tooltips for shovels will tell you the limit for how many blocks you can dig with that shovel. If you're carrying a block the number will be specific for that type of block. Other mods may change the dig limit based on the player, shovel, block type, so the tooltip is there to display that in a table.
 - Server Owners should look at "Tools/README - SERVER OWNERS.md" for help with the config.
 

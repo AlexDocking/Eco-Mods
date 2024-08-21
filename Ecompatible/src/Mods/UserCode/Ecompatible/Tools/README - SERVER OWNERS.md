@@ -1,7 +1,13 @@
 ﻿# Ecompatible (For Server Owners)
 
-## Ecompatible (Big) Shovel Config
+## Ecompatible Shovel Config
 
-You can configure this mod to act the same as the "Big Shovel" mod. The default values for how much each shovel type can pick up, as well as whether they should be affected by the server's stack size multiplier, can be set in the server config "EcompatibleShovel". Other mods can then make their changes based on those values.
+You can configure this mod to act the same as the "Big Shovel" mod by changing the values in the server config "EcompatibleShovel.eco".
 
-If you are running your server on Windows then you can access this configuration file through the server GUI window that appears when you launch the server, otherwise copy the contents of "Configs/EcompatibleShovel.eco.template" to a new file "Configs/EcompatibleShovel.eco" and change the values in there.
+## Ecompatible Axe Config
+
+You can configure this mod to act similar to the "Easy Logging" and other logging mods. The config file is "EcompatibleAxe.eco".
+
+## How to set them
+
+If you are running your server on Windows then you can access these configuration files through the server GUI window that appears when you launch the server, otherwise copy the contents of "Configs/EcompatibleShovel.eco.template" to a new file "Configs/EcompatibleShovel.eco" and change the values in there. Same goes for the axe config.

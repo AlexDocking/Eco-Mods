@@ -27,9 +27,9 @@
     }
     public partial class AxeResolvers
     {
-        public IPriorityValueResolver<float, ITreeFelledContext> FractionOfTreeToAutoSlice { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>((float.MinValue, new BaseLevelModifier<ITreeFelledContext>(0)));
-        public IPriorityValueResolver<float, ITreeFelledContext> DamageToStumpWhenFelled { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>((float.MinValue, new BaseLevelModifier<ITreeFelledContext>(0)));
-        public IPriorityValueResolver<float, ITreeFelledContext> MaxTreeDebrisToSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>((float.MinValue, new BaseLevelModifier<ITreeFelledContext>(20)));
-        public IPriorityValueResolver<float, ITreeFelledContext> ChanceToClearDebrisOnSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>((float.MinValue, new BaseLevelModifier<ITreeFelledContext>(0)));
+        public IPriorityValueResolver<float, ITreeFelledContext> FractionOfTreeToAutoSlice { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>();
+        public IPriorityValueResolver<float, ITreeFelledContext> DamageToStumpWhenFelled { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>();
+        public IPriorityValueResolver<float, ITreeFelledContext> MaxTreeDebrisToSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>();
+        public IPriorityValueResolver<float, ITreeFelledContext> ChanceToClearDebrisOnSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float, ITreeFelledContext>();
     }
 }
