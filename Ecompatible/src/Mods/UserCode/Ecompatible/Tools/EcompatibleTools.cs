@@ -27,7 +27,7 @@
     }
     public partial class AxeResolvers
     {
-        public IPriorityValueResolver<float> FractionOfTreeToSliceWhenFelled { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(0)));
+        public IPriorityValueResolver<float> FractionOfTreeToAutoSlice { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(0)));
         public IPriorityValueResolver<float> DamageToStumpWhenFelled { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(0)));
         public IPriorityValueResolver<float> MaxTreeDebrisToSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(20)));
         public IPriorityValueResolver<float> ChanceToClearDebrisOnSpawn { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new BaseLevelModifier(0)));

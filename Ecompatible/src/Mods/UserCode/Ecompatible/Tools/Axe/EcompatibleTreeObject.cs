@@ -5,7 +5,6 @@ namespace Eco.Mods.Organisms
 {
 
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using Eco.Core.Utils;
@@ -42,7 +41,6 @@ namespace Eco.Mods.Organisms
     using Eco.Mods.TechTree;
     using static Eco.Gameplay.Civics.IfThenBlock;
     using Eco.Gameplay.DynamicValues;
-
     public partial class TreeEntity
     {
         /// <summary>Max number of tree debris spawn from the tree.</summary>
@@ -50,6 +48,13 @@ namespace Eco.Mods.Organisms
         private float ChanceToClearDebrisOnSpawn { get; set; }
         public float StumpHealth => this.stumpHealth;
         private Item ToolUsedToFellTree { get; set; }
+        
+        [Interaction(InteractionTrigger.InteractKey, requiredEnvVars: new[] { "canPickup", "id" }, animationDriven: true)]                        //A definition for when we can actually pickup
+        public void PickUp(Player player, InteractionTriggerInfo trigger, InteractionTarget target) 
+        { 
+            if (target.TryGetParameter("id", out var id)) 
+                this.EcompatiblePickupLog(player, (Guid) id, target.HitPos); 
+        }
         void EcompatiblePickupLog(Player player, Guid logID, Vector3 pickupPosition)
         {
             lock (this.sync)
@@ -112,6 +117,14 @@ namespace Eco.Mods.Organisms
             }
         }
 
+        /// <summary>
+        /// Process the tree if it hasn't been done yet
+        /// </summary>
+        private void ForceProcessing()
+        {
+            DoAutomaticProcessing(UserManager.FindUserByID(this.ChopperUserID), ToolUsedToFellTree);
+        }
+
         private GameActionPack EcompatibleTryDamageTrunk(GameActionPack pack, INetObject damager, float amount, Item tool)
         {
             var user = (damager as Player)?.User;
@@ -134,7 +147,7 @@ namespace Eco.Mods.Organisms
                     this.FellTree(damager);
                     this.ChopperUserID = damager is Player player ? player.User.Id : -1;
                     EcoSim.PlantSim.KillPlant(this, DeathType.Logging, true);
-                    EcompatibleOnFellTree(damager, tool, user);
+                    CallbackSchedulerPlugin.QueueCallback(ForceProcessing, 8000);
                 }
 
                 this.MarkDirty();
@@ -142,61 +155,46 @@ namespace Eco.Mods.Organisms
             return pack;
         }
 
+        private bool processed = false;
+        private object processingLock = new object();
         /// <summary>
         /// Slice up tree and damage stump according to resolver values
         /// </summary>
-        /// <param name="damager"></param>
-        /// <param name="tool"></param>
         /// <param name="user"></param>
-        private void EcompatibleOnFellTree(INetObject damager, Item tool, User user)
+        /// <param name="tool"></param>
+        /// 
+        private void DoAutomaticProcessing(User user, Item tool)
         {
-            IContext context = Context.CreateContext(
-                (ContextProperties.User, user),
-                (ContextProperties.Tree, this),
-                (ContextProperties.ToolUsed, tool as ToolItem)
-                );
-            float fractionOfTreeToSlice = ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled.Resolve(0, context);
-
-            AutoSliceTrunk(damager as Player, tool, fractionOfTreeToSlice);
-
-            float amountToDamageStump = ValueResolvers.Tools.Axe.DamageToStumpWhenFelled.Resolve(0, context);
-            EcompatibleTryDamageStumpInternal(amountToDamageStump, true, user?.Player, checkDestroyed: false);
-
-            MaxTreeDebris = ValueResolvers.Tools.Axe.MaxTreeDebrisToSpawn.ResolveInt(MaxTreeDebris, context);
-            ChanceToClearDebrisOnSpawn = ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn.Resolve(0, context);
-
-        }
-
-        private void EcompatibleTryDamageStumpInternal(float amount, bool giveResource, Player player, bool checkDestroyed = true)
-        {
-            this.stumpHealth = Mathf.Max(0, this.stumpHealth - amount);
-
-            if (this.stumpHealth <= 0)
+            if (processed) return;
+            lock (processingLock)
             {
-                if (World.GetBlock(this.Position.XYZi()).GetType() == this.Species.BlockType) World.DeleteBlock(this.Position.XYZi());
-                this.stumpHealth = 0;
-                //give tree resources
-                if (player != null && giveResource)
+                if (processed) return;
+                IContext context = Context.CreateContext(
+                    (ContextProperties.User, user),
+                    (ContextProperties.Tree, this),
+                    (ContextProperties.ToolUsed, tool as ToolItem)
+                    );
+                float fractionOfTreeToSlice = ValueResolvers.Tools.Axe.FractionOfTreeToAutoSlice.Resolve(0, context);
+
+                AutoSliceTrunk(user.Player, tool, fractionOfTreeToSlice);
+
+                MaxTreeDebris = ValueResolvers.Tools.Axe.MaxTreeDebrisToSpawn.ResolveInt(MaxTreeDebris, context);
+                ChanceToClearDebrisOnSpawn = ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn.Resolve(0, context);
+                
+                float amountToDamageStump = ValueResolvers.Tools.Axe.DamageToStumpWhenFelled.Resolve(0, context);
+
+                //The trunk doesn't have a valid position when it is created, and clearing the stump tries to destroy the tree if there are no pieces with valid y positions
+                Vector3 startPosition = default;
+                if (this.trunkPieces.TryGetSingle(out var piece) && !piece.IsValid)
                 {
-                    var changes = InventoryChangeSet.New(player.User.Inventory, player.User);
-                    var trunkResources = this.Species.TrunkResources;
-                    if (trunkResources != null) trunkResources.ForEach(x => changes.AddItemsNonUnique(x.Key, x.Value.RandInt));
-                    else DebugUtils.Fail("Trunk resources missing for: " + this.Species.Name);
-                    changes.TryApply();
+                     startPosition = piece.Position;
                 }
-                this.RPC("DestroyStump");
+                TryDamageStump(new GameActionPack(), user?.Player, amountToDamageStump, tool).TryPerform(user);
+                if (piece != null) piece.Position = startPosition;
 
-                // Let another plant grow here
-                EcoSim.PlantSim.UpRootPlant(this);
+                processed = true;
             }
-
-            this.MarkDirty();
-            // destroy the tree if it has fallen, all the trunk pieces are collected, and the stump is removed
-            if (checkDestroyed && this.Fallen && this.stumpHealth <= 0 && this.trunkPieces.All(piece => piece.IsCollectedOrNotValid))
-                this.Destroy();
         }
-
-        
         /// <summary>
         /// Slice off small pieces of the trunk until the piece remaining is smaller than the fraction allowed
         /// </summary>
@@ -209,42 +207,21 @@ namespace Eco.Mods.Organisms
 
             int pieceNum = 0;
             
-            float PieceSize(TrunkPiece piece)
+            ThreadSafeList<TrunkPiece> pieces = this.trunkPieces;
+            
+            float fractionOfTreeSliced = 0;
+            while (pieceNum < pieces.Count && fractionOfTreeSliced < fractionOfTreeToSlice)
             {
-                return piece.SliceEnd - piece.SliceStart;
-            }
-            TrunkPiece GetLargestPiece()
-            {
-                var largestPiece = this.trunkPieces[0];
-                for (int i = 0; i < this.trunkPieces.Count; i++)
-                {
-                    if (PieceSize(trunkPieces[i]) > PieceSize(largestPiece))
-                    {
-                        largestPiece = this.trunkPieces[i];
-                    }
-                }
-                return largestPiece;
-            }
-            var pieceToSlice = GetLargestPiece();
-            while (pieceNum < this.trunkPieces.Count && PieceSize(pieceToSlice) > (1 - fractionOfTreeToSlice))
-            {
-                pieceNum++;
-
+                var pieceToSlice = pieces[pieceNum];
                 var slicePoint = pieceToSlice.SliceStart + 0.001f; //Slice a tiny amount. This is smaller than the actual slice will be to ensure it cannot be cut further.
-
-                //If there are still branches, damage them instead
-                for (var branchID = 0; branchID < this.branches.Length; branchID++)
+                
+                using (var pack = new GameActionPack())
                 {
-                    var branch = this.branches[branchID];
-                    if (branch != null && branch.Health > 0)
-                    {
-                        branch.Health = 0;
-                        this.RPC("DestroyBranch", branchID);
-                        this.MarkDirty();
-                    }
+                    if (tool is ToolItem toolItem) pack.UseTool(toolItem.CreateMultiblockContext(player, false, pieceToSlice.Position.XYZi()));
+                    if (!this.TrySliceTrunk(pack, damager, float.MaxValue, slicePoint, tool).TryPerform(player?.User)) return;
                 }
-                this.TrySliceTrunkInternal(slicePoint, damager);
-                pieceToSlice = GetLargestPiece();
+                fractionOfTreeSliced = pieceToSlice.SliceEnd;
+                pieceNum++;
             }
         }
 
@@ -253,6 +230,8 @@ namespace Eco.Mods.Organisms
         {
             if (player != this.Controller)
                 return;
+
+            DoAutomaticProcessing(player.User, ToolUsedToFellTree);
 
             lock (this.sync)
             {
@@ -302,10 +281,10 @@ namespace Eco.Mods.Organisms
                         if (hitblock.Is<Solid>() && World.GetBlock(abovepos).Is<Empty>() && RandomUtil.Value < this.Species.ChanceToSpawnDebris)
                         {
                             //Attempt to chop the debris before it spawns to account for tool usage, calories and experience. If that fails, then it can spawn as normal
-                            bool clearedDebrisBeforeSpawn = true;
+                            bool clearedDebrisBeforeSpawn = false;
                             if (RandomUtil.Value < this.ChanceToClearDebrisOnSpawn)
                             {
-                                clearedDebrisBeforeSpawn = ClearUnspawnedDebris(player.User, ToolUsedToFellTree as ToolItem);
+                                clearedDebrisBeforeSpawn = ClearUnspawnedDebris(player.User, ToolUsedToFellTree as ToolItem, abovepos);
                             }
                             if (!clearedDebrisBeforeSpawn)
                             {
@@ -326,19 +305,9 @@ namespace Eco.Mods.Organisms
                 }
         }
 
-        private bool ClearUnspawnedDebris(User user, ToolItem tool)
+        private bool ClearUnspawnedDebris(User user, ToolItem tool, Vector3i position)
         {
-            Log.WriteLine(Localizer.Do($"Clear unspawned debris"));
-            MultiblockActionContext multiblockContext = new MultiblockActionContext()
-            {
-                Player                = user.Player,
-                ActionDescription     = tool?.DescribeBlockAction,
-                ExperienceSkill       = tool?.ExperienceSkill,
-                ExperiencePerAction   = tool?.ExperienceRate.GetCurrentValue(user) ?? 0,
-                CaloriesPerAction     = tool?.NeededCalories(user.Player) ?? 0,
-                ToolUsed              = tool,
-                RepairableItem        = tool,
-            };
+            MultiblockActionContext multiblockContext = tool?.CreateMultiblockContext(user.Player, false, position) ?? default;
             using (var pack = new GameActionPack()) //Create game action pack, compose and try to perform
             {
                 //Add debris items to inventory
@@ -353,7 +322,6 @@ namespace Eco.Mods.Organisms
                     pack.UseTool(multiblockContext);
                 }
                 bool success = !pack.TryPerform(user).Failed;   //Return true on success and false on failure
-                Log.WriteLine(Localizer.Do($"Success:{success}"));
                 return success;
             }
         }

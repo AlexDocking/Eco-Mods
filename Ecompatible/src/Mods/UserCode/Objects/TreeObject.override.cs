@@ -86,7 +86,7 @@ namespace Eco.Mods.Organisms
         /// <summary>This needs to be 5, because 5 is the max yield bonus, and 5+5=10 is the max log stack size.</summary>
         private const int MaxTrunkPickupSize = 5;
         
-
+        
         // the list of all the slices done to this trunk
         [Serialized] readonly ThreadSafeList<TrunkPiece> trunkPieces = new ThreadSafeList<TrunkPiece>();
 
@@ -175,12 +175,7 @@ namespace Eco.Mods.Organisms
         float ResourceMultiplier => (this.Species.ResourceRange.Diff * this.GrowthPercent) + this.Species.ResourceRange.Min;
         int GetBasePickupSize(TrunkPiece trunk) => Math.Max(Mathf.RoundUpToInt((trunk.SliceEnd - trunk.SliceStart) * this.ResourceMultiplier), 1);
 
-        [Interaction(InteractionTrigger.InteractKey, requiredEnvVars: new[] { "canPickup", "id" }, animationDriven: true)]                        //A definition for when we can actually pickup
-        public void PickUp(Player player, InteractionTriggerInfo trigger, InteractionTarget target) 
-        { 
-            if (target.TryGetParameter("id", out var id)) 
-                this.PickupLog(player, (Guid) id, target.HitPos); 
-        }
+        
 
         #region IController
         int controllerID;
@@ -230,55 +225,6 @@ namespace Eco.Mods.Organisms
                 this.Destroy();
         }
 
-        void PickupLog(Player player, Guid logID, Vector3 pickupPosition)
-        {
-            lock (this.sync)
-            {
-                if (!this.CanHarvest)
-                    player.ErrorLocStr("Log is not ready for harvest.  Remove all branches first.");
-
-                var trunk = this.trunkPieces.FirstOrDefault(p => p.ID == logID);
-                if (trunk?.IsCollectedOrNotValid == false)
-                {
-                    //Check log size, if its too big, it can't be picked up
-                    var canPickup = this.GetBasePickupSize(trunk) <= MaxTrunkPickupSize;
-                    if (!canPickup)
-                    {
-                        player.ErrorLocStr("Log is too large to pick up, slice into smaller pieces first.");
-                        return;
-                    }
-
-                    var resourceType = this.Species.ResourceItemType;
-                    var resource     = Item.Get(resourceType);
-                    var baseCount    = this.GetBasePickupSize(trunk);
-                    var yield        = resource.Yield;
-                    var bonusItems   = yield?.GetCurrentValueInt(player.User.DynamicValueContext, null) ?? 0;
-                    var numItems     = baseCount + bonusItems;
-                    var carried      = player.User.Inventory.Carried;
-
-                    if (numItems > 0)
-                    {
-                        if (!carried.IsEmpty) // Early tests: neeed to check type mismatch and max quantity.
-                        { 
-                            if      (carried.Stacks.First().Item.Type != resourceType)                    { player.Error(Localizer.Format("You are already carrying {0:items} and cannot pick up {1:items}.", carried.Stacks.First().Item.UILink(LinkConfig.ShowPlural), resource.UILink(LinkConfig.ShowPlural)));  return; }                        
-                            else if (carried.Stacks.First().Quantity + numItems > resource.MaxStackSize)  { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), resource.MaxStackSize));                        return; } 
-                        }
-
-                        // Prepare a game action pack.
-                        var pack = new GameActionPack();
-                            pack.AddPostEffect          (() => { trunk.Collected = true; this.RPC("DestroyLog", logID); this.MarkDirty(); this.CheckDestroy(); }); // Delete the log if succseeded.
-                            pack.GetOrCreateInventoryChangeSet   (carried, player.User).AddItemsNonUnique(this.Species.ResourceItemType, numItems);                         // Add items to the changeset.
-                            pack.AddGameAction          (new HarvestOrHunt() {   Species         = this.Species.GetType(),
-                                                                                 HarvestedStacks = new ItemStack(Item.Get(this.Species.ResourceItemType), numItems).SingleItemAsEnumerable(),
-                                                                                 ActionLocation  = pickupPosition.XYZi(),
-                                                                                 Citizen         = player.User,
-                                                                                 ChopperUserID   = this.ChopperUserID});                  
-                            pack.TryPerform(player.User); // Try to perform the action and apply changes & effects.
-                    }
-                }
-            }
-        }
-
         #region RPCs
         [RPC]
         public void DestroyLeaf(int leafID)
@@ -312,6 +258,7 @@ namespace Eco.Mods.Organisms
 
         TrunkPiece GetTrunkPiece(float slicePoint) => this.trunkPieces.FirstOrDefault(p => p.SliceStart < slicePoint && p.SliceEnd > slicePoint);
 
+        
         private Result TrySliceTrunkInternal(float slicePoint, INetObject player)
         {
             lock (this.sync) // prevent threading issues due to multiple choppers
@@ -359,7 +306,6 @@ namespace Eco.Mods.Organisms
                 return Result.Succeeded;
             }
         }
-
         
         #endregion
 
@@ -516,7 +462,28 @@ namespace Eco.Mods.Organisms
 
                 pack.AddPostEffect(() =>
                 {
-                    EcompatibleTryDamageStumpInternal(amount, giveResource, player, checkDestroyed: true);
+                    this.stumpHealth = Mathf.Max(0, this.stumpHealth - amount);
+                    if (this.stumpHealth <= 0)
+                    {
+                        if (World.GetBlock(this.Position.XYZi()).GetType() == this.Species.BlockType) World.DeleteBlock(this.Position.XYZi());
+                        this.stumpHealth = 0;
+                        //give tree resources
+                        if (player != null && giveResource)
+                        {
+                            var changes = InventoryChangeSet.New(player.User.Inventory, player.User);
+                            var trunkResources = this.Species.TrunkResources;
+                            if (trunkResources != null) trunkResources.ForEach(x => changes.AddItemsNonUnique(x.Key, x.Value.RandInt));
+                            else DebugUtils.Fail("Trunk resources missing for: " + this.Species.Name);
+                            changes.TryApply();
+                        }
+                        this.RPC("DestroyStump");
+
+                        // Let another plant grow here
+                        EcoSim.PlantSim.UpRootPlant(this);
+                    }
+
+                    this.MarkDirty();
+                    this.CheckDestroy();
                 });
             }
             else this.EcompatibleTryDamageTrunk(pack, damager, amount, tool);

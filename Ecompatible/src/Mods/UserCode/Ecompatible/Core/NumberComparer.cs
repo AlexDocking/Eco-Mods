@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ecompatible
 {
-    public class NumberComparer<T> : IComparer<T>
+    internal class NumberComparer<T> : IComparer<T>
     {
         private Func<T, float> KeyGenerator { get; }
         public NumberComparer(Func<T, float> keyGenerator)
