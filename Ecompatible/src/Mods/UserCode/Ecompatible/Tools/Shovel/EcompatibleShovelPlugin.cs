@@ -34,12 +34,12 @@ namespace Ecompatible
             ValueResolvers.Tools.Shovel.MaxTakeResolver.Add(-100, new ShovelStackSizeModifierSettingModifier());
         }
     }
-    public class InitialShovelSizeModifier : IValueModifier<float>
+    internal class InitialShovelSizeModifier : IValueModifier<float, IShovelPickUpContext>
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, IShovelPickUpContext> functionInput)
         {
             var context = functionInput.Context;
-            if (!context.TryGetNonNull(ContextProperties.Shovel, out ShovelItem shovel)) return null;
+            if (context.Shovel is not ShovelItem shovel) return null;
             int output;
             switch (shovel)
             {
@@ -58,17 +58,17 @@ namespace Ecompatible
                 default:
                     return null;
             }
-            return Output.BaseLevel(output);
+            return OutputFactory.BaseLevel(output);
         }
     }
-    public class ShovelStackSizeModifierSettingModifier : IValueModifier<float>
+    internal class ShovelStackSizeModifierSettingModifier : IValueModifier<float, IShovelPickUpContext>
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, IShovelPickUpContext> functionInput)
         {
             if (EcompatibleShovelPlugin.Obj.Config.ApplyStackSizeModifier)
             {
                 float output = functionInput.Input * DifficultySettingsConfig.Advanced.StackSizeMultiplier;
-                return Output.Multiplier(output, Localizer.DoStr("Server Stack Size"), DifficultySettingsConfig.Advanced.StackSizeMultiplier);
+                return OutputFactory.Multiplier(output, Localizer.DoStr("Server Stack Size"), DifficultySettingsConfig.Advanced.StackSizeMultiplier);
             }
             return null;
         }

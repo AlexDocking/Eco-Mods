@@ -10,7 +10,8 @@
     }
     public partial class UserInventoryResolvers
     {
-        public IPriorityValueResolver<float> Carried { get; } = ValueResolverFactory.CreatePriorityResolver<float>((float.MinValue, new MaxStackSizePickupLimit()),
-            (float.MaxValue, new UniqueItemStackSizeModifier()));
+        public IPriorityValueResolver<float, IUserPutItemInInventoryContext> Carried { get; } = ValueResolverFactory.CreatePriorityResolver<float, IUserPutItemInInventoryContext>(
+            (float.MinValue, new MaxStackSizePickupLimit<IUserPutItemInInventoryContext>()),
+            (float.MaxValue, new UniqueItemStackSizeModifier<IUserPutItemInInventoryContext>()));
     }
 }

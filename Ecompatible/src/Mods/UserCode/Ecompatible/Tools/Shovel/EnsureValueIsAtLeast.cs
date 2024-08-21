@@ -3,7 +3,7 @@ using Eco.Shared.Utils;
 
 namespace Ecompatible
 {
-    public class EnsureValueIsAtLeast : IValueModifier<float>
+    internal class EnsureValueIsAtLeast<TContext> : IValueModifier<float, TContext> where TContext : IContext
     {
         public EnsureValueIsAtLeast(float minimum)
         {
@@ -12,11 +12,11 @@ namespace Ecompatible
 
         public float Minimum { get; }
 
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             if (functionInput.Input < Minimum)
             {
-                return Output.Overwrite(Minimum, Localizer.DoStr($"Must be at least {Text.Num(Minimum)} (got {Text.Num(functionInput.Input)})"));
+                return OutputFactory.Overwrite(Minimum, Localizer.DoStr($"Must be at least {Text.Num(Minimum)} (got {Text.Num(functionInput.Input)})"));
             }
             return null;
         }

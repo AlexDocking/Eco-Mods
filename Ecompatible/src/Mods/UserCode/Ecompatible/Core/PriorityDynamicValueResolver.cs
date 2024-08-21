@@ -5,32 +5,32 @@ using System.Linq;
 
 namespace Ecompatible
 {
-    public interface IValueResolver<T>
+    public interface IValueResolver<T, TContext> where TContext : IContext
     {
-        T Resolve(T startingValue, IContext context);
+        T Resolve(T startingValue, TContext context);
     }
     public enum Rounding
     {
         RoundDown,
         RoundUp
     }
-    public interface ISequentialValueResolver<T> : IValueResolver<T>
+    public interface ISequentialValueResolver<T, TContext> : IValueResolver<T, TContext> where TContext : IContext
     {
-        T Resolve(T startingValue, IContext context, out IResolvedSequence<T> resolvedSequence);
-        IResolvedSequence<T> ResolveSequence(T startingValue, IContext context);
+        T Resolve(T startingValue, TContext context, out IResolvedSequence<T, TContext> resolvedSequence);
+        IResolvedSequence<T, TContext> ResolveSequence(T startingValue, TContext context);
     }
-    public interface IPriorityValueResolver<T> : ISequentialValueResolver<T>
+    public interface IPriorityValueResolver<T, TContext> : ISequentialValueResolver<T, TContext> where TContext : IContext
     {
-        IEnumerable<IValueModifier<T>> Modifiers { get; }
-        void Add(float priority, IValueModifier<T> modifier);
+        IEnumerable<IValueModifier<T, TContext>> Modifiers { get; }
+        void Add(float priority, IValueModifier<T, TContext> modifier);
     }
     public static class ResolverExtensions
     {
-        public static int ResolveInt(this IValueResolver<float> resolver, float startingValue, IContext context, Rounding rounding = Rounding.RoundDown)
+        public static int ResolveInt<TContext>(this IValueResolver<float, TContext> resolver, float startingValue, TContext context, Rounding rounding = Rounding.RoundDown) where TContext : IContext
         {
             return Round(resolver.Resolve(startingValue, context), rounding);
         }
-        public static int ResolveInt(this ISequentialValueResolver<float> resolver, float startingValue, IContext context, out IResolvedSequence<float> resolvedSequence, Rounding rounding = Rounding.RoundDown)
+        public static int ResolveInt<TContext>(this ISequentialValueResolver<float, TContext> resolver, float startingValue, TContext context, out IResolvedSequence<float, TContext> resolvedSequence, Rounding rounding = Rounding.RoundDown) where TContext : IContext
         {
             return Round(resolver.Resolve(startingValue, context, out resolvedSequence), rounding);
         }
@@ -40,94 +40,94 @@ namespace Ecompatible
             return rounding == Rounding.RoundDown ? (int)value : (int)Math.Ceiling(value);
         }
     }
-    internal sealed class SequentialValueResolver<T> : ISequentialValueResolver<T>
+    internal sealed class SequentialValueResolver<T, TContext> : ISequentialValueResolver<T, TContext> where TContext : IContext
     {
-        public SequentialValueResolver(IEnumerable<IValueModifier<T>> modifiers)
+        public SequentialValueResolver(IEnumerable<IValueModifier<T, TContext>> modifiers)
         {
             Modifiers = modifiers;
         }
 
-        private IEnumerable<IValueModifier<T>> Modifiers { get; }
+        private IEnumerable<IValueModifier<T, TContext>> Modifiers { get; }
 
-        public T Resolve(T startingValue, IContext context) => Resolve(startingValue, context, out _);
-        public T Resolve(T startingValue, IContext context, out IResolvedSequence<T> resolvedSequence)
+        public T Resolve(T startingValue, TContext context) => Resolve(startingValue, context, out _);
+        public T Resolve(T startingValue, TContext context, out IResolvedSequence<T, TContext> resolvedSequence)
         {
             PassThroughModifiers(startingValue, context, out resolvedSequence);
             return resolvedSequence.Output;
         }
 
-        public IResolvedSequence<T> ResolveSequence(T startingValue, IContext context)
+        public IResolvedSequence<T, TContext> ResolveSequence(T startingValue, TContext context)
         {
-            Resolve(startingValue, context, out IResolvedSequence<T> sequentiallyResolvedOutput);
+            Resolve(startingValue, context, out IResolvedSequence<T, TContext> sequentiallyResolvedOutput);
             return sequentiallyResolvedOutput;
         }
 
-        private void PassThroughModifiers(T startingValue, IContext context, out IResolvedSequence<T> resolvedSequence)
+        private void PassThroughModifiers(T startingValue, TContext context, out IResolvedSequence<T, TContext> resolvedSequence)
         {
             List<IModificationOutput<T>> outputs = new List<IModificationOutput<T>>();
-            List<IModificationInput<T>> inputs = new List<IModificationInput<T>>();
+            List<IModificationInput<T, TContext>> inputs = new List<IModificationInput<T, TContext>>();
             T previousOutput = startingValue;
-            foreach (IValueModifier<T> modifier in Modifiers)
+            foreach (IValueModifier<T, TContext> modifier in Modifiers)
             {
-                IModificationInput<T> functionInput = new ModificationInput<T>(this, context, previousOutput);
+                IModificationInput<T, TContext> functionInput = new ModificationInput<T, TContext>(this, context, previousOutput);
                 IModificationOutput<T> functionOutput = modifier.ModifyValue(functionInput);
                 if (functionOutput != null) previousOutput = functionOutput.Output;
                 inputs.Add(functionInput);
                 outputs.Add(functionOutput);
             }
-            resolvedSequence = new ResolvedSequence<T>(this, Modifiers.ToImmutableList(), startingValue, context, inputs.ToImmutableList(), previousOutput, outputs.ToImmutableList());
+            resolvedSequence = new ResolvedSequence<T, TContext>(this, Modifiers.ToImmutableList(), startingValue, context, inputs.ToImmutableList(), previousOutput, outputs.ToImmutableList());
         }
     }
-    internal class PriorityValueResolver<T> : IPriorityValueResolver<T>
+    internal class PriorityValueResolver<T, TContext> : IPriorityValueResolver<T, TContext> where TContext : IContext
     {
-        private ImmutableList<(float, IValueModifier<T>)> requestHandlers = ImmutableList<(float, IValueModifier<T>)>.Empty;
+        private ImmutableList<(float, IValueModifier<T, TContext>)> requestHandlers = ImmutableList<(float, IValueModifier<T, TContext>)>.Empty;
 
-        private IComparer<(float, IValueModifier<T>)> Comparer { get; } = new NumberComparer<(float, IValueModifier<T>)>(x => x.Item1);
-        private ImmutableList<(float, IValueModifier<T>)> RequestHandlers
+        private IComparer<(float, IValueModifier<T, TContext>)> Comparer { get; } = new NumberComparer<(float, IValueModifier<T, TContext>)>(x => x.Item1);
+        private ImmutableList<(float, IValueModifier<T, TContext>)> RequestHandlers
         {
             get => requestHandlers; set
             {
                 requestHandlers = value;
-                SequentialValueResolver = new SequentialValueResolver<T>(value.Select(pair => pair.Item2));
+                SequentialValueResolver = new SequentialValueResolver<T, TContext>(value.Select(pair => pair.Item2));
             }
         }
-        public IEnumerable<IValueModifier<T>> Modifiers => RequestHandlers.Select(pair => pair.Item2);
-        private ISequentialValueResolver<T> SequentialValueResolver { get; set; } = new SequentialValueResolver<T>(Enumerable.Empty<IValueModifier<T>>());
-        public PriorityValueResolver(params (float, IValueModifier<T>)[] requestHandlers)
+        public IEnumerable<IValueModifier<T, TContext>> Modifiers => RequestHandlers.Select(pair => pair.Item2);
+        private ISequentialValueResolver<T, TContext> SequentialValueResolver { get; set; } = new SequentialValueResolver<T, TContext>(Enumerable.Empty<IValueModifier<T, TContext>>());
+        public PriorityValueResolver(params (float, IValueModifier<T, TContext>)[] requestHandlers)
         {
             RequestHandlers = RequestHandlers.AddRange(requestHandlers);
         }
         public PriorityValueResolver() { }
 
-        public void Add(float priority, IValueModifier<T> modifier)
+        public void Add(float priority, IValueModifier<T, TContext> modifier)
         {
             RequestHandlers = RequestHandlers.Add((priority, modifier)).Sort(Comparer);
         }
-        public T Resolve(T startingValue, IContext context, out IResolvedSequence<T> resolvedSequence)
+        public T Resolve(T startingValue, TContext context, out IResolvedSequence<T, TContext> resolvedSequence)
         {
             return SequentialValueResolver.Resolve(startingValue, context, out resolvedSequence);
         }
 
-        public T Resolve(T startingValue, IContext context)
+        public T Resolve(T startingValue, TContext context)
         {
             return SequentialValueResolver.Resolve(startingValue, context);
         }
 
-        public IResolvedSequence<T> ResolveSequence(T startingValue, IContext context) => SequentialValueResolver.ResolveSequence(startingValue, context);
+        public IResolvedSequence<T, TContext> ResolveSequence(T startingValue, TContext context) => SequentialValueResolver.ResolveSequence(startingValue, context);
     }
-    public interface IResolvedSequence<T>
+    public interface IResolvedSequence<T, TContext> where TContext : IContext
     {
-        IContext Context { get; }
+        TContext Context { get; }
         T Output { get; }
-        ISequentialValueResolver<T> Resolver { get; }
+        ISequentialValueResolver<T, TContext> Resolver { get; }
         T StartingValue { get; }
-        IReadOnlyList<IModificationInput<T>> StepInputs { get; }
+        IReadOnlyList<IModificationInput<T, TContext>> StepInputs { get; }
         IReadOnlyList<IModificationOutput<T>> StepOutputs { get; }
-        IReadOnlyList<IValueModifier<T>> Modifiers { get; }
+        IReadOnlyList<IValueModifier<T, TContext>> Modifiers { get; }
     }
-    internal sealed class ResolvedSequence<T> : IResolvedSequence<T>
+    internal sealed class ResolvedSequence<T, TContext> : IResolvedSequence<T, TContext> where TContext : IContext
     {
-        public ResolvedSequence(ISequentialValueResolver<T> resolver, IReadOnlyList<IValueModifier<T>> modifiers, T startingValue, IContext context, IReadOnlyList<IModificationInput<T>> stepInputs, T output, IReadOnlyList<IModificationOutput<T>> stepOutputs)
+        public ResolvedSequence(ISequentialValueResolver<T, TContext> resolver, IReadOnlyList<IValueModifier<T, TContext>> modifiers, T startingValue, TContext context, IReadOnlyList<IModificationInput<T, TContext>> stepInputs, T output, IReadOnlyList<IModificationOutput<T>> stepOutputs)
         {
             Resolver = resolver;
             Modifiers = modifiers;
@@ -137,18 +137,18 @@ namespace Ecompatible
             StepOutputs = stepOutputs;
             Output = output;
         }
-        public IContext Context { get; }
+        public TContext Context { get; }
 
         public T Output { get; }
 
-        public ISequentialValueResolver<T> Resolver { get; }
+        public ISequentialValueResolver<T, TContext> Resolver { get; }
 
         public T StartingValue { get; }
 
-        public IReadOnlyList<IModificationInput<T>> StepInputs { get; }
+        public IReadOnlyList<IModificationInput<T, TContext>> StepInputs { get; }
 
         public IReadOnlyList<IModificationOutput<T>> StepOutputs { get; }
 
-        public IReadOnlyList<IValueModifier<T>> Modifiers { get; }
+        public IReadOnlyList<IValueModifier<T, TContext>> Modifiers { get; }
     }
 }

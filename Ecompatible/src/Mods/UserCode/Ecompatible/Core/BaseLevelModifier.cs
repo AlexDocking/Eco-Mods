@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ecompatible
+﻿namespace Ecompatible
 {
-    public class BaseLevelModifier : IValueModifier<float>
+    public sealed class BaseLevelModifier<TContext> : IValueModifier<float, TContext> where TContext : IContext
     {
         public float BaseValue { get; }
 
@@ -15,9 +9,9 @@ namespace Ecompatible
             BaseValue = baseValue;
         }
 
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
-            return Output.BaseLevel(BaseValue);
+            return OutputFactory.BaseLevel(BaseValue);
         }
     }
 }

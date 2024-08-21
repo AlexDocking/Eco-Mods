@@ -92,9 +92,9 @@ namespace Eco.Mods.Organisms
                             // Ecompatible Tools - Start
                             else
                             {
-                                var context = Context.CreateContext(
-                                    (ContextProperties.User, player.User),
-                                    (ContextProperties.ItemToPutInInventory, Item.Get(Species.ResourceItemType))
+                                var context = ContextFactory.CreateUserPutItemInInventoryContext(
+                                    user: player.User,
+                                    itemToPutInInventory: Item.Get(Species.ResourceItemType)
                                     );
                                 int maxStackSize = ValueResolvers.Inventory.User.Carried.ResolveInt(0, context);
                                 if (carried.Stacks.First().Quantity + numItems > maxStackSize) { player.Error(Localizer.Format("You can't carry {0:n0} more {1:items} ({2} max).", numItems, resource.UILink(numItems != 1 ? LinkConfig.ShowPlural : 0), maxStackSize)); return; }
@@ -169,10 +169,10 @@ namespace Eco.Mods.Organisms
             lock (processingLock)
             {
                 if (processed) return;
-                IContext context = Context.CreateContext(
-                    (ContextProperties.User, user),
-                    (ContextProperties.Tree, this),
-                    (ContextProperties.ToolUsed, tool as ToolItem)
+                ITreeFelledContext context = ContextFactory.CreateTreeFelledContext(
+                    user: user,
+                    axe: tool as AxeItem,
+                    tree: this
                     );
                 float fractionOfTreeToSlice = ValueResolvers.Tools.Axe.FractionOfTreeToAutoSlice.Resolve(0, context);
 

@@ -415,34 +415,6 @@ namespace Eco.Mods.Organisms
             return pack;
         }
 
-        private GameActionPack TryDamageTrunk(GameActionPack pack, INetObject damager, float amount, Item tool)
-        {
-            var user = (damager as Player)?.User;
-            if (this.health <= 0) return pack;
-
-            pack.AddGameAction(this.CreateChopTreeAction(damager, tool, this.health <= amount));
-
-            pack.AddPostEffect(() =>
-            { 
-                // damage trunk
-                var damageDone = InterlockedUtils.SubMinNonNegative(ref this.health, amount);
-                if (damageDone <= 0f) return;
-
-                this.RPC("UpdateHP", this.health / this.Species.TreeHealth);
-
-                if (this.health <= 0)
-                {
-                    this.health = 0;
-                    this.FellTree(damager);
-                    this.ChopperUserID = damager is Player player ? player.User.Id : -1;
-                    EcoSim.PlantSim.KillPlant(this, DeathType.Logging, true);
-                }
-
-                this.MarkDirty();
-            });
-            return pack;
-        }
-
         private GameActionPack TryDamageStump(GameActionPack pack, INetObject damager, float amount, Item tool, bool giveResource = true)
         {
             if (this.Fallen && this.stumpHealth > 0)

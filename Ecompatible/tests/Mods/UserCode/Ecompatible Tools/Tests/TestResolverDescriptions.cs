@@ -22,23 +22,23 @@ namespace Ecompatible.Tests
 
         private static void Setup()
         {
-            Context = Ecompatible.Context.CreateContext((new ContextKey(typeof(float), "ContextMultiplier"), 1.3f));
-            (float, IValueModifier<float>)[] modifiers = new (float, IValueModifier<float>)[]
+            Context = new ExampleContext(contextMultipler: 1.3f);
+            (float, IValueModifier<float, ExampleContext>)[] modifiers = new (float, IValueModifier<float, ExampleContext>)[]
             {
-                (0, new ExampleNoOpModifier()),
-                (1, new ExampleBaseModifier()),
-                (2, new ExampleMultiplierModifier(0.5f)),
-                (3, new ExampleBaseModifier()),//Overwrites all previous values, so only display from here onwards. Displays as "Base Level: 5"
-                (4, new ExampleNoOpModifier()),//No modification, so ignore
-                (5, new EnsureValueIsAtLeast(6)),//Overwrite previous value because the running total is too small, while still displaying the previous values except with lines through them
-                (6, new ExampleContextMultiplierModifier()),//Should read the multiplier value from the context. Displays as "Example Context Multiplier: +30%"
-                (7, new ExampleNoOpModifier())
+                (0, new ExampleNoOpModifier<ExampleContext>()),
+                (1, new ExampleBaseModifier<ExampleContext>()),
+                (2, new ExampleMultiplierModifier<ExampleContext>(0.5f)),
+                (3, new ExampleBaseModifier<ExampleContext>()),//Overwrites all previous values, so only display from here onwards. Displays as "Base Level: 5"
+                (4, new ExampleNoOpModifier<ExampleContext>()),//No modification, so ignore
+                (5, new EnsureValueIsAtLeast<ExampleContext>(6)),//Overwrite previous value because the running total is too small, while still displaying the previous values except with lines through them
+                (6, new ExampleContextMultiplierModifier<ExampleContext>()),//Should read the multiplier value from the context. Displays as "Example Context Multiplier: +30%"
+                (7, new ExampleNoOpModifier<ExampleContext>())
             };
-            Resolver = ValueResolverFactory.CreatePriorityResolver<float>(modifiers);
+            Resolver = ValueResolverFactory.CreatePriorityResolver<float, ExampleContext>(modifiers);
         }
 
-        private static IContext Context { get; set; }
-        private static IPriorityValueResolver<float> Resolver { get; set; }
+        private static ExampleContext Context { get; set; }
+        private static IPriorityValueResolver<float, ExampleContext> Resolver { get; set; }
         private static void ShouldResolveCorrectFloatValue()
         {
             float value = Resolver.Resolve(0, Context, out _);
@@ -56,7 +56,7 @@ namespace Ecompatible.Tests
         }
         private static void ShouldGenerateDescriptionOfEachStep()
         {
-            IResolvedSequence<float> resolvedSequence = Resolver.ResolveSequence(0, Context);
+            IResolvedSequence<float, ExampleContext> resolvedSequence = Resolver.ResolveSequence(0, Context);
             LocString description = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);
 
             string expected = "<table>\r\n<tr><th><![CDATA[Base Level:]]></th><th><![CDATA[<align=\"right\"><s>5</s></align>]]></th></tr><tr><th><![CDATA[Must be at least 6 (got 5):]]></th><th><![CDATA[<align=\"right\">6</align>]]></th></tr><tr><th><![CDATA[Example Context Multiplier:]]></th><th><![CDATA[<align=\"right\"><style=\"Positive\">+30%</style></align>]]></th></tr><tr><th><![CDATA[---------------------------]]></th><th><![CDATA[]]></th></tr><tr><th><![CDATA[Result (rounded down):]]></th><th><![CDATA[<align=\"right\">7</align>]]></th></tr></table>\r\n";
@@ -66,32 +66,38 @@ namespace Ecompatible.Tests
 
     internal class ExampleContext : IContext
     {
-    }
-    internal class ExampleBaseModifier : IValueModifier<float>
-    {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public ExampleContext(float contextMultipler)
         {
-            return Output.BaseLevel(5);
+            this.ContextMultiplier = contextMultipler;
+        }
+
+        public float ContextMultiplier { get; }
+    }
+    internal class ExampleBaseModifier<TContext> : IValueModifier<float, TContext> where TContext : IContext
+    {
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
+        {
+            return OutputFactory.BaseLevel(5);
         }
     }
-    internal class ExampleNoOpModifier : IValueModifier<float>
+    internal class ExampleNoOpModifier<TContext> : IValueModifier<float, TContext> where TContext : IContext
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             return null;
         }
     }
-    internal class ExampleContextMultiplierModifier : IValueModifier<float>
+    internal class ExampleContextMultiplierModifier<TContext> : IValueModifier<float, TContext> where TContext : ExampleContext
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             var context = functionInput.Context;
-            if (!context.TryGetNonNull(new ContextKey<float>("ContextMultiplier"), out float multiplier)) return null;
+            float multiplier = context.ContextMultiplier;
             float output = functionInput.Input * multiplier;
-            return Output.Multiplier(output, Localizer.DoStr("Example Context Multiplier"), multiplier);
+            return OutputFactory.Multiplier(output, Localizer.DoStr("Example Context Multiplier"), multiplier);
         }
     }
-    internal class ExampleMultiplierModifier : IValueModifier<float>
+    internal class ExampleMultiplierModifier<TContext> : IValueModifier<float, TContext> where TContext : IContext
     {
         public float Multiplier { get; }
 
@@ -100,12 +106,12 @@ namespace Ecompatible.Tests
             Multiplier = multiplier;
         }
 
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             var context = functionInput.Context;
             float multiplier = Multiplier;
             float output = functionInput.Input * multiplier;
-            return Output.Multiplier(output, Localizer.DoStr("Example Multiplier"), multiplier);
+            return OutputFactory.Multiplier(output, Localizer.DoStr("Example Multiplier"), multiplier);
         }
     }
 }

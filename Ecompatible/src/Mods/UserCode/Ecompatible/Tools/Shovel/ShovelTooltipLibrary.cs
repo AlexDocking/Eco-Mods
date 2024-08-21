@@ -18,23 +18,26 @@ namespace Ecompatible
         {
             Item targetItem = user.Inventory.Carried.Stacks.First().Item;
             bool targetItemCanBeDug = targetItem != null && shovel.IsDiggable(targetItem.Type);
-            IContext modification;
+            IShovelPickUpContext modification;
 
             if (targetItemCanBeDug)
             {
-                modification = Context.CreateContext(
-                    (ContextProperties.User, user),
-                    (ContextProperties.Shovel, shovel),
-                    (ContextProperties.ItemToPutInInventory, targetItem));
+                modification = ContextFactory.CreateShovelPickUpContext(
+                    user: user,
+                    shovel: shovel,
+                    itemToPutInInventory: targetItem
+                    );
             }
             else
             {
-                modification = Context.CreateContext(
-                    (ContextProperties.User, user),
-                    (ContextProperties.Shovel, shovel));
+                modification = ContextFactory.CreateShovelPickUpContext(
+                    user: user,
+                    shovel: shovel,
+                    itemToPutInInventory: targetItem
+                    );
             }
 
-            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out IResolvedSequence<float> resolvedSequence);
+            int shovelLimit = ValueResolvers.Tools.Shovel.MaxTakeResolver.ResolveInt(shovel.MaxTake, modification, out var resolvedSequence);
             if (shovelLimit <= 0) return default;
             LocString modificationDescription = DescriptionGenerator.Obj.DescribeSequenceAsTableAndRoundDown(resolvedSequence);
 
@@ -44,6 +47,5 @@ namespace Ecompatible
             }
             return new TooltipSection(Localizer.Do($"Shovel can dig {TextLoc.InfoLight(TextLoc.Foldout(Localizer.NotLocalizedStr(Text.Num(shovelLimit)), Localizer.DoStr("Shovel Dig Limit"), modificationDescription))} blocks."));
         }
-        
     }
 }

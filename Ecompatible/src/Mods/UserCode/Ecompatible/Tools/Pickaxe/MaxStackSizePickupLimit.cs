@@ -1,14 +1,12 @@
-﻿using Eco.Gameplay.Items;
-
-namespace Ecompatible
+﻿namespace Ecompatible
 {
-    public class MaxStackSizePickupLimit : IValueModifier<float>
+    internal sealed class MaxStackSizePickupLimit<TContext> : IValueModifier<float, TContext> where TContext : IPutItemInInventoryContext
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             var context = functionInput.Context;
-            if (!context.TryGetNonNull(ContextProperties.ItemToPutInInventory, out Item item)) return null;
-            return Output.BaseLevel(item.MaxStackSize);
+            if (context.ItemToPutInInventory == null) return null;
+            return OutputFactory.BaseLevel(context.ItemToPutInInventory.MaxStackSize);
         }
     }
 }

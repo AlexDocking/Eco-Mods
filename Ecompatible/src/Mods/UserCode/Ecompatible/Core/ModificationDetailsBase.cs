@@ -5,31 +5,32 @@ using System.Linq;
 
 namespace Ecompatible
 {
-    internal class ModificationInput<T> : IModificationInput<T>
+    internal class ModificationInput<T, TContext> : IModificationInput<T, TContext> where TContext : IContext
     {
-        public ModificationInput(IValueResolver<T> resolver, IContext context, T input)
+        public ModificationInput(IValueResolver<T, TContext> resolver, TContext context, T input)
         {
             Resolver = resolver;
             Input = input;
             Context = context;
         }
-        public IValueResolver<T> Resolver { get; }
-        public IContext Context { get; }
+        public IValueResolver<T, TContext> Resolver { get; }
+        public TContext Context { get; }
         public T Input { get; }
     }
-    public interface IModificationInput<T>
+    public interface IModificationInput<T, TContext> where TContext : IContext
     {
-        IValueResolver<T> Resolver { get; }
-        IContext Context { get; }
+        IValueResolver<T, TContext> Resolver { get; }
+        TContext Context { get; }
         T Input { get; }
     }
     public interface IModificationOutput<T>
     {
-        LocString ModificationName { get; }
+        LocString MarkedUpModificationName { get; }
+        string ModificationName { get; }
         T Output { get; }
     }
 
-    public static class Output
+    public static class OutputFactory
     {
         public static IModificationOutput<float> BaseLevel(float output) => new BaseLevelModificationOutput(output, Localizer.DoStr("Base Level"));
         public static IModificationOutput<float> BaseLevel(float output, LocString modificationName) => new BaseLevelModificationOutput(output, modificationName);
@@ -38,13 +39,15 @@ namespace Ecompatible
     }
     internal abstract class ModificationOutputBase : IModificationOutput<float>
     {
-        public LocString ModificationName { get; set; }
+        public LocString MarkedUpModificationName { get; set; }
         public LocString ModificationDescription { get; set; }
         public float Output { get; set; }
+        public string ModificationName => MarkedUpModificationName;
+
         public ModificationOutputBase(float output, LocString modificationName)
         {
             Output = output;
-            ModificationName = modificationName;
+            MarkedUpModificationName = modificationName;
         }
     }
 
@@ -81,14 +84,14 @@ namespace Ecompatible
             return text.Wrap("<s>", "</s>");
         }
     }
-    internal interface IResolvedOutputRowDescriber<U, V>
+    internal interface IResolvedOutputRowDescriber<T, TRow>
     {
-        V DescribeAsRow(IResolvedSequence<U> resolvedSequence, int index);
-        V DescribeAsResult(IResolvedSequence<U> resolvedSequence, int index);
+        TRow DescribeAsRow<TContext>(IResolvedSequence<T, TContext> resolvedSequence, int index) where TContext : IContext;
+        TRow DescribeAsResult<TContext>(IResolvedSequence<T, TContext> resolvedSequence, int index) where TContext : IContext;
     }
     internal interface IResolvedSequenceDescriber<T>
     {
-        public LocString DescribeSequence(IResolvedSequence<T> resolvedSequence);
+        public LocString DescribeSequence<TContext>(IResolvedSequence<T, TContext> resolvedSequence) where TContext : IContext;
     }
     internal class TableRowInformation
     {
@@ -116,7 +119,7 @@ namespace Ecompatible
                 locStringBuilder.AddRow((tableRowInformation.Name + ":", tableRowInformation.Effect.Align("right")));
             }
         }
-        public LocString DescribeSequence(IResolvedSequence<T> resolvedSequence)
+        public LocString DescribeSequence<TContext>(IResolvedSequence<T, TContext> resolvedSequence) where TContext : IContext
         {
             IReadOnlyList<IModificationOutput<T>> stepOutputs = resolvedSequence.StepOutputs;
             if (!stepOutputs.Any()) return LocString.Empty;
@@ -140,7 +143,7 @@ namespace Ecompatible
             TableRowDescriber = new ResolvedSequenceTableDescriber<float>(new TableRowInformationPopulator(rounding));
         }
 
-        public LocString DescribeSequence(IResolvedSequence<float> resolvedSequence)
+        public LocString DescribeSequence<TContext>(IResolvedSequence<float, TContext> resolvedSequence) where TContext : IContext
         {
             return TableRowDescriber.DescribeSequence(resolvedSequence);
         }
@@ -173,16 +176,16 @@ namespace Ecompatible
                 }
                 return true;
             }
-            public TableRowInformation DescribeAsRow(IResolvedSequence<float> resolvedSequence, int index)
+            public TableRowInformation DescribeAsRow<TContext>(IResolvedSequence<float, TContext> resolvedSequence, int index) where TContext : IContext
             {
-                TableRowInformation row = DescribeBasic(resolvedSequence, index);
+                TableRowInformation row = DescribeBasic<TContext>(resolvedSequence, index);
                 if (row != null && ShouldStrikethrough(resolvedSequence.StepOutputs, index))
                 {
                     return new TableRowInformation(row.Name, row.Effect.Strikethrough());
                 }
                 return row;
             }
-            private TableRowInformation DescribeBasic(IResolvedSequence<float> resolvedSequence, int index)
+            private TableRowInformation DescribeBasic<TContext>(IResolvedSequence<float, TContext> resolvedSequence, int index) where TContext : IContext
             {
                 if (!ShouldDisplay(resolvedSequence.StepOutputs, index)) return null;
 
@@ -193,7 +196,7 @@ namespace Ecompatible
                 if (stepOutput is OverwriteModificationOutput overwriteModificationOutput) return TableRowContent(overwriteModificationOutput);
                 return null;
             }
-            public TableRowInformation DescribeAsResult(IResolvedSequence<float> resolvedSequence, int index)
+            public TableRowInformation DescribeAsResult<TContext>(IResolvedSequence<float, TContext> resolvedSequence, int index) where TContext : IContext
             {
                 IModificationOutput<float> stepOutput = resolvedSequence.StepOutputs.Take(index + 1).Reverse().First(step => step != null);
                 LocString resultCell = Rounding == Rounding.RoundUp ? Localizer.DoStr("Result (rounded up)") : Localizer.DoStr("Result (rounded down)");
@@ -201,20 +204,20 @@ namespace Ecompatible
             }
             private TableRowInformation TableRowContent(ModificationOutputBase details)
             {
-                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
+                return new TableRowInformation(details.MarkedUpModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             }
             private TableRowInformation TableRowContent(BaseLevelModificationOutput details)
             {
-                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
+                return new TableRowInformation(details.MarkedUpModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             }
 
             private TableRowInformation TableRowContent(MultiplicationModificationOutput details)
             {
-                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(details.Multiplier >= 1 ? Text.Positive($"+{Text.Percent(details.Multiplier - 1)}") : Text.Negative(Text.Percent(details.Multiplier - 1))));
+                return new TableRowInformation(details.MarkedUpModificationName, Localizer.NotLocalizedStr(details.Multiplier >= 1 ? Text.Positive($"+{Text.Percent(details.Multiplier - 1)}") : Text.Negative(Text.Percent(details.Multiplier - 1))));
             }
             private TableRowInformation TableRowContent(OverwriteModificationOutput details)
             {
-                return new TableRowInformation(details.ModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
+                return new TableRowInformation(details.MarkedUpModificationName, Localizer.NotLocalizedStr(Text.Num(details.Output)));
             }
         }
     }

@@ -1,14 +1,16 @@
-﻿using Eco.Mods.TechTree;
+﻿using Eco.Gameplay.Players;
+using Eco.Mods.TechTree;
 
 namespace Ecompatible
 {
-    public class DefaultPickupRange : IValueModifier<float>
+    internal sealed class DefaultPickupRange<TContext> : IValueModifier<float, TContext> where TContext : IUserContext
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
             var context = functionInput.Context;
-            if (!context.TryGetNonNull(ContextProperties.SweepingHandsTalent, out MiningSweepingHandsTalent sweepingHands)) return null;
-            return Output.BaseLevel(sweepingHands.PickUpRange);
+            User user = context.User;
+            if (user.Talentset.GetTalent<MiningSweepingHandsTalent>() is not MiningSweepingHandsTalent sweepingHands) return null;
+            return OutputFactory.BaseLevel(sweepingHands.PickUpRange);
         }
     }
 }

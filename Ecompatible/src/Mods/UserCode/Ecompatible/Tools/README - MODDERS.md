@@ -1,73 +1,70 @@
 ﻿# Ecompatible (For Mod Developers)
 
-The resolvers can be found in `Ecompatible.ValueResolvers`. The full list is below.
+The resolvers can be found in `Ecompatible.ValueResolvers`. Descriptions of the contexts they take can be found below.
 
 ## Inventory
 
-- `ValueResolvers.Inventory.User.Carried` (float).
+- `ValueResolvers.Inventory.User.Carried` (float, `IUserPutItemInInventoryContext`).
 	- Determines how many blocks the player can hold in the hands.
 	- Value is rounded down.
-	- Context should be at least:
-		> User User;
-		> Item ItemToPutInInventory;
 
 ## Shovel
 
-- `ValueResolvers.Tools.Shovel.MaxTakeResolver` (float).
+- `ValueResolvers.Tools.Shovel.MaxTakeResolver` (float, `IShovelPickUpContext`).
 	- Can be used for changing how many blocks a shovel or player can dig whilst holding the shovel.
 	- Value is rounded down.
-	- Context should be at least:
-		> User User;
-		> Item ItemToPutInInventory;
-		> ShovelItem Shovel;
 
 ## Pickaxe
 
-- `ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver` (float).
+- `ValueResolvers.Tools.Pickaxe.MiningSweepingHands.PickUpRangeResolver` (float, `IUserPickUpRubbleContext`).
 	- Can change how far from the player rocks can be collected from when using the "Sweeping Hands" perk.
 	- Value is rounded down.
-	- Context should be at least:
-		> User User;
-		> Item ItemToPutInInventory;
-		> MiningSweepingHandsTalent SweepingHands;
 
 - Sweeping Hands will pick up as many rocks as possible up to the carry limit and not just the rock item's max stack size. In the vanilla game these are the same, but now multiple mods can apply modifiers to the carry limit and have them work together and be applied to sweeping hands.
 
 ## Axe
 
-- `ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled` (float).
+- `ValueResolvers.Tools.Axe.FractionOfTreeToSliceWhenFelled` (float, `ITreeFelledContext`).
 	- Can be used to automatically slice up this fraction of the tree when it is felled.
 	- Value should be between 0 and 1.
-	- Context should be at least:
-		> User User;
-		> ToolItem ToolUsed;
-		> TreeEntity Tree;
 
-- `ValueResolvers.Tools.Axe.DamageToStumpWhenFelled` (float).
+- `ValueResolvers.Tools.Axe.DamageToStumpWhenFelled` (float, `ITreeFelledContext`).
 	- Can be used to automatically deal damage to the stump when the tree is felled.
 	- TreeEntity now exposes `StumpHealth` property
-	- Context should be at least:
-		> User User;
-		> ToolItem ToolUsed;
-		> TreeEntity Tree;
 
 - `ValueResolvers.Tools.Axe.MaxTreeDebrisToSpawn` (float).
 	- Can be used to change the maximum number of debris that can spawn. It doesn't usually reach the default limit of 20 so increasing it is unlikely to do anything.
 	- Value is rounded down.
-	- Context should be at least:
-		> User User;
-		> ToolItem ToolUsed;
-		> TreeEntity Tree;
 
-- `ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn` (float).
+- `ValueResolvers.Tools.Axe.ChanceToClearDebrisOnSpawn` (float, `ITreeFelledContext`).
 	- Can be used to automatically clear debris as it spawns. Each piece of debris has a chance to be cleared before it actually spawns, when the trunk hits the ground. Calories, tool usage and experience still applies. If those checks fail then the debris will spawn as usual.
 	- Value should be between 0 and 1.
-	- Context should be at least:
-		> User User;
-		> ToolItem ToolUsed;
-		> TreeEntity Tree;
 
 - Without doing anything extra, players can also pick up split logs up to the carry limit and not just the log item's max stack size. In the vanilla game these are one and the same, but now multiple mods can apply modifiers to the carry limit and have them work together and be applied to picking up sliced logs.
+
+## Contexts
+
+- You can create these contexts using the static methods in `ContextFactory`.
+
+- IUserContext
+	> User User;
+
+- IPutItemInInventoryContext
+	> Inventory Inventory;
+	> Item ItemToPutInInventory;
+
+- IUserPutItemInInventoryContext : `IUserContext`, `IPutItemInInventoryContext`
+
+- IShovelPickUpContext : `IUserPutItemInInventoryContext`
+	> ShovelItem Shovel;
+
+- IUserPickUpRubbleContext : `IUserPutItemInInventoryContext`
+	> RubbleObject Rubble;
+
+- ITreeFelledContext : `IUserContext`
+	> AxeItem Axe;
+	> Tree Tree;
+	> TreeSpecies TreeSpecies;
 
 ## If you need to replace the "ShovelItem.Dig" implementation
 

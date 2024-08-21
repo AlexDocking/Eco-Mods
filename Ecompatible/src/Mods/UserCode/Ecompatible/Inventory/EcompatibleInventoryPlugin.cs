@@ -14,24 +14,24 @@ namespace Ecompatible
         public string GetStatus() => "";
         public void Initialize(TimedTask timer)
         {
-            UserManager.OnUserLoggedIn.Add(OnUserLoggedIn);
-
+            foreach(User user in UserManager.Users) AddCarriedInventoryRestriction(user);
+            UserManager.NewUserJoinedEvent.Add(AddCarriedInventoryRestriction);
         }
-        private void OnUserLoggedIn(User user)
+        private void AddCarriedInventoryRestriction(User user)
         {
-            user.Inventory.Carried.AddInvRestriction(new InventorySizeRestriction(user, user.Inventory.Carried, ValueResolvers.Inventory.User.Carried));
+            user.Inventory.Carried.AddInvRestriction(new ResolvedStackSizeInventoryRestriction(user, user.Inventory.Carried, ValueResolvers.Inventory.User.Carried));
         }
     }
-    internal class InventorySizeRestriction : InventoryRestriction
+    internal class ResolvedStackSizeInventoryRestriction : InventoryRestriction
     {
         public override LocString Message => LocString.Empty;
         public override bool SurpassStackSize => true;
 
         private Inventory Inventory { get; }
         private User Owner { get; }
-        private IValueResolver<float> StackSizeResolver { get; }
+        private IValueResolver<float, IUserPutItemInInventoryContext> StackSizeResolver { get; }
 
-        public InventorySizeRestriction(User owner, Inventory inventory, IValueResolver<float> stackSizeResolver)
+        public ResolvedStackSizeInventoryRestriction(User owner, Inventory inventory, IValueResolver<float, IUserPutItemInInventoryContext> stackSizeResolver)
         {
             Owner = owner;
             Inventory = inventory;
@@ -40,21 +40,21 @@ namespace Ecompatible
 
         public override int MaxAccepted(Item item, int currentQuantity)
         {
-            IContext context = Context.CreateContext(
-                (ContextProperties.User, Owner),
-                (ContextProperties.Inventory, Inventory),
-                (ContextProperties.ItemToPutInInventory, item));
+            IUserPutItemInInventoryContext context = ContextFactory.CreateUserPutItemInInventoryContext(
+                user:Owner,
+                inventory:Inventory,
+                itemToPutInInventory:item);
             int maxStackSize = StackSizeResolver.ResolveInt(0, context);
             return maxStackSize;
         }
     }
-    internal class UniqueItemStackSizeModifier : IValueModifier<float>
+    internal class UniqueItemStackSizeModifier<TContext> : IValueModifier<float, TContext> where TContext : IUserPutItemInInventoryContext
     {
-        public IModificationOutput<float> ModifyValue(IModificationInput<float> functionInput)
+        public IModificationOutput<float> ModifyValue(IModificationInput<float, TContext> functionInput)
         {
-            IContext context = functionInput.Context;
-            if (!context.TryGetNonNull(ContextProperties.ItemToPutInInventory, out Item item)) return null;
-            if (Item.IsRestrictedToSingleItem(item.Type)) return Output.BaseLevel(1, Localizer.DoStr("Base Level (unique item)"));
+            var context = functionInput.Context;
+            if (context.ItemToPutInInventory is not Item item) return null;
+            if (Item.IsRestrictedToSingleItem(item.Type)) return OutputFactory.BaseLevel(1, Localizer.DoStr("Base Level (unique item)"));
             return null;
         }
     }
