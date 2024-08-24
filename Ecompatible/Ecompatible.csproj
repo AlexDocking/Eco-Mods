@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <Compile Include="LICENSE" />
-    <Compile Include="src\Mods\UserCode\Ecompatible\Tools\README - SERVER OWNERS.md" />
+    <Compile Include="src\Mods\UserCode\Ecompatible\README - SERVER OWNERS.md" />
   </ItemGroup>
 
   <ItemGroup>

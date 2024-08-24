@@ -1,4 +1,4 @@
-﻿# Ecompatible (For Mod Developers)
+﻿# Modding Reference
 
 The resolvers can be found in `Ecompatible.ValueResolvers`. Descriptions of the contexts they take can be found below.
 
