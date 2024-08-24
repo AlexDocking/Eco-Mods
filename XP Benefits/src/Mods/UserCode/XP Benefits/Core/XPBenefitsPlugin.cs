@@ -1,12 +1,15 @@
-﻿using Eco.Core.Plugins;
+﻿using Eco.Core;
+using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
 using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
 using Eco.Shared.Logging;
 using Eco.Shared.Utils;
+using Ecompatible;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace XPBenefits
@@ -29,7 +32,9 @@ namespace XPBenefits
  
         public XPBenefitsPlugin()
         {
-            this.config = new PluginConfig<XPConfig>("XPBenefits");
+            string configPath = "Mods/XP Benefits";
+            PluginManager.Controller.ConfigStorage.CreateDirectoryAsync(configPath).Wait();
+            this.config = new PluginConfig<XPConfig>(Path.Combine(configPath, "XPBenefits"));
         }
 
         public string GetCategory() => Localizer.DoStr("Mods");

@@ -8,6 +8,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License along with Ecompatible. If not, see <https://www.gnu.org/licenses/>.
 
+using Eco.Core;
 using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
@@ -15,6 +16,7 @@ using Eco.Gameplay.Players;
 using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
+using System.IO;
 
 namespace Ecompatible
 {
@@ -27,7 +29,9 @@ namespace Ecompatible
 
         public EcompatibleShovelPlugin()
         {
-            this.config = new PluginConfig<EcompatibleShovelConfig>("EcompatibleShovel");
+            string configPath = "Mods/Ecompatible";
+            PluginManager.Controller.ConfigStorage.CreateDirectoryAsync(configPath).Wait();
+            this.config = new PluginConfig<EcompatibleShovelConfig>(Path.Combine(configPath, "EcompatibleShovel"));
         }
 
         public string GetCategory() => Localizer.DoStr("Mods");

@@ -1,5 +1,5 @@
 ﻿{
-  //Extra Calorie Benefit a.k.a. Expandable Stomach
+  //Extra Calorie Benefit a.k.a. Bigger Belly
   
 	  //Disable if you don't want XP to grant extra calorie capacity.
 	  "ExtraCaloriesEnabled": true,
@@ -15,7 +15,7 @@
 	  "ExtraCaloriesBenefitFunctionType": "GeometricMeanFoodHousing",
 
 
-  //Extra Carry Stack Limit a.k.a. Bigger Hands
+  //Extra Carry Stack Limit a.k.a. Mighty Arms
 
 	  //Disable if you don't want XP to grant extra carry capacity.
 	  "ExtraCarryStackLimitEnabled": true,
@@ -32,7 +32,7 @@
 	  "ExtraCarryStackLimitBenefitFunction": "GeometricMeanFoodHousing",
 
 
-  //Extra Weight Limit a.k.a Stronger Back
+  //Extra Weight Limit a.k.a Strong Shoulders
 
 	  //Disable if you don't want XP to grant extra backpack/toolbar inventory weight limit.
 	  "ExtraWeightLimitEnabled": true,
