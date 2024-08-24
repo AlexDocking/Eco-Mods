@@ -23,24 +23,22 @@ If you have 100% of the maximum food xp and 0 housing xp, you'll get no benefits
 
 
 ### Server Owners:
-You can configure how the mod is set up through the Settings.cs file.
-There you can set how much of each benefit to give and change how the food and housing xp are combined to give the benefit amount.
+You can configure how the mod is set up through the config file. Instructions can be found in the template file.
+In the config you can set how much of each benefit to give and change how the food and housing xp are combined to give the benefit amount.
 Instead of the geometric mean (default), if you wanted to you could scale the rewards by the sum of the food and housing, or either the food or housing alone. 
 You can also change what values are used as the maximum food and housing, and whether player's xp should be capped to those numbers.
-See the example in the Settings.cs file.
-All code is provided so if you have other ideas to adapt the mod to your needs you can totally do that.
 
-### Settings you need to change:
-If:
-	You use the (All) Big Shovel mod (this mod replaces the file ShovelItem.override from All Big Shovel)
-Then:
-	You need to go to ShovelItem.override and set MaxTake to 0
+If you are running your server on Windows then you can configure the mod through the server GUI window that appears when you launch the server, or instead copy the contents of "Configs/XPBenefits.eco.template" to a new file "Configs/XPBenefits.eco" and change the values in there.
+
+## Dependencies:
+
+- Ecompatible (can be downloaded from https://mod.io/g/eco/m/ecompatible)
 
 ## Installation:
 Unzip and drop it in the server directory.
 
 ## Uninstallation
-Go to Mods/UserCode and delete the folder "XP Benefits", and the files Tools/ShovelItem.override.cs, Objects/TreeObject.override.cs and Benefits/SweepingHands.override.cs
+Go to Mods/UserCode and delete the folder "XP Benefits"
 
 ### Credits:
 **Special thanks** go to ArmoredStone and TheDu for their ideas.
@@ -52,6 +50,8 @@ Enjoy!
 
 
 ## Changelog
+### v2.0.0
+- Update for Eco v0.11.0.0. Added new ecopedia pages and tooltips (English only). Replaced the Settings.cs file with a new config file that can be configured through the server GUI. 'Override' files have been removed as that is now handled through Ecompatible (now a dependency)
 ### v1.2.1
 - Update for Eco v0.10.2.3
 ### v1.2.0
@@ -63,3 +63,4 @@ Enjoy!
 - Fix issue with stat modifiers potentially not being removed on log out (which would have appeared in the console log)
 ### v1.0.0
 - Initial release
+

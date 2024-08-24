@@ -11,10 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="LICENSE" />
     <None Remove="src\Mods\UserCode\Ecompatible\Tools\README - SERVER OWNERS.md" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="LICENSE" />
     <Compile Include="src\Mods\UserCode\Ecompatible\Tools\README - SERVER OWNERS.md" />
   </ItemGroup>
 
