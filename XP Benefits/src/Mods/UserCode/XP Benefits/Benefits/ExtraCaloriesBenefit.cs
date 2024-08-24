@@ -57,9 +57,9 @@ namespace XPBenefits
         {
         }
 
-        public override string PageName { get; } = "Expandable Stomach";
+        public override string PageName { get; } = "Bigger Belly";
         public override float PagePriority { get; } = -5;
-        public override LocString DisplayName { get; } = Localizer.DoStr("Expandable Stomach");
+        public override LocString DisplayName { get; } = Localizer.DoStr("Bigger Belly");
         public override string Summary { get; } = "Earn extra calorie space, so you can eat more food before you get full.";
         public override string IconName { get; } = "Ecopedia_FoodandShelter";
         public override IEnumerable<LocString> Sections

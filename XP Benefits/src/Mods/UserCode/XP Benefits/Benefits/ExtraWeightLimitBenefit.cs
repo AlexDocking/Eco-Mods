@@ -61,10 +61,10 @@ namespace XPBenefits
         {
         }
 
-        public override string PageName { get; } = "Stronger Back";
+        public override string PageName { get; } = "Strong Shoulders";
         public override float PagePriority { get; } = -4;
         public override LocString BenefitDescription => Localizer.DoStr("extra carry weight capacity");
-        public override LocString DisplayName { get; } = Localizer.DoStr("Stronger Back");
+        public override LocString DisplayName { get; } = Localizer.DoStr("Strong Shoulders");
         public override string Summary { get; } = "Earn extra carry weight capacity, so you can keep more heavy items in your toolbar and backpack.";
         public override string IconName { get; } = "BackpackItem";
         public override IEnumerable<LocString> Sections

@@ -73,7 +73,7 @@ namespace XPBenefits
         {
         }
 
-        public override LocString DisplayName { get; } = Localizer.DoStr("Bigger Hands");
+        public override LocString DisplayName { get; } = Localizer.DoStr("Mighty Arms");
         public override string Summary { get; } = "Earn extra carry capacity, so you can hold more blocks in your hands.";
         public override string IconName { get; } = "HandsItem";
 
@@ -91,7 +91,7 @@ namespace XPBenefits
         }
 
         public override LocString BenefitDescription { get; } = Localizer.DoStr("extra carry capacity");
-        public override string PageName { get; } = "Bigger Hands";
+        public override string PageName { get; } = "Mighty Arms";
         public override float PagePriority { get; } = -6;
     }
     public class ExtraCarryStackLimitBenefitDescriber : IBenefitDescriber
