@@ -19,12 +19,12 @@ namespace Ecompatible
     {
         [Category("Settings"), LocDescription("How much of the tree should be automatically sliced up."), Range(0, 1)]
         public float FractionOfTreeToAutoSlice { get; set; } = 0;
-        [Category("Settings"), LocDescription("How much damage should be dealt to the stump."), Range(0, 10000)]
-        public int DamageToStumpWhenFelled { get; set; } = 0;
-        [Category("Settings"), LocDescription("What is the maximum number of debris to spawn per tree."), Range(0, 100)]
+        [Category("Settings"), LocDescription("How much damage should be dealt to the stump."), Range(0, float.MaxValue)]
+        public float DamageToStumpWhenFelled { get; set; } = 0;
+        [Category("Settings"), LocDescription("What is the maximum number of debris to spawn per tree."), Range(0, float.MaxValue)]
         public int MaxTreeDebrisToSpawn { get; set; } = 20;
         [Category("Settings"), LocDescription("What is the chance for each debris to get automatically cleared."), Range(0, 1)]
-        public int ChanceToClearDebrisOnSpawn { get; set; } = 0;
+        public float ChanceToClearDebrisOnSpawn { get; set; } = 0;
 
         #region IController
         int controllerID;

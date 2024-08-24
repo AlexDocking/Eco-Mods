@@ -11,6 +11,6 @@
   //How many blocks a modern shovel can dig before any modifiers are applied.
   "ModernShovelBaseSize": 10,
 
-  //Should the "ItemStackSizeMultiplier" in the Difficulty config affect how much shovels can dig?
+  //Should the "StackSizeMultiplier" in the Difficulty config affect how much shovels can dig?
   "ApplyStackSizeModifier": false
 }

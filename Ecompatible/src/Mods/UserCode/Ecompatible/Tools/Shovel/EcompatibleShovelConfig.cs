@@ -24,7 +24,7 @@ namespace Ecompatible
         public int SteelShovelBaseSize { get; set; } = 5;
         [Category("Settings"), LocDescription("How many blocks a modern shovel can dig before any modifiers are applied.")]
         public int ModernShovelBaseSize { get; set; } = 10;
-        [Category("Settings"), LocDescription("Should the \"ItemStackSizeMultiplier\" in the Difficulty config affect how much shovels can dig?")]
+        [Category("Settings"), LocDescription("Should the \"StackSizeMultiplier\" in the Difficulty config affect how much shovels can dig?")]
         public bool ApplyStackSizeModifier { get; set; } = false;
 
         #region IController
