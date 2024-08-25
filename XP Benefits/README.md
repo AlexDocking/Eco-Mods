@@ -60,6 +60,10 @@ Enjoy!
 
 ## Changelog
 
+### v2.0.1
+
+- Fix crash on startup if the mod can't find existing Ecopedia pages
+
 ### v2.0.0
 
 - Update for Eco v0.11.0.0. Added new ecopedia pages and tooltips (English only). Replaced the Settings.cs file with a new config file that can be configured through the server GUI. 'Override' files have been removed as that is now handled through Ecompatible (now a dependency)
