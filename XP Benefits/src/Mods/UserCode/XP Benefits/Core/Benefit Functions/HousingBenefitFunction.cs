@@ -24,12 +24,12 @@ namespace XPBenefits
         {
             HousingXPInput input = new HousingXPInput(xpConfig);
             SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(new ClampInput(input, xpLimitEnabled), maximumBenefit);
-            LocString inputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Housing Overview").UILink(Localizer.DoStr("Housing"))} multiplier");
+            LocString GetInputTitle() => Localizer.Do($"{Ecopedia.Obj.UILinkPageWithContent("Housing Overview", Localizer.DoStr("Housing"))} multiplier");
             benefitFunction.Describer = new InputDescriber(input)
             {
                 InputName = "housing XP",
-                InputTitle = inputTitle,
-                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {inputTitle}"),
+                InputTitleGetter = GetInputTitle,
+                MeansOfImprovingStatDescriptionGetter = () => Localizer.Do($"You can increase this benefit by improving your {GetInputTitle()}"),
             };
             return benefitFunction;
         }

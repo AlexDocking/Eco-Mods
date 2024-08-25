@@ -25,12 +25,13 @@ namespace XPBenefits
         {
             FoodXPInput input = new FoodXPInput(xpConfig);
             SimpleBenefitFunction benefitFunction = new SimpleBenefitFunction(new ClampInput(input, xpLimitEnabled), maximumBenefit);
-            LocString inputTitle = Localizer.Do($"{Ecopedia.Obj.GetPage("Nutrition").UILink()} multiplier");
+
+            static LocString GetInputTitle() => Localizer.Do($"{Ecopedia.Obj.UILinkPage("Nutrition")} multiplier");
             benefitFunction.Describer = new InputDescriber(input)
             {
                 InputName = "food XP",
-                InputTitle = inputTitle,
-                MeansOfImprovingStatDescription = Localizer.Do($"You can increase this benefit by improving your {inputTitle}"),
+                InputTitleGetter = GetInputTitle,
+                MeansOfImprovingStatDescriptionGetter = () => Localizer.Do($"You can increase this benefit by improving your {GetInputTitle()}"),
                 AdditionalInfo = Localizer.DoStr("Note that 'Base Gain' is ignored when calculating your nutrition percentage"),
             };
             return benefitFunction;

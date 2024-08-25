@@ -1,5 +1,6 @@
 ﻿using Eco.Gameplay.Players;
 using Eco.Shared.Localization;
+using System;
 
 namespace XPBenefits
 {
@@ -11,10 +12,12 @@ namespace XPBenefits
         }
 
         public string InputName { get; set; }
-        public LocString InputTitle { get; set; }
+        public Func<LocString> InputTitleGetter { get; set; }
+        public LocString InputTitle { get => InputTitleGetter.GetOrDefault(); set => InputTitleGetter = () => value; }
         public LocString AdditionalInfo { get; set; }
         private IBenefitFunctionInput Input { get; }
-        public LocString MeansOfImprovingStatDescription { get; set; }
+        public Func<LocString> MeansOfImprovingStatDescriptionGetter { get; set; }
+        public LocString MeansOfImprovingStatDescription { get => MeansOfImprovingStatDescriptionGetter.GetOrDefault(); set => MeansOfImprovingStatDescriptionGetter = () => value; }
 
         LocString IBenefitInputDescriber.InputName(User user) => InputTitle;
 

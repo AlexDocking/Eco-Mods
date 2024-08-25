@@ -25,7 +25,7 @@ namespace XPBenefits
         }
 
         public MeanOfNormalizedInputsBenefitFunction BenefitFunction { get; }
-        private string ExperienceEcopediaPageLink => Ecopedia.Obj.GetPage("Experience").UILink(Localizer.DoStr("XP Multiplier"));
+        private static LocString ExperienceEcopediaPageLink() => Ecopedia.Obj.UILinkPageWithContent("Experience", Localizer.DoStr("XP Multiplier"));
         private IEnumerable<IBenefitFunctionInput> Inputs => BenefitFunction.Inputs;
 
         public LocString CurrentInput(User user)
@@ -34,7 +34,7 @@ namespace XPBenefits
             return Localizer.Do($"an XP multiplier of {DisplayUtils.GradientNumLoc(xpMultiplier, xpMultiplier.ToString("0.#"), new Range(Inputs.Select(input => input.GetInputRange(user).Min).Sum(), Inputs.Select(input => input.GetInputRange(user).Max).Sum()))}");
         }
 
-        public LocString InputName(User user) => Localizer.Do($"{ExperienceEcopediaPageLink}");
+        public LocString InputName(User user) => ExperienceEcopediaPageLink();
 
         public LocString MaximumInput(User user)
         {
@@ -42,7 +42,7 @@ namespace XPBenefits
             return Localizer.Do($"an XP multiplier of {TextLoc.StyledNumLoc(maxXPMultiplier, maxXPMultiplier.ToString("0.#"))}");
         }
 
-        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {ExperienceEcopediaPageLink}");
+        public LocString MeansOfImprovingStat(User user) => Localizer.Do($"You can increase this benefit by improving your {ExperienceEcopediaPageLink()}");
     }
 
     public class SkillRateBenefitFunctionFactory : IBenefitFunctionFactory
