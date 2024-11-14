@@ -5,7 +5,6 @@ using Eco.Gameplay.Interactions.Interactors;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Systems;
 using Eco.Shared.Localization;
-using Eco.Shared.Localization.ConstLocs;
 using Eco.Shared.Networking;
 using Eco.Shared.SharedTypes;
 using Eco.Shared.Utils;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static Eco.Simulation.RouteProbing.AStarSearch;
 
 namespace ReplacementInteractions
 {
@@ -382,6 +380,7 @@ namespace ReplacementInteractions
                 first.HighlightColor.HexRGBA == second.HighlightColor.HexRGBA &&
                 first.AccessForHighlight == second.AccessForHighlight &&
                 first.Flags == second.Flags &&
+                first.UIType == second.UIType &&
                 first.TagsTargetable.SequenceEqualNullSafe(second.TagsTargetable);
         }
         public static InteractionAttribute Clone(this InteractionAttribute interaction)
@@ -405,6 +404,7 @@ namespace ReplacementInteractions
                 interaction.AccessForHighlight,
                 false,
                 interaction.Flags,
+                interaction.UIType,
                 interaction.TagsTargetable?.Select(tag => tag.Name).ToArray() ?? Array.Empty<string>());
             clone.Init(interaction.InteractorType, interaction.RPCName);
             return clone;

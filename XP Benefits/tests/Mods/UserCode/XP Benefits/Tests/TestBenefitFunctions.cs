@@ -5,6 +5,7 @@ using Eco.Gameplay.Systems.Messaging.Chat.Commands;
 using Eco.Gameplay.Utils;
 using Eco.Mods.TechTree;
 using Eco.Shared.Localization;
+using Eco.Shared.Logging;
 using Eco.Shared.Utils;
 using EcoTestTools;
 using System;
@@ -154,6 +155,7 @@ namespace XPBenefits.Tests
             float initialStat = getStat(user);
             user.ReplaceStomachContentsAndMakeTasteOk(TestingUtils.SingleFood);
             user.CreateTestResidencyWithValue(3);
+
             if (SkillRateUtil.FoodXP(user) <= 0) throw new Exception("Could not give food xp");
             if (SkillRateUtil.HousingXP(user) <= 0) throw new Exception("Could not give housing xp");
             float modifiedStat = getStat(user);
