@@ -4,6 +4,13 @@ namespace EcoTestTools
 {
     public class Assert
     {
+        /// <summary>
+        /// Pass expected and actual values through a function first. It is a shorthand for AreEqual(func(expected), func(actual))
+        /// </summary>
+        /// <param name="func"></param>
+        /// <param name="expected"></param>
+        /// <param name="actual"></param>
+        public static void AreEqual(Func<object, object> func, object expected, object actual) => AreEqual(func(expected), func(actual));
         public static void AreEqual(object expected, object actual)
         {
             if (!Equals(expected, actual))

@@ -10,6 +10,7 @@ using EcoTestTools;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace XPBenefits.Tests
 {
@@ -76,7 +77,22 @@ namespace XPBenefits.Tests
             }
             Log.WriteLine(locStringBuilder.ToLocString());
         }
-
+        /// <summary>
+        /// Remove most of the UnserializedEntry tags so they don't break tests when the number changes between Eco builds. The important part is the icon name and that will still be compared
+        /// </summary>
+        /// <param name="messageString"></param>
+        /// <returns></returns>
+        private static object CleanIrrelevantTagDetails(object messageString)
+        {
+            if (messageString is not string message) return null;
+            StringBuilder cleanedMessageBuilder = new StringBuilder();
+            var split = message.Split("UnserializedEntry:");
+            foreach (var part in split)
+            {
+                cleanedMessageBuilder.Append(String.Concat(part.SkipWhile(c => char.IsDigit(c))));
+            }
+            return cleanedMessageBuilder.ToString();
+        }
         private static void ShouldDescribeFoodXPBenefitFunction()
         {
             User user = TestUtils.TestUser;
@@ -86,9 +102,9 @@ namespace XPBenefits.Tests
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
 
             Assert.AreEqual("<color=#FFAA00FF>72</color> food XP", (string)benefitInputDescriber.CurrentInput(user));
-            Assert.AreEqual("<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitInputDescriber.InputName(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitInputDescriber.InputName(user));
             Assert.AreEqual("<style=\"Positive\">192</style> food XP", (string)benefitInputDescriber.MaximumInput(user));
-            Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
         private static void ShouldDescribeHousingXPBenefitFunction()
@@ -115,9 +131,9 @@ namespace XPBenefits.Tests
             IBenefitInputDescriber benefitInputDescriber = benefitFunction.Describer;
             
             Assert.AreEqual("<color=#FFAA00FF>33%</color> food XP and <color=#FF6600FF>20%</color> housing XP", (string)benefitInputDescriber.CurrentInput(user));
-            Assert.AreEqual("<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style> multipliers", (string)benefitInputDescriber.InputName(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style> multipliers", (string)benefitInputDescriber.InputName(user));
             Assert.AreEqual("<style=\"Positive\">192</style> food XP and <style=\"Positive\">15</style> housing XP", (string)benefitInputDescriber.MaximumInput(user));
-            Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style> multipliers. If you want to see the greatest improvement you should improve the lowest percentage first. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> and <style=\"Item\"><icon name=\"House\" type=\"\">Housing</icon></style> multipliers. If you want to see the greatest improvement you should improve the lowest percentage first. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitInputDescriber.MeansOfImprovingStat(user));
         }
 
         private static void ShouldDescribeSkillRateBenefitFunction()
@@ -146,10 +162,10 @@ namespace XPBenefits.Tests
             Assert.AreEqual("<style=\"Positive\">+333%</style>", (string)benefitDescriber.CurrentBenefit(user));
             Assert.AreEqual("<color=#FFAA00FF>+333%</color>", (string)benefitDescriber.CurrentBenefitEcopedia(user));
             Assert.AreEqual("<color=#FFAA00FF>72</color> food XP", (string)benefitDescriber.CurrentInput(user));
-            Assert.AreEqual("<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitDescriber.InputName(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "<link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier", (string)benefitDescriber.InputName(user));
             Assert.AreEqual("<style=\"Positive\">+1000%</style>", (string)benefitDescriber.MaximumBenefit(user));
             Assert.AreEqual("<style=\"Positive\">192</style> food XP", (string)benefitDescriber.MaximumInput(user));
-            Assert.AreEqual("You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitDescriber.MeansOfImprovingStat(user));
+            Assert.AreEqual(CleanIrrelevantTagDetails, "You can increase this benefit by improving your <link=\"UnserializedEntry:83\"><style=\"Item\"><icon name=\"Beet\" type=\"\">Nutrition</icon></style></link> multiplier. Note that 'Base Gain' is ignored when calculating your nutrition percentage", (string)benefitDescriber.MeansOfImprovingStat(user));
         }
     }
 }
