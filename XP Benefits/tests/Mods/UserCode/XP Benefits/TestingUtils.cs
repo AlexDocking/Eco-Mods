@@ -3,11 +3,8 @@ using Eco.Gameplay.Items;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Property;
 using Eco.Gameplay.Utils;
-using Eco.Shared.Localization;
-using Eco.Shared.Logging;
 using Eco.Shared.Voxel;
 using System;
-using System.Threading;
 
 namespace XPBenefits.Tests
 {

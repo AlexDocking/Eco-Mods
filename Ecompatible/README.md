@@ -15,7 +15,7 @@ Modders should look at "MODDING GUIDE.md" then "MODDING REFERENCE.md".
 
 ## Dependencies:
 
-- "Replacement Interactions" - is included in the installation
+- "Replacement Interactions"
 
 ## Installation:
 
@@ -30,3 +30,13 @@ Go to "Mods/UserCode" and delete the following:
 
 Do get in touch if you have any problems or queries.
 Enjoy!
+
+## Changelog
+
+### v0.2.0
+
+- Update for Eco v0.11.1. Remove 'Replacement Interactions' from the download: now it must be downloaded separately.
+
+### v0.1.0
+
+- Initial release

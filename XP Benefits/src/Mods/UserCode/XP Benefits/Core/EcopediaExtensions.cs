@@ -15,7 +15,8 @@ namespace XPBenefits
         public static LocString UILinkPageWithContent(this Ecopedia ecopedia, string pageName, LocString content)
         {
             EcopediaPage page = ecopedia.GetPage(pageName);
-            if (page != null) return page.UILinkContent(content);
+            //EcopediaPage.UILinkContent sets up the icon and text but doesn't create the link, so this has to be done manually
+            if (page != null) return ((ILinkable)page).UILink(page.UILinkContent(content));
             return Localizer.DoStr($"<Missing Ecopedia page \"{pageName}\">");
         }
     }

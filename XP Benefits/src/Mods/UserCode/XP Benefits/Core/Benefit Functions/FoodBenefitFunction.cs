@@ -1,6 +1,5 @@
 ﻿using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 
 namespace XPBenefits

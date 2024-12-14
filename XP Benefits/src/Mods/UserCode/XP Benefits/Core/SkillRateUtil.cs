@@ -1,7 +1,5 @@
 ﻿
 using Eco.Gameplay.Players;
-using Eco.Shared.Localization;
-using Eco.Shared.Utils;
 using System;
 
 namespace XPBenefits

@@ -1,8 +1,8 @@
 #!/bin/bash
-VERSION="v1.0.0"
+VERSION="v1.1.0"
 MOD_NAME="Replacement Interactions"
-ECO_VERSION=$1
-PACKAGE_NAME=$2
+ECO_VERSION="v0.11.1.3+"
+PACKAGE_NAME=$1
 if [ -d "./${PACKAGE_NAME}" ]; then rm -r "./${PACKAGE_NAME}"; fi
 cp -r "./src" "./${PACKAGE_NAME}"
 cp "./README.md" "./${PACKAGE_NAME}/Mods/UserCode/${MOD_NAME}/README.md"

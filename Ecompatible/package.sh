@@ -1,8 +1,8 @@
 #!/bin/bash
-VERSION="v0.1.0"
+VERSION="v0.2.0"
 MOD_NAME="Ecompatible"
-ECO_VERSION=$1
-PACKAGE_NAME=$2
+ECO_VERSION="v0.11.1.0+"
+PACKAGE_NAME=$1
 if [ -d "./${PACKAGE_NAME}" ]; then rm -r "./${PACKAGE_NAME}"; fi
 cp -r "./src" "./${PACKAGE_NAME}"
 cp "./README.md" "./${PACKAGE_NAME}/Mods/UserCode/${MOD_NAME}/README.md"

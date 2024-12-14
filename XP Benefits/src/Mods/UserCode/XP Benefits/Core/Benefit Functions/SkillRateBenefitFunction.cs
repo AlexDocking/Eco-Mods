@@ -1,7 +1,6 @@
 ﻿using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Gameplay.Players;
-using Eco.Gameplay.Systems.TextLinks;
 using Eco.Shared.Localization;
 using Eco.Shared.Math;
 using System.Collections.Generic;

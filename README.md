@@ -33,6 +33,6 @@ Ecompatible is licensed under the GNU Lesser General Public License (LGPL). I've
 
 ### XP Benefits
 
-The latest version of XP Benefits is distributed without a license, whereas versions v1.x.x have used GPL. Until SLG gives more details about how they will determine which mods can and can't profit from their marketplace sales, I don't want to license it with terms I might later be unhappy with. Open Source permits commercial use without restriction, and if SLG don't exercise sufficient control over their platform then nothing would prevent others from uploading exact copies of the mod for profit. Undermining the modder's hard work this way provides no value to either the community or the mod developer. Since there are no ready made anti-free-riding equivalent licenses then the 'no license' is what I have chosen. That doesn't mean I have an issue with you making and sharing changes to the code, but that is too vague to put in a license.
+XP Benefits is distributed without a license. However, that doesn't mean I have an issue with you making and sharing changes to the code.
 
 Thank you for reading.

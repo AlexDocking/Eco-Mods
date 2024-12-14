@@ -1,7 +1,6 @@
 ﻿using Eco.Core.Plugins.Interfaces;
 using Eco.Gameplay.EcopediaRoot;
 using Eco.Shared.Localization;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 

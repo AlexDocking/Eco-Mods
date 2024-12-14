@@ -1,5 +1,4 @@
 #!/bin/bash
-ECO_VERSION="$1"
 COPY_TESTS=false
 SERVER_DIRECTORY=""
 PACKAGE_NAME="package"
@@ -56,8 +55,6 @@ handle_options() {
   done
 }
 
-#The first argument (the eco version) has already been read
-shift
 # Main script execution
 handle_options "$@"
 
@@ -66,7 +63,7 @@ handle_options "$@"
 for MOD_PROJECT_DIRECTORY in "XP Benefits" "Ecompatible" "Replacement Interactions"
 do
 	cd "./${MOD_PROJECT_DIRECTORY}"
-	./package.sh $VERSION $ECO_VERSION $PACKAGE_NAME
+	./package.sh $VERSION $PACKAGE_NAME
 	cp -RT "./${PACKAGE_NAME}" "${ROOT_DIRECTORY}/${PACKAGE_NAME}"
 	cd "$ROOT_DIRECTORY"
 done

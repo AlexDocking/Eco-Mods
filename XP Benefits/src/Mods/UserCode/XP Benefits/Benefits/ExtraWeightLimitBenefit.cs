@@ -10,7 +10,6 @@ using Eco.Gameplay.Items;
 using Eco.Gameplay.Items.Actionbar;
 using Eco.Core.Plugins.Interfaces;
 using Eco.Core.Utils;
-using Eco.Shared.Utils;
 
 namespace XPBenefits
 {

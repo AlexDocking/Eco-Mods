@@ -54,9 +54,12 @@ namespace XPBenefits
             
             if (XPBenefitsPlugin.Obj.EnabledBenefits.Any())
             {
-                var section = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
-                section.Text = ecopediaPageList;
-                EcopediaXPBenefitsOverviewPage.Sections.Insert(1, section);
+                var newSection = new Eco.Gameplay.EcopediaRoot.EcopediaSection();
+                newSection.Text = ecopediaPageList;
+                //Fixes a bug with eco duplicating the contents of the ecopedia page. The page xml only has two sections so delete anything after that
+                if (EcopediaXPBenefitsOverviewPage.Sections.Count > 2) EcopediaXPBenefitsOverviewPage.Sections.RemoveRange(2, EcopediaXPBenefitsOverviewPage.Sections.Count - 2);
+                
+                EcopediaXPBenefitsOverviewPage.Sections.Insert(1, newSection);
                 EcopediaXPBenefitsOverviewPage.ParseTagsInText();
             }
             else
@@ -64,7 +67,6 @@ namespace XPBenefits
                 Ecopedia.Obj.Chapters["Mods"].Categories.Remove(EcopediaXPBenefitsCategory);
             }
         }
-
         private EcopediaCategory EcopediaXPBenefitsCategory => Ecopedia.Obj.Chapters["Mods"].Categories.FirstOrDefault(category => category.Name == "XP Benefits");
         private EcopediaPage EcopediaXPBenefitsOverviewPage => EcopediaXPBenefitsCategory.Pages["XP Benefits Overview"];
     }

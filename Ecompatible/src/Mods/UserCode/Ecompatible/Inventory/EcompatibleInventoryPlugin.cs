@@ -63,7 +63,7 @@ namespace Ecompatible
         {
             var context = functionInput.Context;
             if (context.ItemToPutInInventory is not Item item) return null;
-            if (Item.IsRestrictedToSingleItem(item.Type)) return OutputFactory.BaseLevel(1, Localizer.DoStr("Base Level (unique item)"));
+            if (!item.IsStackable) return OutputFactory.BaseLevel(1, Localizer.DoStr("Base Level (unique item)"));
             return null;
         }
     }

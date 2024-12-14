@@ -60,6 +60,10 @@ Enjoy!
 
 ## Changelog
 
+### v2.1.0
+
+- Update for Eco v0.11.1.3 and register mod. Fix a couple of minor Ecopedia bugs
+
 ### v2.0.1
 
 - Fix crash on startup if the mod can't find existing Ecopedia pages

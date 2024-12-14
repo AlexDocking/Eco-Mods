@@ -109,3 +109,13 @@ public class ExampleRPCReplacer
 	}
 }
 ```
+
+## Changelog
+
+### v1.1.0
+
+- Update for Eco v0.11.1.3
+
+### v1.0.0
+
+- Initial release
