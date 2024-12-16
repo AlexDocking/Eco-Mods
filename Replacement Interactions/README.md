@@ -10,6 +10,16 @@ Several mods override the same files to edit the interaction implementations or 
 
 There are also some limited use cases for changing what data is sent to back to the client which otherwise could not be done without modifying the server's source code.
 
+## How do RPCs work?
+
+Sometimes the client game wants to call code on the server, and for that it uses RPCs (Remote Procedure Calls). Methods which the client may call are marked with the `[RPC]` attribute.
+
+Each RPC method needs to be set up on both the server and client, with the method being identified by a unique ID. The client is only aware of the method's interface, while the server has the actual implementation. When the client wants to invoke the RPC, it sends the ID to the server along with any parameters the method will use. The server maps that ID to the corresponding method and executes it. The server then sends any output back to the client.
+
+The interaction system is built around RPCs. Every method with an `InteractionAttribute` is an RPC because `InteractionAttribute` derives from `RPCAttribute`. The `[Interaction(...)]` attribute stores information about the conditions that must be met before the player is allowed to attempt the action. These conditions are sent to the client when the player logs on to the server. When the client decides those conditions are met, such as the player being within range of the target and when the correct key is pressed, it invokes the RPC to tell the server the player is attempting the action.
+
+Not all RPCs are interactions, and some of them can be redirected to execute different methods. This project lets you change the mapping between the received RPCs (whether an interaction or not) and the methods they correspond to.
+
 ## Usage:
 
 ### Replace an interaction method
@@ -106,6 +116,45 @@ public class ExampleRPCReplacer
 	public static int ReplacementRPC(ClassWithRPC instance, string str)
 	{
 		return 1;
+	}
+}
+```
+
+Here are some real examples:
+```csharp
+[DefinesInteractions]
+public static class MyRPCReplacementsMod
+{
+	//The method in the Stomach class looks like this:
+	//[RPC]
+	//public TooltipSection BalancedDietMultDescRPC();
+	//
+	//This will change what the popup says when you hover over the blue 'Balanced Diet Bonus' link in the stomach tooltip (hover over the pie chart to find it)
+	[ReplacementRPC(typeof(Stomach), nameof(Stomach.BalancedDietMultDescRPC))]
+	public static TooltipSection ExampleReplacementOfRPCTooltip(Stomach stomach)
+	{
+		return new TooltipSection(Localizer.DoStr(
+			$"The client is asking the server for the contents of the tooltip \"BalancedDietMultDescRPC\".\n" +
+			$"The server looked up which method should be called but it has been directed to call this custom method instead.\n" +
+			$"This message is what the player will see instead."
+			));
+	}
+
+	//When the player clicks the 'Start Project' button in the crafting UI, it usually calls this RPC in CraftingComponent:
+	//[RPC]
+	//public bool CreateWorkOrder(Player player, Recipe recipe, int quantity, BankAccount account);
+	//
+	//This line will direct that call to this method instead, to block new crafts over 100 iterations long
+	[ReplacementRPC(typeof(CraftingComponent), nameof(CraftingComponent.CreateWorkOrder))]
+	public static bool CreateWorkOrderWithCraftLimit(CraftingComponent craftingComponent, Player player, Recipe recipe, int quantity, BankAccount account)
+	{
+		if (quantity > 100)
+		{
+            player.ErrorLocStr("Can only queue up to 100 crafts per job");
+			return false;
+		}
+		//Pass the request to the intended recipient. This call doesn't go through the RPC system
+		return craftingComponent.CreateWorkOrder(player, recipe, quantity, account);
 	}
 }
 ```
