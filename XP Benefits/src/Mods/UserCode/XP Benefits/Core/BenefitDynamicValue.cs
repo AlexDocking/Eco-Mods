@@ -13,7 +13,7 @@ namespace XPBenefits
 
         public BenefitDynamicValue(IBenefitFunction benefitFunction)
         {
-            BenefitFunction = benefitFunction ?? throw new ArgumentNullException(nameof(benefitFunction));
+            BenefitFunction = benefitFunction;
         }
 
         public float GetCurrentValue(IDynamicValueContext context, object obj)
